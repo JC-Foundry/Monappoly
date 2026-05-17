@@ -56,6 +56,10 @@ if (app.Environment.IsDevelopment())
 // Seed admin and roles
 await app.ConfigureAdminAndRolesAsync<AppUser, AppRole, AppDbContext, AppRoles>();
 
+// Short routes for Identity pages
+app.MapGet("/login", () => Results.Redirect("/Identity/Account/Login"));
+app.MapGet("/register", () => Results.Redirect("/Identity/Account/Register"));
+
 app.MapRazorPages();
 
 app.Run();

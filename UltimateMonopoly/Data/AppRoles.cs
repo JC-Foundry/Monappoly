@@ -2,4 +2,7 @@ using JC.Identity.Authentication;
 
 namespace UltimateMonopoly.Data;
 
-public class AppRoles : SystemRoles { }
+public class AppRoles : SystemRoles
+{
+    
+}

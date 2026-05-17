@@ -1,0 +1,20 @@
+@page
+@model Disable2faModel
+@{
+    ViewData["Title"] = "Disable Two-Factor Authentication";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<h3>@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="card border-warning">
+    <div class="card-body">
+        <div class="alert alert-warning mb-3">
+            <strong>Warning:</strong> Disabling 2FA reduces the security of your account. To change authenticator keys, <a asp-page="./ResetAuthenticator">reset your authenticator</a> instead.
+        </div>
+        <form method="post">
+            <button class="btn btn-danger" type="submit">Disable 2FA</button>
+        </form>
+    </div>
+</div>

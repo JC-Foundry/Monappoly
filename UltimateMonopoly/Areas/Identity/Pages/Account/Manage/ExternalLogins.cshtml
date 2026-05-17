@@ -1,0 +1,55 @@
+@page
+@model ExternalLoginsModel
+@{
+    ViewData["Title"] = "External Logins";
+    ViewData["ActivePage"] = ManageNavPages.ExternalLogins;
+}
+
+<h3>@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+@if (Model.CurrentLogins?.Count > 0)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Linked Accounts</h5>
+            <table class="table table-hover mb-0">
+                <tbody>
+                    @foreach (var login in Model.CurrentLogins)
+                    {
+                        <tr class="align-middle">
+                            <td>@login.ProviderDisplayName</td>
+                            <td class="text-end">
+                                @if (Model.ShowRemoveButton)
+                                {
+                                    <form asp-page-handler="RemoveLogin" method="post" class="d-inline">
+                                        <input asp-for="@login.LoginProvider" name="LoginProvider" type="hidden" />
+                                        <input asp-for="@login.ProviderKey" name="ProviderKey" type="hidden" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (Model.OtherLogins?.Count > 0)
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Add External Login</h5>
+            <form asp-page-handler="LinkLogin" method="post">
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    @foreach (var provider in Model.OtherLogins)
+                    {
+                        <button type="submit" class="btn btn-outline-primary" name="provider" value="@provider.Name">@provider.DisplayName</button>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+}

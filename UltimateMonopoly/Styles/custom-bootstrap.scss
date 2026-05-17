@@ -27,6 +27,7 @@ $body-emphasis-color:     #ffffff;
 // Card / component backgrounds
 $card-bg:                 #2c2c2c;
 $card-border-color:       #3a3a3a;
+$card-box-shadow:         0 4px 16px rgba(0, 0, 0, 0.6), 0 1px 4px rgba(0, 0, 0, 0.4);
 
 // Input / form overrides
 $input-bg:                #2c2c2c;
@@ -61,4 +62,11 @@ html {
     --bs-body-color: #{$body-color};
     --bs-border-color: #{$border-color};
   }
+}
+
+// ------------------------------------------------------------------
+// Card shadow
+// ------------------------------------------------------------------
+.card {
+  box-shadow: $card-box-shadow;
 }

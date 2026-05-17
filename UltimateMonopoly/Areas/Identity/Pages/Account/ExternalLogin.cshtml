@@ -1,0 +1,29 @@
+@page
+@model ExternalLoginModel
+@{
+    ViewData["Title"] = "External Login";
+}
+
+<div class="container" style="max-width: 420px;">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">Link @Model.ProviderDisplayName</h2>
+            <p class="text-center text-body-secondary mb-3">
+                You've authenticated with <strong>@Model.ProviderDisplayName</strong>. Enter your email to complete registration.
+            </p>
+            <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="name@example.com" />
+                    <label asp-for="Input.Email">Email</label>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+                <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

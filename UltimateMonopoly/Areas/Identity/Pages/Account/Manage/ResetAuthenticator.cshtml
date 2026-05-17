@@ -1,0 +1,20 @@
+@page
+@model ResetAuthenticatorModel
+@{
+    ViewData["Title"] = "Reset Authenticator";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<h3>@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="card border-danger">
+    <div class="card-body">
+        <div class="alert alert-danger mb-3">
+            <strong>This will disable 2FA</strong> until you reconfigure your authenticator app. If you don't complete setup, you may lose access to your account.
+        </div>
+        <form method="post">
+            <button class="btn btn-danger" type="submit">Reset Authenticator Key</button>
+        </form>
+    </div>
+</div>

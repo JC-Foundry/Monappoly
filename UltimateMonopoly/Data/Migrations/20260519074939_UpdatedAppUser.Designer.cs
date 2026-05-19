@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UltimateMonopoly.Data;
 
@@ -11,9 +12,11 @@ using UltimateMonopoly.Data;
 namespace UltimateMonopoly.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260519074939_UpdatedAppUser")]
+    partial class UpdatedAppUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1156,7 +1159,7 @@ namespace UltimateMonopoly.Data.Migrations
                         .HasMaxLength(7)
                         .HasColumnType("varchar(7)");
 
-                    b.Property<string>("AvatarImageName")
+                    b.Property<string>("AvatarImagePath")
                         .HasMaxLength(10240)
                         .HasColumnType("varchar(10240)");
 
@@ -1176,9 +1179,6 @@ namespace UltimateMonopoly.Data.Migrations
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<DateTime?>("LastActiveUtc")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("LastLoginUtc")
                         .HasColumnType("datetime(6)");
@@ -1353,189 +1353,6 @@ namespace UltimateMonopoly.Data.Migrations
                     b.HasIndex("BoardId");
 
                     b.ToTable("CustomBoardSpaces");
-                });
-
-            modelBuilder.Entity("UltimateMonopoly.Models.DataModels.Social.BlockedUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(38)
-                        .HasColumnType("varchar(38)");
-
-                    b.Property<string>("BlockedUserId")
-                        .IsRequired()
-                        .HasMaxLength(38)
-                        .HasColumnType("varchar(38)");
-
-                    b.Property<string>("CreatedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("DeletedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("DeletedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LastModifiedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("LastModifiedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("RestoredById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("RestoredUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BlockedUsers");
-                });
-
-            modelBuilder.Entity("UltimateMonopoly.Models.DataModels.Social.Friend", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(38)
-                        .HasColumnType("varchar(38)");
-
-                    b.Property<string>("CreatedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("DateRemovedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("DeletedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("DeletedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("FriendUserId")
-                        .IsRequired()
-                        .HasMaxLength(38)
-                        .HasColumnType("varchar(38)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LastModifiedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("LastModifiedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("RestoredById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("RestoredUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Friends");
-                });
-
-            modelBuilder.Entity("UltimateMonopoly.Models.DataModels.Social.FriendRequest", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(38)
-                        .HasColumnType("varchar(38)");
-
-                    b.Property<DateTime?>("AcknowledgedAtUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CreatedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("DeletedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("DeletedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool?>("IsAccepted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LastModifiedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("LastModifiedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("RestoredById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("RestoredUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("ToUserId")
-                        .IsRequired()
-                        .HasMaxLength(38)
-                        .HasColumnType("varchar(38)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FriendRequests");
-                });
-
-            modelBuilder.Entity("UltimateMonopoly.Models.DataModels.Social.ReportedUser", b =>
-                {
-                    b.Property<string>("BlockedUserId")
-                        .HasMaxLength(38)
-                        .HasColumnType("varchar(38)");
-
-                    b.Property<string>("CreatedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("DeletedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("DeletedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LastModifiedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("LastModifiedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Message")
-                        .HasMaxLength(10240)
-                        .HasColumnType("varchar(10240)");
-
-                    b.Property<int>("Reason")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RestoredById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("RestoredUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("BlockedUserId");
-
-                    b.ToTable("ReportedUsers");
                 });
 
             modelBuilder.Entity("JC.Communication.Logging.Models.Email.EmailContentLog", b =>
@@ -1726,17 +1543,6 @@ namespace UltimateMonopoly.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Board");
-                });
-
-            modelBuilder.Entity("UltimateMonopoly.Models.DataModels.Social.ReportedUser", b =>
-                {
-                    b.HasOne("UltimateMonopoly.Models.DataModels.Social.BlockedUser", "BlockedUser")
-                        .WithMany()
-                        .HasForeignKey("BlockedUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BlockedUser");
                 });
 
             modelBuilder.Entity("JC.Communication.Logging.Models.Email.EmailLog", b =>

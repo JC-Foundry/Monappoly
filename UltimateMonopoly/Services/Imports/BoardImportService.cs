@@ -36,7 +36,7 @@ public class BoardImportService
 
     public async Task<Board> ImportDefaultBoard()
     {
-        var path = _filePathProvider.GetFilePath(FilePathProvider.ConfigType.Board);
+        var path = _filePathProvider.GetFilePath(FilePathProvider.FileCategory.Board);
         var fileText = await _filePathProvider.ReadFileAsync(path, _boardFileName);
         
         var importResult = JsonConvert.DeserializeObject<List<BoardSpaceJsonImport>>(fileText);

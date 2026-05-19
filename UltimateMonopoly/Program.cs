@@ -1,3 +1,4 @@
+using Hangfire;
 using JC.Communication.Email.Models;
 using JC.Communication.Email.Models.Options;
 using JC.Communication.Extensions;
@@ -8,15 +9,26 @@ using JC.MySql;
 using JC.SqlServer.Hangfire;
 using JC.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using JC.Web.Security.Models;
+using Microsoft.AspNetCore.Http;
+using UltimateMonopoly.Areas.Identity.Services;
+using UltimateMonopoly.Areas.Social.Hubs;
+using UltimateMonopoly.Authorization;
 using UltimateMonopoly.Data;
 using UltimateMonopoly.Extensions;
 using UltimateMonopoly.Services.GameConfig;
-using UltimateMonopoly.Services.Imports;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Syncfusion license
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(
+    builder.Configuration["SYNCFUSION_KEY"]);
+
 // Razor Pages
 builder.Services.AddRazorPages();
+
+// SignalR
+builder.Services.AddSignalR();
 
 // Database
 builder.Services.AddMySqlDatabase<AppDbContext>(builder.Configuration, migrationsAssembly: "UltimateMonopoly");
@@ -77,6 +89,13 @@ app.UseIdentity();
 app.UseWebDefaults();
 app.UseGithubWebhooks();
 
+// Hangfire dashboard — SystemAdmin only
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    DashboardTitle = "Ultimate Monopoly — Background Jobs",
+    Authorization = [new HangfireDashboardAuthFilter()]
+});
+
 // Auto-migrate
 await app.Services.MigrateDatabaseAsync<AppDbContext>();
 
@@ -87,10 +106,20 @@ await app.ConfigureAdminAndRolesAsync<AppUser, AppRole, AppDbContext, AppRoles>(
 app.MapGet("/login", () => Results.Redirect("/Identity/Account/Login"));
 app.MapGet("/register", () => Results.Redirect("/Identity/Account/Register"));
 app.MapGet("/account", () => Results.Redirect("/Identity/Account/Manage"));
+app.MapGet("/profile", () => Results.Redirect("/Identity/Profile"));
 app.MapGet("/social", () => Results.Redirect("/Social/Friends"));
 app.MapGet("/friends", () => Results.Redirect("/Social/Friends"));
 
 app.MapRazorPages();
+app.MapHub<PresenceHub>("/hubs/presence");
+
+// Profile cookie — 90-day encrypted cookie holding the user's avatar choices
+app.PopulateEncryptedCookieProfiles(
+    (ProfileService.CookieName, ProfileService.ProtectorPurpose,
+        new CookieDefaultOverride(
+            sameSite: SameSiteMode.Lax,
+            httpOnly: true,
+            maxAge: TimeSpan.FromDays(90))));
 
 //Create defaults:
 await SetupDefaults();

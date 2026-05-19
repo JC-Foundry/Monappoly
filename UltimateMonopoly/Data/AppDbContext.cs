@@ -15,6 +15,7 @@ using JC.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using UltimateMonopoly.Models;
 using UltimateMonopoly.Models.DataModels.Boards;
+using UltimateMonopoly.Models.DataModels.Social;
 
 namespace UltimateMonopoly.Data;
 
@@ -26,6 +27,12 @@ public class AppDbContext : IdentityDataDbContext<AppUser, AppRole>,
 
     public DbSet<CustomBoard> CustomBoards { get; set; }
     public DbSet<CustomBoardSpace> CustomBoardSpaces { get; set; }
+    
+    // Social
+    public DbSet<Friend> Friends { get; set; }
+    public DbSet<FriendRequest> FriendRequests { get; set; }
+    public DbSet<BlockedUser> BlockedUsers { get; set; }
+    public DbSet<ReportedUser> ReportedUsers { get; set; }
     
     // Github
     public DbSet<ReportedIssue> ReportedIssues { get; set; }

@@ -11,18 +11,20 @@ public class FilePathProvider
                     ?? throw new ArgumentNullException(nameof(_basePath), "BasePath is not set in configuration");
     }
     
-    public enum ConfigType
+    public enum FileCategory
     {
         Card,
-        Board
+        Board,
+        ProfileImg
     }
 
-    public string GetFilePath(ConfigType type)
+    public string GetFilePath(FileCategory type)
     {
         var path = type switch
         {
-            ConfigType.Card => "cards",
-            ConfigType.Board => "boards",
+            FileCategory.Card => "cards",
+            FileCategory.Board => "boards",
+            FileCategory.ProfileImg => "profile_imgs",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
         

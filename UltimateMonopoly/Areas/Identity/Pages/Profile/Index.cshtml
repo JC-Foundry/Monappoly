@@ -1,0 +1,166 @@
+@page
+@model UltimateMonopoly.Areas.Identity.Pages.Profile.IndexModel
+@{
+    ViewData["Title"] = "Profile";
+
+    string TabClass(string name) => Model.Tab == name ? "active" : "";
+    string PaneClass(string name) => Model.Tab == name ? "tab-pane fade show active" : "tab-pane fade";
+
+    var avatarBg = string.IsNullOrEmpty(Model.Input.AvatarColour) ? "#000000" : Model.Input.AvatarColour;
+}
+
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Profile</h1>
+        <p class="text-body-secondary mb-0">Customise how you appear in games.</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-@(Model.StatusKind ?? "info") alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form method="post">
+    <input asp-for="Tab" type="hidden" />
+    <input asp-for="Input.AvatarColour" type="hidden" id="AvatarColourHidden" />
+
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-3">
+        <ul class="nav nav-tabs sticky-tabs mb-0 border-bottom-0" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button type="button" class="nav-link @TabClass("image")" data-bs-toggle="tab" data-bs-target="#tab-image" data-tab-value="image" role="tab">
+                    Avatar Image
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button type="button" class="nav-link @TabClass("colour")" data-bs-toggle="tab" data-bs-target="#tab-colour" data-tab-value="colour" role="tab">
+                    Colour
+                </button>
+            </li>
+        </ul>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+
+    <div class="tab-content">
+        @* ---------- Avatar Image tab ---------- *@
+        <div class="@PaneClass("image")" id="tab-image" role="tabpanel">
+            @if (Model.AvailableImageNames.Count == 0)
+            {
+                <p class="text-body-secondary">No avatar images available.</p>
+            }
+            else
+            {
+                <div class="row g-3 mb-3">
+                    @foreach (var name in Model.AvailableImageNames)
+                    {
+                        var isSelected = name == Model.Input.AvatarImageName;
+                        var inputId = $"avatar-{name}";
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <input type="radio" class="btn-check" name="Input.AvatarImageName" value="@name" id="@inputId" autocomplete="off" checked="@isSelected" />
+                            <label class="card h-100 avatar-card @(isSelected ? "border-primary border-2" : "")" for="@inputId" role="button">
+                                <div class="card-body text-center">
+                                    <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center overflow-hidden"
+                                         data-avatar-preview style="background-color: @avatarBg; width: 6rem; height: 6rem;">
+                                        <img src="@Url.Page("Index", "AvatarImage", new { name })" alt="@name" class="mw-100 mh-100 p-2" />
+                                    </div>
+                                    <div class="small text-capitalize">@name.Replace("_", " ")</div>
+                                </div>
+                            </label>
+                        </div>
+                    }
+                </div>
+            }
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary w-100">Update</button>
+                <button type="submit" asp-page-handler="ClearImage" class="btn btn-outline-secondary w-100">Clear Image</button>
+            </div>
+        </div>
+
+        @* ---------- Colour tab ---------- *@
+        <div class="@PaneClass("colour")" id="tab-colour" role="tabpanel">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-3 align-items-start">
+                        <div class="col-md-auto">
+                            <ejs-colorpicker id="ColourPicker"
+                                             mode="Picker"
+                                             inline="true"
+                                             showButtons="false"
+                                             value="@avatarBg"
+                                             change="onColourChange"></ejs-colorpicker>
+                        </div>
+                        <div class="col d-flex flex-row flex-md-column align-items-center justify-content-center gap-3">
+                            <div class="text-center">
+                                @if (string.IsNullOrEmpty(Model.Input.AvatarColour))
+                                {
+                                    <div class="rounded-circle border border-2 d-flex align-items-center justify-content-center text-body-secondary small"
+                                         style="width: 6rem; height: 6rem;">
+                                        Not Set
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle border border-2"
+                                         style="background-color: @Model.Input.AvatarColour; width: 6rem; height: 6rem;"></div>
+                                }
+                                <small class="text-body-secondary d-block mt-1">Current</small>
+                            </div>
+                            <div class="text-center">
+                                <div data-avatar-preview class="rounded-circle border border-2"
+                                     style="background-color: @avatarBg; width: 6rem; height: 6rem;"></div>
+                                <small class="text-body-secondary d-block mt-1">Preview</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-text mt-3">If no colour is chosen, your avatar uses a deep black background.</div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary w-100">Update</button>
+                <button type="submit" asp-page-handler="ClearColour" class="btn btn-outline-secondary w-100">Clear Colour</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            // Keep the hidden Tab input in sync with the currently shown tab
+            const tabHidden = document.querySelector('input[name="Tab"]');
+            document.querySelectorAll('#profileTabs [data-tab-value]').forEach(btn => {
+                btn.addEventListener('shown.bs.tab', () => {
+                    if (tabHidden) tabHidden.value = btn.dataset.tabValue;
+                });
+            });
+
+            // Selected-card highlight follows the radio state
+            const cards = document.querySelectorAll('.avatar-card');
+            document.querySelectorAll('input[name="Input.AvatarImageName"]').forEach(input => {
+                input.addEventListener('change', () => {
+                    cards.forEach(c => c.classList.remove('border-primary', 'border-2'));
+                    if (input.checked) {
+                        const label = document.querySelector(`label[for="${input.id}"]`);
+                        label?.classList.add('border-primary', 'border-2');
+                    }
+                });
+            });
+        })();
+
+        // Syncfusion ColorPicker change handler — syncs to the hidden field that
+        // is bound to Input.AvatarColour, and updates all live previews.
+        function onColourChange(args) {
+            const colour = args.currentValue?.hex || args.value;
+            const hidden = document.getElementById('AvatarColourHidden');
+            if (hidden) hidden.value = colour;
+            document.querySelectorAll('[data-avatar-preview]').forEach(el => {
+                el.style.backgroundColor = colour;
+            });
+        }
+    </script>
+}

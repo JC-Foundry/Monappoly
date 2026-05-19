@@ -16,7 +16,7 @@ public class FriendRequest : AuditModel
     [Required]
     [MaxLength(38)]
     //No nav prop foreign key - allows account deletion
-    public string ToUserId { get; set; }
+    public string ToUserId { get; private set; }
 
     [NotMapped]
     public DateTime SentAtUtc => CreatedUtc;
@@ -25,14 +25,30 @@ public class FriendRequest : AuditModel
     public bool? IsAccepted { get; private set; }
     public DateTime? AcknowledgedAtUtc { get; private set; }
 
+
+    public FriendRequest()
+    {
+    }
+
+    public FriendRequest(string toUserId)
+    {
+        ToUserId = toUserId;
+    }
+    
     public void Accept()
     {
+        if(IsAccepted.HasValue)
+            return;
+        
         IsAccepted = true;
         AcknowledgedAtUtc = DateTime.UtcNow;
     }
 
     public void Decline()
     {
+        if(IsAccepted.HasValue)
+            return;
+        
         IsAccepted = false;
         AcknowledgedAtUtc = DateTime.UtcNow;
     }

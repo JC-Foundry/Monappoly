@@ -1,37 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using UltimateMonopoly.Areas.Social.Services;
+using UltimateMonopoly.Models.ViewModels.Social;
 
 namespace UltimateMonopoly.Areas.Social.Pages.Friends;
 
 public class IndexModel : PageModel
 {
-    // Dummy data — no services, repositories or context wired yet.
-    private static readonly string[] KnownUsernames = ["alice", "bob", "charlie", "david", "eve"];
+    private readonly FriendService _friendService;
 
-    public List<Friend> Friends { get; } =
-    [
-        new("alice99",   "Alice Henderson", "AH", "purple",  true,  "Atlantic City Marathon", DateTime.UtcNow.AddMinutes(-3)),
-        new("bobby_b",   "Bobby Brennan",   "BB", "teal",    true,  "Boardwalk Blitz",        DateTime.UtcNow.AddMinutes(-12)),
-        new("charliem",  "Charlie Mason",   "CM", "indigo",  false, "Classic Monopoly",       DateTime.UtcNow.AddHours(-2)),
-        new("dee_v",     "Dee Vargas",      "DV", "pink",    true,  "Speed Edition",          DateTime.UtcNow.AddMinutes(-44)),
-        new("evgeniya",  "Evgeniya Sokol",  "ES", "orange",  false, "Atlantic City Marathon", DateTime.UtcNow.AddDays(-1)),
-        new("fraz",      "Fraser Quinn",    "FQ", "green",   false, "Junior",                 DateTime.UtcNow.AddDays(-3)),
-        new("gigi",      "Gigi Park",       "GP", "blue",    true,  "Boardwalk Blitz",        DateTime.UtcNow.AddMinutes(-1)),
-        new("hank.t",    "Hank Tomlin",     "HT", "red",     false, "Cheaters Edition",       DateTime.UtcNow.AddDays(-9))
-    ];
+    public IndexModel(FriendService friendService)
+    {
+        _friendService = friendService;
+    }
 
-    public List<FriendRequest> IncomingRequests { get; } =
-    [
-        new("ivor.t",  "Ivor Trent",     "IT", "indigo", DateTime.UtcNow.AddHours(-3)),
-        new("jules_w", "Jules Whitcomb", "JW", "teal",   DateTime.UtcNow.AddDays(-2)),
-        new("kelpy",   "Kelpy Mira",     "KM", "orange", DateTime.UtcNow.AddDays(-6))
-    ];
-
-    public List<FriendRequest> OutgoingRequests { get; } =
-    [
-        new("luca99", "Luca Romano", "LR", "pink",  DateTime.UtcNow.AddHours(-6)),
-        new("mia.b",  "Mia Bishop",  "MB", "green", DateTime.UtcNow.AddDays(-1))
-    ];
+    public List<FriendViewModel> Friends { get; private set; } = [];
+    public IReadOnlyList<FriendRequestViewModel> IncomingRequests { get; private set; } = [];
+    public IReadOnlyList<FriendRequestViewModel> OutgoingRequests { get; private set; } = [];
 
     [BindProperty]
     public AddFriendInput Input { get; set; } = new();
@@ -41,52 +26,62 @@ public class IndexModel : PageModel
 
     public string Tab { get; private set; } = "friends";
 
-    public void OnGet(string? tab = null)
+    public async Task OnGetAsync(string? tab = null)
     {
-        Tab = NormalizeTab(tab);
+        Tab = NormaliseTab(tab);
+        await LoadAsync();
     }
 
-    public IActionResult OnPostAddFriend()
+    public async Task<IActionResult> OnPostAddFriendAsync()
     {
         if (!ModelState.IsValid)
         {
             Tab = "add";
+            await LoadAsync();
             return Page();
         }
 
         var username = Input.Username.Trim();
-        var found = KnownUsernames.Contains(username, StringComparer.OrdinalIgnoreCase);
+        var result = await _friendService.TrySendFriendRequest(username);
 
-        StatusMessage = found
+        StatusMessage = result.Success
             ? $"Friend request sent to {username}."
-            : $"No user found with the username '{username}'.";
-        StatusKind = found ? "success" : "danger";
+            : result.ErrorMessage ?? "Could not send friend request.";
+        StatusKind = result.Success ? "success" : "danger";
 
         return RedirectToPage(new { tab = "add" });
     }
 
-    private static string NormalizeTab(string? tab) => tab switch
+    public async Task<IActionResult> OnPostAcceptAsync(string requestId)
+    {
+        var ok = await _friendService.TryAcceptFriendRequest(requestId);
+        StatusMessage = ok ? "Friend request accepted." : "Could not accept friend request.";
+        StatusKind = ok ? "success" : "danger";
+        return RedirectToPage(new { tab = "requests" });
+    }
+
+    public async Task<IActionResult> OnPostDeclineAsync(string requestId)
+    {
+        var ok = await _friendService.TryDeclineFriendRequest(requestId);
+        StatusMessage = ok ? "Friend request declined." : "Could not decline friend request.";
+        StatusKind = ok ? "success" : "danger";
+        return RedirectToPage(new { tab = "requests" });
+    }
+
+    private async Task LoadAsync()
+    {
+        Friends = await _friendService.GetFriendsList();
+        var requests = await _friendService.GetFriendRequests();
+        IncomingRequests = requests.IncomingRequests;
+        OutgoingRequests = requests.OutgoingRequests;
+    }
+
+    private static string NormaliseTab(string? tab) => tab switch
     {
         "requests" => "requests",
         "add"      => "add",
         _          => "friends"
     };
-
-    public record Friend(
-        string Username,
-        string DisplayName,
-        string Initials,
-        string AvatarColor,
-        bool IsOnline,
-        string LastPlayedGame,
-        DateTime LastSeenUtc);
-
-    public record FriendRequest(
-        string Username,
-        string DisplayName,
-        string Initials,
-        string AvatarColor,
-        DateTime RequestedAtUtc);
 
     public class AddFriendInput
     {

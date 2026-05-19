@@ -7,7 +7,7 @@ using UltimateMonopoly.Helpers;
 
 namespace UltimateMonopoly.Models.DataModels.Boards;
 
-public class CustomBoardSpace : AuditModel
+public class BoardSkinSpace : AuditModel
 {
     [Key]
     [MaxLength(38)]
@@ -17,7 +17,7 @@ public class CustomBoardSpace : AuditModel
     [MaxLength(38)]
     public string BoardId { get; set; }
     [ForeignKey(nameof(BoardId))]
-    public CustomBoard Board { get; set; }
+    public BoardSkin BoardSkin { get; set; }
     
     [Required]
     [MaxLength(128)]

@@ -34,7 +34,7 @@
         <Folder Include="Areas\Social\Pages\" />
         <Folder Include="Areas\Social\Services\" />
         <Folder Include="Data\Migrations\" />
-        <Folder Include="Models\ViewModels\" />
+        <Folder Include="Pages\Boards\" />
     </ItemGroup>
 
 </Project>

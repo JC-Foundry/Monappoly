@@ -55,6 +55,28 @@ $theme-gradients: (
   "light":     linear-gradient(135deg, $light,     $light-dark),
 );
 
+// Monopoly property-set colours. Keys mirror the PropertyColour enum
+// (kebab-case for multi-word values, e.g. DarkBlue -> dark-blue).
+$prop-brown:     #4a3221;
+$prop-blue:      #248de3;
+$prop-pink:      #e42fed;
+$prop-orange:    #e0850d;
+$prop-red:       #d62929;
+$prop-yellow:    #ebd513;
+$prop-green:     #035221;
+$prop-dark-blue: #0b034a;
+
+$prop-colours: (
+  "brown":     $prop-brown,
+  "blue":      $prop-blue,
+  "pink":      $prop-pink,
+  "orange":    $prop-orange,
+  "red":       $prop-red,
+  "yellow":    $prop-yellow,
+  "green":     $prop-green,
+  "dark-blue": $prop-dark-blue,
+);
+
 // Dark mode body overrides
 $body-bg:                 #212121;
 $body-color:              #e0e0e0;
@@ -500,4 +522,21 @@ $hero-box-shadow-hover: 0 8px 24px rgba($black, 0.7), 0 2px 8px rgba($black, 0.5
       transform: rotate(-45deg);
     }
   }
+}
+
+// ------------------------------------------------------------------
+// Monopoly property colours
+// Exposes --prop-{name} custom properties and .bg-/.text-/.border-prop-{name}
+// utility classes for each PropertyColour enum value.
+// ------------------------------------------------------------------
+:root {
+  @each $name, $value in $prop-colours {
+    --prop-#{$name}: #{$value};
+  }
+}
+
+@each $name, $value in $prop-colours {
+  .bg-prop-#{$name}     { background-color: var(--prop-#{$name}) !important; }
+  .text-prop-#{$name}   { color:            var(--prop-#{$name}) !important; }
+  .border-prop-#{$name} { border-color:     var(--prop-#{$name}) !important; }
 }

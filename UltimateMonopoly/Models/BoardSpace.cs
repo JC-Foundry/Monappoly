@@ -42,13 +42,13 @@ public class BoardSpace
             Tax = import.Tax;
     }
 
-    public BoardSpace(CustomBoardSpace customSpace, BoardSpace defaultSpace)
+    public BoardSpace(BoardSkinSpace skinSpace, BoardSpace defaultSpace)
     {
-        Name = customSpace.Name;
+        Name = skinSpace.Name;
         //These are already validated in the CustomBoardSpace private setter
-        Index = customSpace.Index;
-        SpaceType = customSpace.SpaceType;
-        PropertyColour = customSpace.PropertyColour;
+        Index = skinSpace.Index;
+        SpaceType = skinSpace.SpaceType;
+        PropertyColour = skinSpace.PropertyColour;
         
         PurchaseCost = defaultSpace.PurchaseCost;
         Rents = defaultSpace.Rents;

@@ -25,8 +25,8 @@ public class AppDbContext : IdentityDataDbContext<AppUser, AppRole>,
     public AppDbContext(DbContextOptions<AppDbContext> options, IUserInfo userInfo)
         : base(options, userInfo) { }
 
-    public DbSet<CustomBoard> CustomBoards { get; set; }
-    public DbSet<CustomBoardSpace> CustomBoardSpaces { get; set; }
+    public DbSet<BoardSkin> BoardSkins { get; set; }
+    public DbSet<BoardSkinSpace> BoardSkinSpaces { get; set; }
     
     // Social
     public DbSet<Friend> Friends { get; set; }

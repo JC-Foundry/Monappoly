@@ -68,7 +68,7 @@ public class BoardImportService
     public async Task<List<Board>> GetCustomBoards(Board defaultBoard, string? userId = null)
     {
         userId ??= _userInfo.UserId;
-        var customBoards = await _repos.GetRepository<CustomBoard>()
+        var customBoards = await _repos.GetRepository<BoardSkin>()
             .AsQueryable()
             .Include(b => b.Spaces)
             .Where(b => b.UserId == userId && !b.IsDeleted)
@@ -80,7 +80,7 @@ public class BoardImportService
                 select customSpace == null
                     ? defaultSpace
                     : new BoardSpace(customSpace, defaultSpace)).ToList()
-            select new Board(customBoard.Name, spaces)).ToList();
+            select new Board(customBoard.Name, spaces, customBoard.Id)).ToList();
         
         return boards.Any(b => b.Spaces.Count != IndexHelper.BoardSize) 
             ? throw new InvalidOperationException($"All custom boards must have {IndexHelper.BoardSize} spaces") 

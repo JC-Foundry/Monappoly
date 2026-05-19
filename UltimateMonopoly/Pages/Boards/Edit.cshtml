@@ -1,0 +1,213 @@
+@page "{id?}"
+@model UltimateMonopoly.Pages.Boards.EditModel
+@{
+    ViewData["Title"] = Model.Id is null ? "New Board Skin" : "Edit Board Skin";
+}
+
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">@ViewData["Title"]</h1>
+        <p class="text-body-secondary mb-0">Rename board spaces to create a custom skin.</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page="./Index">Back to Boards</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-@(Model.StatusKind ?? "info") alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form method="post">
+    @* ---------- Details card ---------- *@
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Details</h5>
+
+            <div class="mb-3">
+                <label for="skin-name" class="form-label">Name</label>
+                <input type="text" id="skin-name" name="Name" class="form-control" maxlength="128"
+                       value="@Model.Skin?.Name" />
+            </div>
+
+            <div class="mb-0">
+                <label for="skin-description" class="form-label">Description <span class="text-body-secondary small">(optional)</span></label>
+                <textarea id="skin-description" name="Description" class="form-control" rows="3" maxlength="10240">@Model.Skin?.Description</textarea>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- Spaces card with accordion ---------- *@
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Spaces</h5>
+
+            <div class="accordion" id="spacesAccordion">
+                @foreach (var sec in Model.Sections)
+                {
+                    var collapseId = $"section-{sec.Key}";
+                    var customCount = sec.Spaces.Count(s => s.IsCustomised);
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#@collapseId"
+                                    aria-expanded="false" aria-controls="@collapseId">
+                                @if (sec.BannerClass is not null)
+                                {
+                                    <span class="d-inline-block rounded me-2 @sec.BannerClass"
+                                          style="width: 1rem; height: 1rem;"></span>
+                                }
+                                <span>@sec.Title</span>
+                                <span class="badge text-bg-secondary ms-2">@sec.Spaces.Count</span>
+                                @if (customCount > 0)
+                                {
+                                    <span class="badge text-bg-primary ms-1">@customCount custom</span>
+                                }
+                            </button>
+                        </h2>
+                        <div id="@collapseId" class="accordion-collapse collapse" data-bs-parent="#spacesAccordion">
+                            <div class="accordion-body">
+                                @if (sec.Spaces.Count == 0)
+                                {
+                                    <p class="text-body-secondary mb-0">No spaces in this section.</p>
+                                }
+                                else
+                                {
+                                    <div class="d-flex flex-wrap gap-3">
+                                        @foreach (var card in sec.Spaces)
+                                        {
+                                            var isSquare = sec.Shape == UltimateMonopoly.Pages.Boards.EditModel.SpaceShape.Square;
+                                            var cardSize = isSquare
+                                                ? "width: 9rem; min-height: 9rem;"
+                                                : "width: 9rem; min-height: 12rem;";
+
+                                            <div class="d-flex flex-column rounded border bg-body-tertiary overflow-hidden @(card.IsCustomised ? "border-primary" : "")"
+                                                 style="@cardSize">
+                                                @if (sec.BannerClass is not null)
+                                                {
+                                                    <div class="@sec.BannerClass flex-shrink-0" style="height: 2.5rem;"></div>
+                                                }
+                                                <div class="flex-grow-1 d-flex flex-column p-2">
+                                                    <div class="my-auto text-center">
+                                                        <div class="small fw-semibold text-break">@card.DisplayName</div>
+                                                        @if (card.IsCustomised)
+                                                        {
+                                                            <div class="small text-body-secondary text-break">@card.DefaultName</div>
+                                                        }
+                                                    </div>
+                                                    <div class="d-grid gap-1 pt-2">
+                                                        @if (card.IsCustomised)
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                                    data-bs-toggle="modal" data-bs-target="#spaceEditModal"
+                                                                    data-space-index="@card.Index"
+                                                                    data-space-default-name="@card.DefaultName"
+                                                                    data-space-custom-id="@card.Custom!.Id"
+                                                                    data-space-current-name="@card.Custom.Name">
+                                                                Edit
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                                    data-bs-toggle="modal" data-bs-target="#spaceDeleteModal"
+                                                                    data-space-custom-id="@card.Custom.Id"
+                                                                    data-space-default-name="@card.DefaultName"
+                                                                    data-space-current-name="@card.Custom.Name">
+                                                                Delete
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                                    data-bs-toggle="modal" data-bs-target="#spaceEditModal"
+                                                                    data-space-index="@card.Index"
+                                                                    data-space-default-name="@card.DefaultName">
+                                                                Create custom
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ---------- Save / cancel ---------- *@
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a class="btn btn-outline-secondary" asp-page="./Index">Cancel</a>
+    </div>
+</form>
+
+@* ---------- Space create/edit modal ---------- *@
+<div class="modal fade" id="spaceEditModal" tabindex="-1" aria-labelledby="spaceEditModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="SaveSpace" asp-route-id="@Model.Id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="spaceEditModalTitle" data-modal-title>Customise space</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Index"   data-modal-index />
+                    <input type="hidden" name="SpaceId" data-modal-space-id />
+
+                    <div class="mb-3">
+                        <div class="small text-body-secondary">Default name</div>
+                        <div class="fw-semibold" data-modal-default-name></div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label for="space-name-input" class="form-label">Custom name</label>
+                        <input type="text" id="space-name-input" name="Name" class="form-control"
+                               maxlength="128" required autocomplete="off" data-modal-name-input />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* ---------- Space delete confirm modal ---------- *@
+<div class="modal fade" id="spaceDeleteModal" tabindex="-1" aria-labelledby="spaceDeleteModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="DeleteSpace" asp-route-id="@Model.Id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="spaceDeleteModalTitle">Remove customisation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="SpaceId" data-modal-space-id />
+
+                    <p class="mb-0">
+                        Remove customisation
+                        "<strong data-modal-current-name></strong>"
+                        and revert this space back to
+                        "<strong data-modal-default-name></strong>"?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/scripts/boards-edit.js" asp-append-version="true"></script>
+}

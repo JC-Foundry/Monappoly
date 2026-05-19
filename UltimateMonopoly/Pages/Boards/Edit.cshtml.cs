@@ -1,0 +1,138 @@
+using JC.Web.UI.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using UltimateMonopoly.Enums;
+using UltimateMonopoly.Helpers;
+using UltimateMonopoly.Models;
+using UltimateMonopoly.Models.ViewModels.BoardSkins;
+using UltimateMonopoly.Services.BoardSkins;
+
+namespace UltimateMonopoly.Pages.Boards;
+
+[Authorize]
+public class EditModel : PageModel
+{
+    private readonly BoardSkinService _boardSkins;
+
+    public EditModel(BoardSkinService boardSkins)
+    {
+        _boardSkins = boardSkins;
+    }
+
+    public string? Id { get; private set; }
+    public BoardSkinViewModel? Skin { get; private set; }
+    public List<SpaceSection> Sections { get; private set; } = [];
+
+    [TempData] public string? StatusMessage { get; set; }
+    [TempData] public string? StatusKind { get; set; }
+
+    public async Task<IActionResult> OnGetAsync(string? id)
+    {
+        Id = id;
+
+        if (!string.IsNullOrWhiteSpace(id))
+        {
+            Skin = await _boardSkins.GetBoardSkin(id);
+            if (Skin is null) return NotFound();
+        }
+
+        var board = await _boardSkins.GetBoard(id)
+            ?? throw new InvalidOperationException("Default board not available");
+
+        var customs = (Skin?.Spaces ?? [])
+            .ToDictionary(s => s.Index, s => s);
+
+        Sections = BuildSections(board, customs);
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostAsync(string? id, string? Name, string? Description)
+    {
+        var modelState = new ModelStateWrapper(ModelState, ignorePrefix: true);
+        var result = await _boardSkins.TrySaveSkin(id, Name, Description, modelState);
+
+        if (!result.Success)
+        {
+            StatusMessage = FirstError() ?? "Could not save board skin.";
+            StatusKind = "danger";
+            return RedirectToPage(new { id });
+        }
+
+        StatusMessage = string.IsNullOrWhiteSpace(id) ? "Board skin created." : "Board skin updated.";
+        StatusKind = "success";
+        return RedirectToPage(new { id = result.Id });
+    }
+
+    public async Task<IActionResult> OnPostSaveSpaceAsync(string? id, ushort Index, string? SpaceId, string? Name)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            StatusMessage = "Save the board skin before customising spaces.";
+            StatusKind = "danger";
+            return RedirectToPage(new { id });
+        }
+
+        var modelState = new ModelStateWrapper(ModelState, ignorePrefix: true);
+        var ok = await _boardSkins.TrySaveSpace(id, SpaceId, Index, Name, modelState);
+
+        StatusMessage = ok
+            ? (string.IsNullOrWhiteSpace(SpaceId) ? "Custom space created." : "Custom space updated.")
+            : (FirstError() ?? "Could not save the space.");
+        StatusKind = ok ? "success" : "danger";
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostDeleteSpaceAsync(string? id, string? SpaceId)
+    {
+        if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(SpaceId))
+        {
+            StatusMessage = "Missing skin or space reference.";
+            StatusKind = "danger";
+            return RedirectToPage(new { id });
+        }
+
+        var ok = await _boardSkins.TryDeleteSpace(id, SpaceId);
+        StatusMessage = ok ? "Customisation removed." : "Could not remove customisation.";
+        StatusKind = ok ? "success" : "danger";
+        return RedirectToPage(new { id });
+    }
+
+    private string? FirstError() =>
+        ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage;
+
+    private static List<SpaceSection> BuildSections(Board board, IReadOnlyDictionary<ushort, BoardSkinSpaceViewModel> customs)
+    {
+        SpaceCard ToCard(BoardSpace s) =>
+            new(s.Index, s.Name, customs.GetValueOrDefault(s.Index));
+
+        List<SpaceCard> Filter(Func<BoardSpace, bool> pred) =>
+            board.Spaces.Where(pred).OrderBy(s => s.Index).Select(ToCard).ToList();
+
+        return
+        [
+            new("brown",     "Brown",            "bg-prop-brown",     SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Brown)),
+            new("blue",      "Blue",             "bg-prop-blue",      SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Blue)),
+            new("pink",      "Pink",             "bg-prop-pink",      SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Pink)),
+            new("orange",    "Orange",           "bg-prop-orange",    SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Orange)),
+            new("red",       "Red",              "bg-prop-red",       SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Red)),
+            new("yellow",    "Yellow",           "bg-prop-yellow",    SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Yellow)),
+            new("green",     "Green",            "bg-prop-green",     SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Green)),
+            new("dark-blue", "Dark Blue",        "bg-prop-dark-blue", SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.DarkBlue)),
+            new("stations",  "Stations",         "bg-dark",           SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Station)),
+            new("utilities", "Utilities",        "bg-secondary",      SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Utility)),
+            new("corners",   "Corners and Jail", null,                SpaceShape.Square, Filter(s => s.Index.IsCorner())),
+            new("tax",       "Tax",              null,                SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Tax)),
+        ];
+    }
+
+    public enum SpaceShape { Rect, Square }
+
+    public record SpaceSection(string Key, string Title, string? BannerClass, SpaceShape Shape, List<SpaceCard> Spaces);
+
+    public record SpaceCard(ushort Index, string DefaultName, BoardSkinSpaceViewModel? Custom)
+    {
+        public string DisplayName => Custom?.Name ?? DefaultName;
+        public bool IsCustomised => Custom is not null;
+    }
+}

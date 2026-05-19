@@ -7,6 +7,7 @@ using UltimateMonopoly.Areas.Social.Services;
 using UltimateMonopoly.Models.DataModels.Boards;
 using UltimateMonopoly.Models.DataModels.Social;
 using UltimateMonopoly.Services;
+using UltimateMonopoly.Services.BoardSkins;
 using UltimateMonopoly.Services.GameConfig;
 using UltimateMonopoly.Services.Imports;
 
@@ -17,8 +18,8 @@ public static class ServiceRegistration
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.RegisterRepositoryContexts(
-            typeof(CustomBoard),
-            typeof(CustomBoardSpace),
+            typeof(BoardSkin),
+            typeof(BoardSkinSpace),
             typeof(Friend),
             typeof(FriendRequest),
             typeof(BlockedUser),
@@ -28,6 +29,7 @@ public static class ServiceRegistration
 
         services.TryAddScoped<BoardImportService>();
         services.TryAddScoped<BoardCacheService>();
+        services.TryAddScoped<BoardSkinService>();
 
         // Social — presence tracking
         services.TryAddSingleton<PresenceService>();

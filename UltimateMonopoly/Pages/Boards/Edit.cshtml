@@ -39,7 +39,9 @@
         </div>
     </div>
 
-    @* ---------- Spaces card with accordion ---------- *@
+    @* ---------- Spaces card with accordion (edit mode only) ---------- *@
+    @if (Model.Id is not null)
+    {
     <div class="card mb-4">
         <div class="card-body">
             <h5 class="card-title mb-3">Spaces</h5>
@@ -84,7 +86,7 @@
                                                 ? "width: 9rem; min-height: 9rem;"
                                                 : "width: 9rem; min-height: 12rem;";
 
-                                            <div class="d-flex flex-column rounded border bg-body-tertiary overflow-hidden @(card.IsCustomised ? "border-primary" : "")"
+                                            <div class="d-flex flex-column rounded border bg-body-secondary overflow-hidden @(card.IsCustomised ? "border-primary" : "")"
                                                  style="@cardSize">
                                                 @if (sec.BannerClass is not null)
                                                 {
@@ -139,14 +141,25 @@
             </div>
         </div>
     </div>
+    }
 
     @* ---------- Save / cancel ---------- *@
     <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Save</button>
+        @if (Model.Id is null)
+        {
+            <button type="submit" class="btn btn-primary">Next</button>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-primary" name="Action" value="save">Save</button>
+            <button type="submit" class="btn btn-outline-primary" name="Action" value="close">Save &amp; Close</button>
+        }
         <a class="btn btn-outline-secondary" asp-page="./Index">Cancel</a>
     </div>
 </form>
 
+@if (Model.Id is not null)
+{
 @* ---------- Space create/edit modal ---------- *@
 <div class="modal fade" id="spaceEditModal" tabindex="-1" aria-labelledby="spaceEditModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -207,6 +220,7 @@
         </div>
     </div>
 </div>
+}
 
 @section Scripts {
     <script src="~/scripts/boards-edit.js" asp-append-version="true"></script>

@@ -27,6 +27,7 @@ public class AppDbContext : IdentityDataDbContext<AppUser, AppRole>,
 
     public DbSet<BoardSkin> BoardSkins { get; set; }
     public DbSet<BoardSkinSpace> BoardSkinSpaces { get; set; }
+    public DbSet<SharedBoardSkin> SharedBoardSkins { get; set; }
     
     // Social
     public DbSet<Friend> Friends { get; set; }

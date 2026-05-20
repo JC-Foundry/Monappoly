@@ -10,13 +10,16 @@ namespace UltimateMonopoly.Pages.Boards;
 public class IndexModel : PageModel
 {
     private readonly BoardSkinService _boardSkins;
+    private readonly BoardSkinShareService _shareService;
 
-    public IndexModel(BoardSkinService boardSkins)
+    public IndexModel(BoardSkinService boardSkins, BoardSkinShareService shareService)
     {
         _boardSkins = boardSkins;
+        _shareService = shareService;
     }
 
     public List<BoardSkinViewModel> Skins { get; private set; } = [];
+    public List<BoardSkinViewModel> SharedSkins { get; private set; } = [];
 
     [TempData] public string? StatusMessage { get; set; }
     [TempData] public string? StatusKind { get; set; }
@@ -24,5 +27,17 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         Skins = await _boardSkins.GetAllBoardSkins();
+        SharedSkins = await _shareService.GetSharedBoardSkins();
+    }
+
+    public async Task<IActionResult> OnPostRemoveShareAsync(string? id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return RedirectToPage();
+
+        var ok = await _shareService.TryRemoveSharedBoardSkin(id);
+        StatusMessage = ok ? "Shared board removed." : "Could not remove shared board.";
+        StatusKind = ok ? "success" : "danger";
+        return RedirectToPage();
     }
 }

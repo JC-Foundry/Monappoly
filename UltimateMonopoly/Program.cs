@@ -80,12 +80,12 @@ builder.Services.AddMessaging<AppDbContext>();
 builder.Services.AddNotifications<AppDbContext>();
 
 // Background Jobs — Hangfire
-builder.Services.AddHangfireSqlServer(builder.Configuration
-    /*, configureSqlStorage: opts =>
-{
-    //TODO Remove:
-    opts.SqlClientFactory = Microsoft.Data.SqlClient.SqlClientFactory.Instance;
-}*/);
+// builder.Services.AddHangfireSqlServer(builder.Configuration
+//     /*, configureSqlStorage: opts =>
+// {
+//     //TODO Remove:
+//     opts.SqlClientFactory = Microsoft.Data.SqlClient.SqlClientFactory.Instance;
+// }*/);
 
 builder.Services.AddServices();
 
@@ -98,11 +98,11 @@ app.UseWebDefaults();
 app.UseGithubWebhooks();
 
 // Hangfire dashboard — SystemAdmin only
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
-{
-    DashboardTitle = "Ultimate Monopoly — Background Jobs",
-    Authorization = [new HangfireDashboardAuthFilter()]
-});
+// app.UseHangfireDashboard("/hangfire", new DashboardOptions
+// {
+//     DashboardTitle = "Ultimate Monopoly — Background Jobs",
+//     Authorization = [new HangfireDashboardAuthFilter()]
+// });
 
 // Auto-migrate
 await app.Services.MigrateDatabaseAsync<AppDbContext>();

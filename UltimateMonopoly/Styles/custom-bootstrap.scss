@@ -56,7 +56,8 @@ $theme-gradients: (
 );
 
 // Monopoly property-set colours. Keys mirror the PropertyColour enum
-// (kebab-case for multi-word values, e.g. DarkBlue -> dark-blue).
+// (kebab-case for multi-word values, e.g. DarkBlue -> dark-blue), plus
+// station and utility which are board-element colours rather than sets.
 $prop-brown:     #4a3221;
 $prop-blue:      #248de3;
 $prop-pink:      #e42fed;
@@ -65,6 +66,8 @@ $prop-red:       #d62929;
 $prop-yellow:    #ebd513;
 $prop-green:     #035221;
 $prop-dark-blue: #0b034a;
+$prop-station:   #111111;
+$prop-utility:   #d1d1d1;
 
 $prop-colours: (
   "brown":     $prop-brown,
@@ -75,6 +78,8 @@ $prop-colours: (
   "yellow":    $prop-yellow,
   "green":     $prop-green,
   "dark-blue": $prop-dark-blue,
+  "station":   $prop-station,
+  "utility":   $prop-utility,
 );
 
 // Dark mode body overrides

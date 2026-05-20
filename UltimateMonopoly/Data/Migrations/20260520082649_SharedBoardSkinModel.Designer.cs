@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UltimateMonopoly.Data;
 
@@ -11,9 +12,11 @@ using UltimateMonopoly.Data;
 namespace UltimateMonopoly.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520082649_SharedBoardSkinModel")]
+    partial class SharedBoardSkinModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1365,33 +1368,6 @@ namespace UltimateMonopoly.Data.Migrations
                         .HasMaxLength(38)
                         .HasColumnType("varchar(38)");
 
-                    b.Property<string>("CreatedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("DeletedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("DeletedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LastModifiedById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("LastModifiedUtc")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("RestoredById")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("RestoredUtc")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("BoardSkinId", "UserId");
 
                     b.ToTable("SharedBoardSkins");
@@ -1773,7 +1749,7 @@ namespace UltimateMonopoly.Data.Migrations
             modelBuilder.Entity("UltimateMonopoly.Models.DataModels.Boards.SharedBoardSkin", b =>
                 {
                     b.HasOne("UltimateMonopoly.Models.DataModels.Boards.BoardSkin", "BoardSkin")
-                        .WithMany("SharedWith")
+                        .WithMany()
                         .HasForeignKey("BoardSkinId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1819,8 +1795,6 @@ namespace UltimateMonopoly.Data.Migrations
 
             modelBuilder.Entity("UltimateMonopoly.Models.DataModels.Boards.BoardSkin", b =>
                 {
-                    b.Navigation("SharedWith");
-
                     b.Navigation("Spaces");
                 });
 #pragma warning restore 612, 618

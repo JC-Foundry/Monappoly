@@ -3,6 +3,7 @@ using JC.Core.Extensions;
 using JC.Core.Models;
 using JC.Core.Services.DataRepositories;
 using JC.Web.UI.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using UltimateMonopoly.Enums;
 using UltimateMonopoly.Models;
@@ -18,16 +19,19 @@ public class BoardSkinService
     private readonly IUserInfo _userInfo;
     private readonly ILogger<BoardSkinService> _logger;
     private readonly BoardCacheService _boardCacheService;
+    private readonly BoardSkinShareService _boardSkinShareService;
 
     public BoardSkinService(IRepositoryManager repos,
         IUserInfo userInfo,
         ILogger<BoardSkinService> logger,
-        BoardCacheService boardCacheService)
+        BoardCacheService boardCacheService,
+        BoardSkinShareService boardSkinShareService)
     {
         _repos = repos;
         _userInfo = userInfo;
         _logger = logger;
         _boardCacheService = boardCacheService;
+        _boardSkinShareService = boardSkinShareService;
     }
 
 
@@ -51,6 +55,15 @@ public class BoardSkinService
             .Where(s => s.SpaceType != BoardSpaceType.Chance && s.SpaceType != BoardSpaceType.ComChest)
             .ToList();
         return new Board(fullBoard.Name, spaces);
+    }
+
+    public async Task<List<SelectListItem>> GetBoardDropdown()
+    {
+        var boards = await GetAllBoardSkins(false);
+        var shared = await _boardSkinShareService.GetSharedBoardSkins(false);
+        
+        boards.AddRange(shared);
+        return DropdownHelper.FromCollection(boards, b => b.Name, b => b.Id);
     }
     
 
@@ -172,12 +185,21 @@ public class BoardSkinService
         else
             spaces = spaces.Where(s => !s.IsDeleted).ToList();
 
+        var shareLinks = await _repos.GetRepository<SharedBoardSkin>()
+            .AsQueryable().FilterDeleted(DeletedQueryType.OnlyActive)
+            .Where(sbs => sbs.BoardSkinId == boardSkin.Id)
+            .ToListAsync();
+        
         await _repos.BeginTransactionAsync();
         try
         {
-            if(spaces.Count > 0)
+            if (spaces.Count > 0)
                 await _repos.GetRepository<BoardSkinSpace>()
                     .SoftDeleteAsync(spaces, saveNow: false);
+
+            if (shareLinks.Count > 0)
+                await _repos.GetRepository<SharedBoardSkin>()
+                    .SoftDeleteAsync(shareLinks, saveNow: false);
             
             await _repos.GetRepository<BoardSkin>()
                 .SoftDeleteAsync(boardSkin, saveNow: false);

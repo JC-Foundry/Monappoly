@@ -1,0 +1,99 @@
+@page "{id?}"
+@model UltimateMonopoly.Pages.Boards.Share
+@{
+    ViewData["Title"] = "Share Board Skin";
+    var availableFriends = Model.Friends.Where(f => !Model.SharedFriendIds.Contains(f.FriendId)).ToList();
+    var sharedFriends = Model.Friends.Where(f => Model.SharedFriendIds.Contains(f.FriendId)).ToList();
+}
+
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Share Board Skin</h1>
+        <p class="text-body-secondary mb-0">
+            Choose which friends can use <strong class="text-body">@Model.Skin?.Name</strong>.
+        </p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page="./Index">Back to Boards</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-@(Model.StatusKind ?? "info") alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form method="post" data-board-share>
+    <div class="d-flex justify-content-end mb-3">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+
+    <div class="row g-3">
+        @* ---------- Not shared with ---------- *@
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold">Not shared with</span>
+                    <span class="badge text-bg-secondary" data-count-available>@availableFriends.Count</span>
+                </div>
+                <div class="card-body d-flex flex-column gap-2" data-share-column="available">
+                    @foreach (var friend in availableFriends)
+                    {
+                        <div class="card board-share-friend" role="button" tabindex="0"
+                             data-friend-card data-friend-id="@friend.FriendId">
+                            <input type="hidden" name="friendIds" value="@friend.FriendId" disabled />
+                            <div class="card-body d-flex align-items-center gap-3 py-2">
+                                <profile-circle user="friend" size="Md" />
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="fw-semibold text-truncate">@friend.DisplayName</div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-success" data-share-action tabindex="-1">Share</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger d-none" data-revoke-action tabindex="-1">Revoke</button>
+                            </div>
+                        </div>
+                    }
+                    <p class="text-body-secondary text-center mb-0 py-3" data-empty
+                       hidden="@(availableFriends.Count > 0)">No friends available.</p>
+                </div>
+            </div>
+        </div>
+
+        @* ---------- Shared with ---------- *@
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold">Shared with</span>
+                    <span class="badge text-bg-success" data-count-shared>@sharedFriends.Count</span>
+                </div>
+                <div class="card-body d-flex flex-column gap-2" data-share-column="shared">
+                    @foreach (var friend in sharedFriends)
+                    {
+                        <div class="card board-share-friend border-success" role="button" tabindex="0"
+                             data-friend-card data-friend-id="@friend.FriendId">
+                            <input type="hidden" name="friendIds" value="@friend.FriendId" />
+                            <div class="card-body d-flex align-items-center gap-3 py-2">
+                                <profile-circle user="friend" size="Md" />
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="fw-semibold text-truncate">@friend.DisplayName</div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-success d-none" data-share-action tabindex="-1">Share</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-revoke-action tabindex="-1">Revoke</button>
+                            </div>
+                        </div>
+                    }
+                    <p class="text-body-secondary text-center mb-0 py-3" data-empty
+                       hidden="@(sharedFriends.Count > 0)">No friends shared yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/scripts/boards-share.js" asp-append-version="true"></script>
+}

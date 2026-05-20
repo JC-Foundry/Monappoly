@@ -65,7 +65,7 @@ public class BoardImportService
             : new Board(_boardName, spaces);
     }
 
-    public async Task<List<Board>> GetCustomBoards(Board defaultBoard, string? userId = null)
+    public async Task<List<Board>> GetBoardSkins(Board defaultBoard, string? userId = null)
     {
         userId ??= _userInfo.UserId;
         var customBoards = await _repos.GetRepository<BoardSkin>()

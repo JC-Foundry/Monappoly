@@ -23,4 +23,5 @@ public class BoardSkin : AuditModel
     public string? Description { get; set; }
     
     public List<BoardSkinSpace> Spaces { get; set; }
+    public List<SharedBoardSkin> SharedWith { get; set; }
 }

@@ -31,23 +31,25 @@ public class EditModel : PageModel
     {
         Id = id;
 
-        if (!string.IsNullOrWhiteSpace(id))
-        {
-            Skin = await _boardSkins.GetBoardSkin(id);
-            if (Skin is null) return NotFound();
-        }
+        // Creating a new skin — only the details card is shown until it has been saved.
+        if (string.IsNullOrWhiteSpace(id))
+            return Page();
 
-        var board = await _boardSkins.GetBoard(id)
+        Skin = await _boardSkins.GetBoardSkin(id);
+        if (Skin is null) return NotFound();
+
+        // Always build sections from the default board so DefaultName is the
+        // default space name. The custom board would substitute custom names.
+        var board = await _boardSkins.GetBoard(null)
             ?? throw new InvalidOperationException("Default board not available");
 
-        var customs = (Skin?.Spaces ?? [])
-            .ToDictionary(s => s.Index, s => s);
+        var customs = Skin.Spaces.ToDictionary(s => s.Index, s => s);
 
         Sections = BuildSections(board, customs);
         return Page();
     }
 
-    public async Task<IActionResult> OnPostAsync(string? id, string? Name, string? Description)
+    public async Task<IActionResult> OnPostAsync(string? id, string? Name, string? Description, string? Action)
     {
         var modelState = new ModelStateWrapper(ModelState, ignorePrefix: true);
         var result = await _boardSkins.TrySaveSkin(id, Name, Description, modelState);
@@ -61,7 +63,10 @@ public class EditModel : PageModel
 
         StatusMessage = string.IsNullOrWhiteSpace(id) ? "Board skin created." : "Board skin updated.";
         StatusKind = "success";
-        return RedirectToPage(new { id = result.Id });
+
+        return string.Equals(Action, "close", StringComparison.OrdinalIgnoreCase)
+            ? RedirectToPage("./Index")
+            : RedirectToPage(new { id = result.Id });
     }
 
     public async Task<IActionResult> OnPostSaveSpaceAsync(string? id, ushort Index, string? SpaceId, string? Name)
@@ -119,8 +124,8 @@ public class EditModel : PageModel
             new("yellow",    "Yellow",           "bg-prop-yellow",    SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Yellow)),
             new("green",     "Green",            "bg-prop-green",     SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.Green)),
             new("dark-blue", "Dark Blue",        "bg-prop-dark-blue", SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertyColour.DarkBlue)),
-            new("stations",  "Stations",         "bg-dark",           SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Station)),
-            new("utilities", "Utilities",        "bg-secondary",      SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Utility)),
+            new("stations",  "Stations",         "bg-prop-station",   SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Station)),
+            new("utilities", "Utilities",        "bg-prop-utility",   SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Utility)),
             new("corners",   "Corners and Jail", null,                SpaceShape.Square, Filter(s => s.Index.IsCorner())),
             new("tax",       "Tax",              null,                SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Tax)),
         ];

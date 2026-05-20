@@ -20,6 +20,7 @@ public static class ServiceRegistration
         services.RegisterRepositoryContexts(
             typeof(BoardSkin),
             typeof(BoardSkinSpace),
+            typeof(SharedBoardSkin),
             typeof(Friend),
             typeof(FriendRequest),
             typeof(BlockedUser),
@@ -30,13 +31,14 @@ public static class ServiceRegistration
         services.TryAddScoped<BoardImportService>();
         services.TryAddScoped<BoardCacheService>();
         services.TryAddScoped<BoardSkinService>();
+        services.TryAddScoped<BoardSkinShareService>();
 
         // Social — presence tracking
         services.TryAddSingleton<PresenceService>();
-        services.AddHangfireJob<PresenceFlushJob>(opts =>
-        {
-            opts.Cron = "*/5 * * * *";
-        });
+        // services.AddHangfireJob<PresenceFlushJob>(opts =>
+        // {
+        //     opts.Cron = "*/5 * * * *";
+        // });
 
         services.TryAddScoped<UrlLinkService>();
 

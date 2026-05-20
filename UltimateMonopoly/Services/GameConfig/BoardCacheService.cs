@@ -47,7 +47,7 @@ public class BoardCacheService
         var customBoards = await _memoryCache.GetOrCreateAsync(GetKey(false, userId), entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CustomBoardExpiration;
-            return _boardImportService.GetCustomBoards(defaultBoard, userId);
+            return _boardImportService.GetBoardSkins(defaultBoard, userId);
         }) ?? throw new InvalidOperationException("Failed to get custom boards");
 
         return includeDefault 

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using UltimateMonopoly.Areas.Social.Services;
+using UltimateMonopoly.Services.Friends;
 
-namespace UltimateMonopoly.Areas.Social.Hubs;
+namespace UltimateMonopoly.Hubs;
 
 [Authorize]
 public class PresenceHub : Hub

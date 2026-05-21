@@ -1,5 +1,5 @@
 @page "{id}"
-@model UltimateMonopoly.Pages.Game.SetupModel
+@model UltimateMonopoly.Areas.Game.Pages.SetupModel
 @{
     ViewData["Title"] = "Game Setup";
 }
@@ -26,7 +26,7 @@
 
 @if (!string.IsNullOrEmpty(Model.StatusMessage))
 {
-    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1090;" data-setup-alert>
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1090;" data-floating-alert>
         <alert type="@Model.StatusAlertType" message="@Model.StatusMessage" />
     </div>
 }
@@ -137,14 +137,26 @@
                 <div class="modal-body">
                     <p class="text-body-secondary small mb-3" data-dice-player></p>
                     <input type="hidden" name="targetUserId" data-dice-target />
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <label class="form-label">Die 1</label>
-                            <input type="number" class="form-control" name="dice1" min="1" max="6" required data-dice1 />
+                    <div class="mb-3">
+                        <label class="form-label">Die 1</label>
+                        <div class="btn-group d-flex" role="group" aria-label="Die 1">
+                            @for (ushort i = 1; i <= 6; i++)
+                            {
+                                <input type="radio" class="btn-check" name="dice1" id="modal-d1-@i" value="@i"
+                                       autocomplete="off" required />
+                                <label class="btn btn-outline-primary" for="modal-d1-@i">@i</label>
+                            }
                         </div>
-                        <div class="col-6">
-                            <label class="form-label">Die 2</label>
-                            <input type="number" class="form-control" name="dice2" min="1" max="6" required data-dice2 />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Die 2</label>
+                        <div class="btn-group d-flex" role="group" aria-label="Die 2">
+                            @for (ushort i = 1; i <= 6; i++)
+                            {
+                                <input type="radio" class="btn-check" name="dice2" id="modal-d2-@i" value="@i"
+                                       autocomplete="off" required />
+                                <label class="btn btn-outline-primary" for="modal-d2-@i">@i</label>
+                            }
                         </div>
                     </div>
                 </div>

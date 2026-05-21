@@ -4,9 +4,9 @@ using JC.Web.UI.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using UltimateMonopoly.Areas.Social.Services;
 using UltimateMonopoly.Models.DataModels.Social;
 using UltimateMonopoly.Models.ViewModels.Social;
+using UltimateMonopoly.Services.Friends;
 
 namespace UltimateMonopoly.Areas.Social.Pages.Friends;
 

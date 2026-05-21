@@ -10,12 +10,10 @@ using JC.SqlServer.Hangfire;
 using JC.Web.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using JC.Web.Security.Models;
-using Microsoft.AspNetCore.Http;
-using UltimateMonopoly.Areas.Identity.Services;
-using UltimateMonopoly.Areas.Social.Hubs;
-using UltimateMonopoly.Authorization;
 using UltimateMonopoly.Data;
 using UltimateMonopoly.Extensions;
+using UltimateMonopoly.Hubs;
+using UltimateMonopoly.Services;
 using UltimateMonopoly.Services.GameConfig;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -117,7 +115,7 @@ app.MapGet("/account", () => Results.Redirect("/Identity/Account/Manage"));
 app.MapGet("/profile", () => Results.Redirect("/Identity/Profile"));
 app.MapGet("/social", () => Results.Redirect("/Social/Friends"));
 app.MapGet("/friends", () => Results.Redirect("/Social/Friends"));
-app.MapGet("/join", () => Results.Redirect("/Game/Join"));
+app.MapGet("/join", () => Results.Redirect("/Games/Join"));
 
 app.MapRazorPages();
 app.MapControllers();

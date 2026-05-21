@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using UltimateMonopoly.Areas.Identity.Services;
 using UltimateMonopoly.Models.ViewModels.Social;
+using UltimateMonopoly.Services;
 
 namespace UltimateMonopoly.Areas.Social.Pages.Friends;
 

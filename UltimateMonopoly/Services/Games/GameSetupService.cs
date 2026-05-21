@@ -4,13 +4,13 @@ using JC.Core.Models;
 using JC.Core.Services.DataRepositories;
 using JC.Web.UI.Helpers;
 using Microsoft.EntityFrameworkCore;
-using UltimateMonopoly.Areas.Social.Services;
 using UltimateMonopoly.Enums.Games;
 using UltimateMonopoly.Helpers;
 using UltimateMonopoly.Helpers.RuleSet;
 using UltimateMonopoly.Models;
 using UltimateMonopoly.Models.DataModels.Games;
 using UltimateMonopoly.Services.BoardSkins;
+using UltimateMonopoly.Services.Friends;
 
 namespace UltimateMonopoly.Services.Games;
 

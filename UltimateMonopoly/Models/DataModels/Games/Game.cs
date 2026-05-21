@@ -43,7 +43,9 @@ public class Game : AuditModel
     public GameOutcome Outcome { get; private set; }
     public GameRoundingRule RoundingRule { get; private set; }
     
-    public List<GamePlayer> Players { get; set; } 
+    public ICollection<GamePlayer> Players { get; set; } 
+    public ICollection<GameTurn> Turns { get; set; }
+    public ICollection<GameSnapshot> Snapshots { get; set; }
     
 
     //EF Core constructor

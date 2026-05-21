@@ -17,16 +17,21 @@ public class UserProfileViewModel
     public uint NumberOfDraws { get; }
     public uint NumberOfGamesPlayed => NumberOfWins + NumberOfLosses + NumberOfDraws;
 
-    public UserProfileViewModel(AppUser user, string? imgUrl)
+    public UserProfileViewModel(string userId, string? username, string? displayName,
+        string? avatarColour, string? avatarImageUrl)
     {
-        UserId = user.Id;
-        Username = user.UserName ?? "Unknown";
-        DisplayName = string.IsNullOrWhiteSpace(user.DisplayName) ? Username : user.DisplayName;
+        UserId = userId;
+        Username = string.IsNullOrWhiteSpace(username) ? "Unknown" : username;
+        DisplayName = string.IsNullOrWhiteSpace(displayName) ? Username : displayName;
         Initial = DisplayName.Length > 0 ? $"{DisplayName[0]}".ToUpperInvariant() : "U";
 
-        AvatarColour = user.AvatarColour;
-        AvatarImageUrl = imgUrl;
-        
+        AvatarColour = avatarColour;
+        AvatarImageUrl = avatarImageUrl;
+    }
+
+    public UserProfileViewModel(AppUser user, string? imgUrl)
+        : this(user.Id, user.UserName, user.DisplayName, user.AvatarColour, imgUrl)
+    {
         NumberOfWins = user.NumberOfWins;
         NumberOfLosses = user.NumberOfLosses;
         NumberOfDraws = user.NumberOfDraws;

@@ -1,0 +1,9 @@
+@using UltimateMonopoly.Helpers.RuleSet
+<a class="navbar-brand" asp-area="" asp-page="/Index">
+    @{
+        const string name = RuleDictionary.GameName;
+        var start = name[..name.IndexOf(':')];
+        var end = name[(name.IndexOf(':') + 1)..];
+    }
+    <span class="text-primary">@start:</span> <span class="text-light">@end</span>
+</a>

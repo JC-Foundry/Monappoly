@@ -1,0 +1,32 @@
+@model List<UltimateMonopoly.Models.ViewModels.Games.GameViewModel>
+@{
+    // Tab labels match GameViewModel.State (GameState.ToDisplayName()).
+    var tabs = new[] { "Setup", "In Play", "Finished", "Cancelled" };
+}
+
+<ul class="nav nav-tabs" role="tablist">
+    @for (var i = 0; i < tabs.Length; i++)
+    {
+        var slug = tabs[i].Replace(" ", "-").ToLowerInvariant();
+        var count = Model.Count(g => g.State == tabs[i]);
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(i == 0 ? "active" : "")" type="button" role="tab"
+                    id="tab-@slug" data-bs-toggle="tab" data-bs-target="#pane-@slug"
+                    aria-controls="pane-@slug" aria-selected="@(i == 0 ? "true" : "false")">
+                @tabs[i]
+                <span class="badge text-bg-secondary ms-1">@count</span>
+            </button>
+        </li>
+    }
+</ul>
+<div class="tab-content pt-3">
+    @for (var i = 0; i < tabs.Length; i++)
+    {
+        var slug = tabs[i].Replace(" ", "-").ToLowerInvariant();
+        var games = Model.Where(g => g.State == tabs[i]).ToList();
+        <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="pane-@slug" role="tabpanel"
+             aria-labelledby="tab-@slug">
+            <partial name="_GameList" model="games" />
+        </div>
+    }
+</div>

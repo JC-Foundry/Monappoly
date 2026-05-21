@@ -7,7 +7,7 @@ using UltimateMonopoly.Enums.Games;
 using UltimateMonopoly.Services.BoardSkins;
 using UltimateMonopoly.Services.Games;
 
-namespace UltimateMonopoly.Pages.Game;
+namespace UltimateMonopoly.Pages.Games;
 
 [Authorize]
 public class IndexModel : PageModel
@@ -36,7 +36,7 @@ public class IndexModel : PageModel
 
         var result = await _gameSetup.TryCreateNewGame(modelState, Name, boardSkinId, RoundingRule);
         if (result.Result)
-            return RedirectToPage("./Setup", new { id = result.GameId });
+            return RedirectToPage("/Setup", new { area = "Game", id = result.GameId });
 
         if (ModelState.IsValid)
             ModelState.AddModelError(string.Empty, "Could not create the game. Please try again.");

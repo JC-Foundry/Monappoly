@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using UltimateMonopoly.Data;
 
-namespace UltimateMonopoly.Areas.Social.Services;
+namespace UltimateMonopoly.Services.Friends;
 
 public class PresenceService
 {

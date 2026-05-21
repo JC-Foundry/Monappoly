@@ -10,17 +10,15 @@
             diceModal.querySelector('[data-dice-target]').value = btn.dataset.userId || '';
             diceModal.querySelector('[data-dice-player]').textContent =
                 `Dice numbers for ${btn.dataset.name || 'this player'}.`;
-            diceModal.querySelector('[data-dice1]').value = btn.dataset.dice1 || '';
-            diceModal.querySelector('[data-dice2]').value = btn.dataset.dice2 || '';
+            selectDie('dice1', btn.dataset.dice1);
+            selectDie('dice2', btn.dataset.dice2);
         });
-    }
 
-    // ---- Floating status alert: auto-dismiss after 5s ----
-    const statusAlert = document.querySelector('[data-setup-alert] .alert');
-    if (statusAlert) {
-        setTimeout(() => {
-            bootstrap.Alert.getOrCreateInstance(statusAlert).close();
-        }, 5000);
+        function selectDie(name, value) {
+            diceModal.querySelectorAll(`input[name="${name}"]`).forEach((radio) => {
+                radio.checked = radio.value === value;
+            });
+        }
     }
 
     // ---- Drag reorder (host only) ----

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using UltimateMonopoly.Services.Games;
 
-namespace UltimateMonopoly.Pages.Game;
+namespace UltimateMonopoly.Pages.Games;
 
 public class Join : PageModel
 {
@@ -32,7 +32,7 @@ public class Join : PageModel
 
         var joinResult = await _gameSetupService.TryJoinGame(id, _userInfo.UserId);
         if (joinResult.Result)
-            return RedirectToPage("/Game/Waiting", new { id });
+            return RedirectToPage("/Player/Lobby", new { area = "Game", gameId = id, userId = _userInfo.UserId });
 
         ErrorMessage = joinResult.Message ?? "Unable to join this game.";
         return Page();
@@ -51,7 +51,7 @@ public class Join : PageModel
 
         var joinResult = await _gameSetupService.TryJonGameFromCode(code, _userInfo.UserId);
         if (joinResult.Result)
-            return RedirectToPage("/Game/Waiting", new { id = joinResult.GameId });
+            return RedirectToPage("/Player/Lobby", new { area = "Game", gameId = joinResult.GameId, userId = _userInfo.UserId });
 
         ErrorMessage = joinResult.Message ?? "Unable to join this game.";
         return Page();

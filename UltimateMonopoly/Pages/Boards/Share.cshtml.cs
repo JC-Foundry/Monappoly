@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using UltimateMonopoly.Areas.Social.Services;
 using UltimateMonopoly.Models.ViewModels.BoardSkins;
 using UltimateMonopoly.Models.ViewModels.Social;
 using UltimateMonopoly.Services.BoardSkins;
+using UltimateMonopoly.Services.Friends;
 
 namespace UltimateMonopoly.Pages.Boards;
 

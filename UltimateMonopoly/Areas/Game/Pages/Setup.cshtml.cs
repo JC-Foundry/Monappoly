@@ -5,12 +5,11 @@ using JC.Web.UI.HTML;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using UltimateMonopoly.Areas.Identity.Services;
 using UltimateMonopoly.Models.ViewModels.Social;
 using UltimateMonopoly.Services;
 using UltimateMonopoly.Services.Games;
 
-namespace UltimateMonopoly.Pages.Game;
+namespace UltimateMonopoly.Areas.Game.Pages;
 
 [Authorize]
 public class SetupModel : PageModel

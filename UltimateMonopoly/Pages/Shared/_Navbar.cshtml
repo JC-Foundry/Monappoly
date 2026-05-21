@@ -2,17 +2,15 @@
 @using JC.Communication.Notifications.Services
 @using JC.Core.Extensions
 @using Microsoft.AspNetCore.Identity
-@using UltimateMonopoly.Areas.Identity.Services
 @using UltimateMonopoly.Data
+@using UltimateMonopoly.Services
 @inject SignInManager<AppUser> SignInManager
 @inject NotificationCache NotificationCache
 @inject ProfileService ProfileService
 
 <nav class="navbar navbar-expand-lg navbar-glass mb-4">
     <div class="container-lg">
-        <a class="navbar-brand" asp-area="" asp-page="/Index">
-            <span class="text-primary">Ultimate</span> Monopoly
-        </a>
+        <partial name="_Branding"/>
 
         <button class="navbar-toggler nav-toggler-morph collapsed" type="button"
                 data-bs-toggle="collapse" data-bs-target="#mainNav"
@@ -23,14 +21,15 @@
         <div class="collapse navbar-collapse" id="mainNav">
             @* TODO: replace href="#" once these pages exist *@
             <ul class="navbar-nav mx-lg-auto mb-2 mb-lg-0 gap-lg-1">
-                <li class="nav-item"><a class="btn btn-nav" asp-area="" asp-page="/Game/Index">New Game</a></li>
-
                 <li class="nav-item dropdown">
                     <button class="btn btn-nav dropdown-toggle" type="button"
                             data-bs-toggle="dropdown" aria-expanded="false">Games</button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">Load Game</a></li>
-                        <li><a class="dropdown-item" href="#">Completed Games</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-page="/Games/Index">New Game</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-page="/Games/Join">Join Game</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" asp-area="" asp-page="/Games/MyGames">My Games</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-page="/Games/Joined">Joined Games</a></li>
                     </ul>
                 </li>
 

@@ -1,10 +1,10 @@
 using JC.Core.Models.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using UltimateMonopoly.Areas.Identity.Services;
-using UltimateMonopoly.Areas.Social.Services;
 using UltimateMonopoly.Data;
 using UltimateMonopoly.Models.ViewModels.Social;
+using UltimateMonopoly.Services;
+using UltimateMonopoly.Services.Friends;
 
 namespace UltimateMonopoly.Areas.Identity.Pages.Profile;
 

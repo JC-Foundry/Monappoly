@@ -4,12 +4,10 @@ using JC.Core.Models;
 using JC.Core.Models.Pagination;
 using JC.Core.Services.DataRepositories;
 using Microsoft.EntityFrameworkCore;
-using UltimateMonopoly.Data;
 using UltimateMonopoly.Models.DataModels.Social;
 using UltimateMonopoly.Models.ViewModels.Social;
-using UltimateMonopoly.Services;
 
-namespace UltimateMonopoly.Areas.Social.Services;
+namespace UltimateMonopoly.Services.Friends;
 
 public class BlockAndReportService
 {

@@ -2,7 +2,7 @@ using JC.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using UltimateMonopoly.Data;
 
-namespace UltimateMonopoly.Areas.Social.Services;
+namespace UltimateMonopoly.Services.Friends;
 
 public class PresenceFlushJob : IBackgroundJob
 {

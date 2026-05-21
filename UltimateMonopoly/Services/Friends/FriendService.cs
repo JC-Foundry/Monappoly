@@ -4,15 +4,12 @@ using JC.Core.Enums;
 using JC.Core.Extensions;
 using JC.Core.Models;
 using JC.Core.Services.DataRepositories;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using UltimateMonopoly.Data;
 using UltimateMonopoly.Models;
 using UltimateMonopoly.Models.DataModels.Social;
 using UltimateMonopoly.Models.ViewModels.Social;
-using UltimateMonopoly.Services;
 
-namespace UltimateMonopoly.Areas.Social.Services;
+namespace UltimateMonopoly.Services.Friends;
 
 public class FriendService
 {

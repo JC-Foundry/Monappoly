@@ -1,0 +1,108 @@
+using JC.Core.Enums;
+using JC.Core.Extensions;
+using JC.Core.Models;
+using JC.Core.Services.DataRepositories;
+using Microsoft.EntityFrameworkCore;
+using UltimateMonopoly.Enums.Games;
+using UltimateMonopoly.Models.DataModels.Games;
+using UltimateMonopoly.Models.ViewModels.Games;
+
+namespace UltimateMonopoly.Services.Games;
+
+public class GameListService
+{
+    private readonly IRepositoryManager _repos;
+    private readonly IUserInfo _userInfo;
+
+    public GameListService(IRepositoryManager repos,
+        IUserInfo userInfo)
+    {
+        _repos = repos;
+        _userInfo = userInfo;
+    }
+
+    private IQueryable<Game> QueryGames(bool asNoTracking, bool includePlayers, bool includeBoardSkin, bool includeTurns,
+        bool includeSnapshots, bool joinedGames, GameState? state)
+    {
+        var query = _repos.GetRepository<Game>()
+            .AsQueryable().FilterDeleted(DeletedQueryType.OnlyActive);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        if (includePlayers)
+            query = query.Include(g => g.Players);
+
+        if (includeBoardSkin)
+            query = query.Include(g => g.BoardSkin)
+                .ThenInclude(bs => bs!.Spaces);
+        
+        if (includeTurns)
+            query = query.Include(g => g.Turns);
+        
+        if (includeSnapshots)
+            query = query.Include(g => g.Snapshots);
+        
+        if(state.HasValue)
+            query = query.Where(g => g.State == state);
+        
+        query = joinedGames 
+            ? query.Where(g => g.CreatedById != _userInfo.UserId) 
+            : query.Where(g => g.CreatedById == _userInfo.UserId);
+        
+        return query
+            .Where(g => g.Players.Any(p => p.UserId == _userInfo.UserId))
+            .OrderByDescending(g => g.CreatedUtc);
+    }
+
+    public async Task<List<GameViewModel>> GetAllMyGames(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetMyGames(asNoTracking, includeTurns, includeSnapshots, null);
+
+    public async Task<List<GameViewModel>> GetMySetupGames(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetMyGames(asNoTracking, includeTurns, includeSnapshots, GameState.Setup);
+
+    public async Task<List<GameViewModel>> GetMyActiveGames(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetMyGames(asNoTracking, includeTurns, includeSnapshots, GameState.InPlay);
+    
+    public async Task<List<GameViewModel>> GetMyCompletedGames(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetMyGames(asNoTracking, includeTurns, includeSnapshots, GameState.Finished);
+
+    public async Task<List<GameViewModel>> GetMyCancelledGames(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetMyGames(asNoTracking, includeTurns, includeSnapshots, GameState.Cancelled);
+    
+    private async Task<List<GameViewModel>> GetMyGames(bool asNoTracking, bool includeTurns, bool includeSnapshots, GameState? state)
+        => await QueryGames(asNoTracking, true, true, includeTurns, includeSnapshots, false, state)
+            .Select(g => new GameViewModel(g, _userInfo.UserId))
+            .ToListAsync();
+    
+    
+    public async Task<List<GameViewModel>> GetAllGamesJoined(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetGamesJoined(asNoTracking, includeTurns, includeSnapshots, null);
+
+    public async Task<List<GameViewModel>> GetSetupGamesJoined(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetGamesJoined(asNoTracking, includeTurns, includeSnapshots, GameState.Setup);
+
+    public async Task<List<GameViewModel>> GetActiveGamesJoined(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetGamesJoined(asNoTracking, includeTurns, includeSnapshots, GameState.InPlay);
+    
+    public async Task<List<GameViewModel>> GetCompletedGamesJoined(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetGamesJoined(asNoTracking, includeTurns, includeSnapshots, GameState.Finished);
+
+    public async Task<List<GameViewModel>> GetCancelledGamesJoined(bool asNoTracking = true, bool includeTurns = true,
+        bool includeSnapshots = false)
+        => await GetGamesJoined(asNoTracking, includeTurns, includeSnapshots, GameState.Cancelled);
+    
+    private async Task<List<GameViewModel>> GetGamesJoined(bool asNoTracking, bool includeTurns, bool includeSnapshots, GameState? state)
+        => await QueryGames(asNoTracking, true, true, includeTurns, includeSnapshots, true, state)
+            .Select(g => new GameViewModel(g, _userInfo.UserId))
+            .ToListAsync();
+}

@@ -1,12 +1,10 @@
 using System.Text.Json;
 using JC.Core.Models;
 using JC.Web.Security.Services;
-using Microsoft.EntityFrameworkCore;
 using UltimateMonopoly.Data;
 using UltimateMonopoly.Models.ViewModels.Social;
-using UltimateMonopoly.Services;
 
-namespace UltimateMonopoly.Areas.Identity.Services;
+namespace UltimateMonopoly.Services;
 
 public class ProfileService
 {
@@ -77,6 +75,18 @@ public class ProfileService
         return new UserProfileViewModel(user, imgUrl);
     }
 
+    // Builds the view model from the profile cookie when it belongs to the
+    // requested user; otherwise falls back to the database.
+    public async Task<UserProfileViewModel?> GetProfileViewModelAsync(string userId)
+    {
+        var cached = ReadCookie();
+        if (cached is not null && cached.UserId == userId && cached.Username is not null)
+            return new UserProfileViewModel(cached.UserId, cached.Username, cached.DisplayName,
+                cached.AvatarColour, _urlLinkService.GetImgUrl(cached.AvatarImageName));
+
+        return await GetUserProfileViewModelAsync(userId);
+    }
+
     public async Task<UserProfile> GetAsync()
     {
         var userId = _userInfo.UserId ?? throw new InvalidOperationException("No authenticated user");
@@ -93,7 +103,7 @@ public class ProfileService
             return new UserProfile(null, null);
         
         var profile = new UserProfile(user.AvatarColour, user.AvatarImageName);
-        WriteCookie(userId, profile);
+        WriteCookie(profile);
         return profile;
     }
 
@@ -112,7 +122,7 @@ public class ProfileService
         await _context.SaveChangesAsync();
 
         var newProfile = updated with { AvatarColour = updatedColour };
-        WriteCookie(userId, newProfile);
+        WriteCookie(newProfile);
         return true;
     }
 
@@ -124,9 +134,11 @@ public class ProfileService
         catch { return null; }
     }
 
-    private void WriteCookie(string userId, UserProfile profile)
+    private void WriteCookie(UserProfile profile)
         => _cookies.TryCreateCookie(CookieName, JsonSerializer.Serialize(
-            new CookiePayload(userId, profile.AvatarColour, profile.AvatarImageName)));
+            new CookiePayload(_userInfo.UserId, _userInfo.Username, _userInfo.DisplayName,
+                profile.AvatarColour, profile.AvatarImageName)));
 
-    private record CookiePayload(string UserId, string? AvatarColour, string? AvatarImageName);
+    private record CookiePayload(string UserId, string? Username, string? DisplayName,
+        string? AvatarColour, string? AvatarImageName);
 }

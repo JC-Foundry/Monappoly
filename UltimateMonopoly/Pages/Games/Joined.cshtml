@@ -1,0 +1,12 @@
+@page
+@model UltimateMonopoly.Pages.Games.JoinedModel
+@{
+    ViewData["Title"] = "Joined Games";
+}
+
+<div class="mb-4">
+    <h1 class="mb-1">Joined Games</h1>
+    <p class="text-body-secondary mb-0">Games you're a player in.</p>
+</div>
+
+<partial name="_GameTabs" model="Model.Games" />

@@ -2,6 +2,7 @@ namespace UltimateMonopoly.Helpers.RuleSet;
 
 public static class RuleDictionary
 {
+    public const string GameName = "Monopoly: Property Pandamonium";
     public const ushort MinimumPlayers = 2;
     public const ushort MaximumPlayers = 8;
     

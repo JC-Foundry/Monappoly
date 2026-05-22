@@ -12,7 +12,7 @@ public class BoardSkinSpaceViewModel
     
     public ushort Index { get; }
     public string SpaceType { get; }
-    public string? PropertyColour { get; }
+    public string? PropertySet { get; }
 
     public BoardSkinSpaceViewModel(BoardSkinSpace boardSkinSpace)
     {
@@ -21,6 +21,6 @@ public class BoardSkinSpaceViewModel
         Name = boardSkinSpace.Name;
         Index = boardSkinSpace.Index;
         SpaceType = boardSkinSpace.SpaceType.ToDisplayName();
-        PropertyColour = boardSkinSpace.PropertyColour?.ToDisplayName();
+        PropertySet = boardSkinSpace.PropertySet?.ToDisplayName();
     }
 }

@@ -1,6 +1,6 @@
 using MP.GameEngine.Enums;
 
-namespace UltimateMonopoly.Extensions;
+namespace MP.GameEngine.Extensions;
 
 public static class ImportExtensions
 {

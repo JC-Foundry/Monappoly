@@ -4,10 +4,10 @@ using JC.Core.Models;
 using JC.Core.Services.DataRepositories;
 using Microsoft.EntityFrameworkCore;
 using MP.GameEngine.Helpers;
+using MP.GameEngine.Models.Boards;
+using MP.GameEngine.Models.Imports;
 using Newtonsoft.Json;
-using UltimateMonopoly.Models;
 using UltimateMonopoly.Models.DataModels.Boards;
-using UltimateMonopoly.Models.ImportModels;
 
 namespace UltimateMonopoly.Services.Imports;
 
@@ -81,7 +81,7 @@ public class BoardImportService
                 let customSpace = customBoard.Spaces.FirstOrDefault(s => s.Index == defaultSpace.Index)
                 select customSpace == null
                     ? defaultSpace
-                    : new BoardSpace(customSpace, defaultSpace)).ToList()
+                    : new BoardSpace(new SkinSpaceRecord(customSpace.Name, customSpace.Index, customSpace.SpaceType, customSpace.PropertySet), defaultSpace)).ToList()
             select new Board(customBoard.Name, spaces, customBoard.Id)).ToList();
         
         return boards.Any(b => b.Spaces.Count != IndexHelper.BoardSize) 

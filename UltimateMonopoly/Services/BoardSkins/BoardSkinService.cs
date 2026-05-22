@@ -6,7 +6,7 @@ using JC.Web.UI.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MP.GameEngine.Enums;
-using UltimateMonopoly.Models;
+using MP.GameEngine.Models.Boards;
 using UltimateMonopoly.Models.DataModels.Boards;
 using UltimateMonopoly.Models.ViewModels;
 using UltimateMonopoly.Models.ViewModels.BoardSkins;

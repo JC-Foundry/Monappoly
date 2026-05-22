@@ -18,4 +18,20 @@ public class PropertyModel
     /// Used for owning the street rule.
     /// </summary>
     public bool HasBeenBuiltOn { get; set; }
+
+    public PropertyModel()
+    {
+    }
+
+    public PropertyModel(PropertyModel model)
+    {
+        Name = model.Name;
+        BoardIndex = model.BoardIndex;
+        
+        OwnerPlayerId = model.OwnerPlayerId;
+        State = model.State;
+        RentLevel = model.RentLevel;
+        
+        HasBeenBuiltOn = model.HasBeenBuiltOn;
+    }
 }

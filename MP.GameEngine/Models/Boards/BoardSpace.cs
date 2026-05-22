@@ -1,11 +1,10 @@
 using MP.GameEngine.Enums;
 using MP.GameEngine.Enums.Properties;
+using MP.GameEngine.Extensions;
 using MP.GameEngine.Helpers;
-using UltimateMonopoly.Extensions;
-using UltimateMonopoly.Models.DataModels.Boards;
-using UltimateMonopoly.Models.ImportModels;
+using MP.GameEngine.Models.Imports;
 
-namespace UltimateMonopoly.Models;
+namespace MP.GameEngine.Models.Boards;
 
 public class BoardSpace
 {
@@ -13,7 +12,7 @@ public class BoardSpace
     
     public ushort Index { get; private set; }
     public BoardSpaceType SpaceType { get; private set; }
-    public PropertySet? PropertyColour { get; private set; }
+    public PropertySet? PropertySet { get; private set; }
     
     public ushort? PurchaseCost { get; }
     public bool IsPurchasable => PurchaseCost != null && !Index.IsCorner() && !Index.IsCard() && !Index.IsTax();
@@ -43,13 +42,12 @@ public class BoardSpace
             Tax = import.Tax;
     }
 
-    public BoardSpace(BoardSkinSpace skinSpace, BoardSpace defaultSpace)
+    public BoardSpace(SkinSpaceRecord skinSpace, BoardSpace defaultSpace)
     {
         Name = skinSpace.Name;
-        //These are already validated in the CustomBoardSpace private setter
         Index = skinSpace.Index;
-        SpaceType = skinSpace.SpaceType;
-        PropertyColour = skinSpace.PropertyColour;
+        SpaceType = skinSpace.Type;
+        PropertySet = skinSpace.Set;
         
         PurchaseCost = defaultSpace.PurchaseCost;
         Rents = defaultSpace.Rents;
@@ -58,7 +56,7 @@ public class BoardSpace
     }
 
 
-    public bool SetProperties(BoardSpaceJsonImport import)
+    private bool SetProperties(BoardSpaceJsonImport import)
     {
         if (string.IsNullOrEmpty(import.SpaceType)) return false;
         
@@ -73,7 +71,7 @@ public class BoardSpace
         
         Index = index.Value;
         SpaceType = (BoardSpaceType)spaceType;
-        PropertyColour = colour;
+        PropertySet = colour;
         return true;
     }
 

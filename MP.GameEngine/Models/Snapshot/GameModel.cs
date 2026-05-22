@@ -26,5 +26,21 @@ public class GameModel
     /// Card decks (for each card type) that are not owned by any player
     /// </summary>
     public CardListModel CardDecks { get; set; } = new();
-    
+
+
+    public GameModel()
+    {
+    }
+
+    public GameModel(GameModel model)
+    {
+        Metadata = new GameMetadata(model.Metadata);
+        
+        ReserveRuleActive = model.ReserveRuleActive;
+        FreeParkingAmount = model.FreeParkingAmount;
+        
+        Players = model.Players.Select(p => new PlayerModel(p)).ToList();
+        Properties = model.Properties.Select(p => new PropertyModel(p)).ToList();
+        CardDecks = new CardListModel(model.CardDecks);
+    }
 }

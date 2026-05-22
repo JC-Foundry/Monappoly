@@ -9,4 +9,14 @@ public class LoanModel
     
     [JsonIgnore]
     public bool IsOutstanding => PaidBack < Amount;
+
+    public LoanModel()
+    {
+    }
+
+    public LoanModel(LoanModel model)
+    {
+        Amount = model.Amount;
+        PaidBack = model.PaidBack;
+    }
 }

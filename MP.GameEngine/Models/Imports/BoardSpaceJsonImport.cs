@@ -1,4 +1,4 @@
-namespace UltimateMonopoly.Models.ImportModels;
+namespace MP.GameEngine.Models.Imports;
 
 public class BoardSpaceJsonImport
 {

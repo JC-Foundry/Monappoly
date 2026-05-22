@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using MP.GameEngine.Enums;
 using MP.GameEngine.Enums.Properties;
 using MP.GameEngine.Helpers;
+using MP.GameEngine.Models.Boards;
 using UltimateMonopoly.Models;
 using UltimateMonopoly.Models.ViewModels;
 using UltimateMonopoly.Models.ViewModels.BoardSkins;
@@ -118,16 +119,16 @@ public class EditModel : PageModel
 
         return
         [
-            new("brown",     "Brown",            "bg-prop-brown",     SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertySet.Brown)),
-            new("blue",      "Blue",             "bg-prop-blue",      SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertySet.Blue)),
-            new("pink",      "Pink",             "bg-prop-pink",      SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertySet.Pink)),
-            new("orange",    "Orange",           "bg-prop-orange",    SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertySet.Orange)),
-            new("red",       "Red",              "bg-prop-red",       SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertySet.Red)),
-            new("yellow",    "Yellow",           "bg-prop-yellow",    SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertySet.Yellow)),
-            new("green",     "Green",            "bg-prop-green",     SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertySet.Green)),
-            new("dark-blue", "Dark Blue",        "bg-prop-dark-blue", SpaceShape.Rect,   Filter(s => s.PropertyColour == PropertySet.DarkBlue)),
-            new("stations",  "Stations",         "bg-prop-station",   SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Station)),
-            new("utilities", "Utilities",        "bg-prop-utility",   SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Utility)),
+            new("brown",     "Brown",            "bg-prop-brown",     SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Brown)),
+            new("blue",      "Blue",             "bg-prop-blue",      SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Blue)),
+            new("pink",      "Pink",             "bg-prop-pink",      SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Pink)),
+            new("orange",    "Orange",           "bg-prop-orange",    SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Orange)),
+            new("red",       "Red",              "bg-prop-red",       SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Red)),
+            new("yellow",    "Yellow",           "bg-prop-yellow",    SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Yellow)),
+            new("green",     "Green",            "bg-prop-green",     SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Green)),
+            new("dark-blue", "Dark Blue",        "bg-prop-dark-blue", SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.DarkBlue)),
+            new("stations",  "Stations",         "bg-prop-station",   SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Station)),
+            new("utilities", "Utilities",        "bg-prop-utility",   SpaceShape.Rect,   Filter(s => s.PropertySet == PropertySet.Utility)),
             new("corners",   "Corners and Jail", null,                SpaceShape.Square, Filter(s => s.Index.IsCorner())),
             new("tax",       "Tax",              null,                SpaceShape.Rect,   Filter(s => s.SpaceType == BoardSpaceType.Tax)),
         ];

@@ -1,8 +1,7 @@
 using JC.Core.Models;
 using JC.Identity.Authentication;
 using Microsoft.Extensions.Caching.Memory;
-using UltimateMonopoly.Data;
-using UltimateMonopoly.Models;
+using MP.GameEngine.Models.Boards;
 using UltimateMonopoly.Services.Imports;
 
 namespace UltimateMonopoly.Services.GameConfig;

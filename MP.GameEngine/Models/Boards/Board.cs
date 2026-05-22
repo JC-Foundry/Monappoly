@@ -1,4 +1,4 @@
-namespace UltimateMonopoly.Models;
+namespace MP.GameEngine.Models.Boards;
 
 public class Board(string name, List<BoardSpace> spaces, string? skinId = null)
 {

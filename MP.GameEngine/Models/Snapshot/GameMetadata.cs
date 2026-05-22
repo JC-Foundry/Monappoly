@@ -16,4 +16,24 @@ public class GameMetadata
     
     public GameState GameState { get; set; }
     public GameOutcome? GameOutcome { get; set; }
+
+    public GameMetadata()
+    {
+    }
+
+    public GameMetadata(GameMetadata metadata)
+    {
+        GameId = metadata.GameId;
+        GameName = metadata.GameName;
+        BoardId = metadata.BoardId;
+        
+        RoundingRule = metadata.RoundingRule;
+        
+        CurrentTurnId = metadata.CurrentTurnId;
+        CurrentPlayerId = metadata.CurrentPlayerId;
+        TurnNumber = metadata.TurnNumber;
+        
+        GameState = metadata.GameState;
+        GameOutcome = metadata.GameOutcome;
+    }
 }

@@ -26,7 +26,7 @@ public class BoardSkinSpace : AuditModel
     
     public ushort Index { get; private set; }
     public BoardSpaceType SpaceType { get; private set; }
-    public PropertySet? PropertyColour { get; private set; }
+    public PropertySet? PropertySet { get; private set; }
 
     public bool SetSpaceProperties(ushort desiredIndex, BoardSpaceType spaceType)
     {
@@ -40,13 +40,13 @@ public class BoardSkinSpace : AuditModel
         
         Index = index.Value;
         SpaceType = spaceType;
-        PropertyColour = colour;
+        PropertySet = colour;
         return true;
     }
     
 
     [NotMapped]
-    public bool IsProperty => Index.IsProperty() && PropertyColour != null;
+    public bool IsProperty => Index.IsProperty() && PropertySet != null;
     
     [NotMapped]
     public bool IsCorner => Index.IsCorner();

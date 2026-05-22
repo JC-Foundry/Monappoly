@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using JC.Core.Models.Auditing;
 using Microsoft.EntityFrameworkCore;
 using MP.GameEngine.Enums.Games;
+using MP.GameEngine.Models.Boards;
 using UltimateMonopoly.Models.DataModels.Boards;
 using UltimateMonopoly.Services.GameConfig;
 

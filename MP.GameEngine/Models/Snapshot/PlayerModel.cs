@@ -48,4 +48,38 @@ public class PlayerModel
     
     
     public List<PropertySet> FPHandedInSets { get; set; } = [];
+
+    public PlayerModel()
+    {
+    }
+
+    public PlayerModel(PlayerModel model)
+    {
+        PlayerId = model.PlayerId;
+        OrderId = model.OrderId;
+        Dice1 = model.Dice1;
+        Dice2 = model.Dice2;
+        
+        HasPassedInitialGo = model.HasPassedInitialGo;
+        Money = model.Money;
+        BoardIndex = model.BoardIndex;
+        Direction = model.Direction;
+        
+        DoublesInRow = model.DoublesInRow;
+        TriplesInRow = model.TriplesInRow;
+        
+        TripleBonus = model.TripleBonus;
+        JailCost = model.JailCost;
+        
+        TurnsToMiss = model.TurnsToMiss;
+        JailTurnCounter = model.JailTurnCounter;
+        MaxJailTurnsOverride = model.MaxJailTurnsOverride;
+        
+        IsBankrupt = model.IsBankrupt;
+        
+        Cards = model.Cards.Select(c => new CardModel(c)).ToList();
+        Loans = model.Loans.Select(l => new LoanModel(l)).ToList();
+
+        FPHandedInSets = [..model.FPHandedInSets];
+    }
 }

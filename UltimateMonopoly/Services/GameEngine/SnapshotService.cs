@@ -18,7 +18,7 @@ public class SnapshotService : ISnapshotService
         _logger = logger;
     }
 
-    public async Task CreateSnapshotAsync(GameModel game)
+    public async Task CreateSnapshotAsync(GameModel game, bool completeTransaction = true)
     {
         var turn = new GameTurn(game.GameId, game.Metadata.CurrentPlayerId)
         {
@@ -31,7 +31,8 @@ public class SnapshotService : ISnapshotService
         var stateJson = JsonSerializer.Serialize(game);
         snapshot.StateJson = stateJson;
         
-        await _repos.BeginTransactionAsync();
+        if(completeTransaction)
+            await _repos.BeginTransactionAsync();
         try
         {
             await _repos.GetRepository<GameTurn>()
@@ -39,13 +40,17 @@ public class SnapshotService : ISnapshotService
             
             await _repos.GetRepository<GameSnapshot>()
                 .AddAsync(snapshot, saveNow: false);
+
+            if (!completeTransaction) return;
             
             await _repos.SaveChangesAsync();
             await _repos.CommitTransactionAsync();
         }
         catch (Exception ex)
         {
-            await _repos.RollbackTransactionAsync();
+            if (completeTransaction)
+                await _repos.RollbackTransactionAsync();
+            
             _logger.LogError(ex, "Error persisting snapshot for game {GameId}", snapshot.GameId);
             throw;
         }

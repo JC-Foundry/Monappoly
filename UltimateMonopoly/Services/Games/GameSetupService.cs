@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using MP.GameEngine.Abstractions;
 using MP.GameEngine.Enums.Games;
 using MP.GameEngine.Helpers.RuleSet;
+using MP.GameEngine.Models;
 using MP.GameEngine.Models.DTOs;
 using UltimateMonopoly.Helpers;
 using UltimateMonopoly.Hubs;
@@ -373,22 +374,37 @@ public class GameSetupService
         if(players.Any(p => p.Dice1 == null || p.Dice2 == null))
             return false;
         
+        game.StartGame();
         var gameDto = new GameDTO(game.Id, game.Name, game.BoardId, game.RoundingRule, game.UserId, 
             game.State, game.Outcome);
         var playerDtos = players.Select(p => new PlayerDTO(p.UserId, p.OrderId, 
                 p.Dice1 ?? 1, p.Dice2 ?? 1))
             .ToList();
+
+        GameCacheModel? cache;
+        await _repos.BeginTransactionAsync();
+        try
+        {
+            cache = _engineEngineSetupService.SetupGameCache(gameDto, board, playerDtos);
+            await _snapshotService.CreateSnapshotAsync(cache.Game, false);
+            
+            
+            await _repos.GetRepository<Game>()
+                .UpdateAsync(game, saveNow: false);
+
+            await _repos.SaveChangesAsync();
+            await _repos.CommitTransactionAsync();
+        }
+        catch (Exception ex)
+        {
+            await _repos.RollbackTransactionAsync();
+            _logger.LogError(ex, "Failed to start game {GameId}", gameId);
+            return false;
+        }
         
-        var cache = _engineEngineSetupService.SetupGameCache(gameDto, board, playerDtos);
-        await _snapshotService.CreateSnapshotAsync(cache.Game);
-        
+        cache.SaveChanges();
         _gameCacheService.PopulateGame(cache);
-        await _gameCacheService.SaveChangesAsync(gameId);
-
-        game.StartGame();
-        await _repos.GetRepository<Game>()
-            .UpdateAsync(game);
-
+        
         await _setupHub.Clients.Group(GameSetupHub.GroupName(gameId))
             .SendAsync("GameStarted");
         return true;

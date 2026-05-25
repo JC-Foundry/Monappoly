@@ -50,6 +50,7 @@ public class TurnStateProvider_Tests
                 new PlayerModel
                 {
                     PlayerId = PlayerId,
+                    OrderId = 0,
                     BoardIndex = currentPlayerId == PlayerId && currentPlayerInJail
                         ? IndexHelper.JailSpace
                         : SafeBoardIndex,
@@ -59,6 +60,7 @@ public class TurnStateProvider_Tests
                 new PlayerModel
                 {
                     PlayerId = OtherPlayerId,
+                    OrderId = 1,
                     BoardIndex = SafeBoardIndex
                 }
             ]
@@ -68,16 +70,31 @@ public class TurnStateProvider_Tests
         return new GameCacheModel(dto, game, board);
     }
 
-    private static TurnStateProvider CreateProvider(GameCacheModel cache) => new(cache, new SnapshotServiceMock());
+    private static TurnStateProvider CreateProvider(GameCacheModel cache)
+        => new(cache, new SnapshotServiceMock());
 
+    private static (TurnStateProvider provider, SnapshotServiceMock snapshots) CreateProviderWithSnapshots(GameCacheModel cache)
+    {
+        var snapshots = new SnapshotServiceMock();
+        return (new TurnStateProvider(cache, snapshots), snapshots);
+    }
+
+    /// <summary>
+    /// Test double for <see cref="ISnapshotService"/>. Records every call
+    /// and simulates the real impl's side-effect of writing back a fresh
+    /// <c>CurrentTurnId</c> to the passed-in <c>GameModel.Metadata</c>.
+    /// </summary>
     private class SnapshotServiceMock : ISnapshotService
     {
-        public async Task CreateSnapshotAsync(GameModel game)
-        {
-        }
+        public int CallCount { get; private set; }
+        public List<GameModel> Calls { get; } = [];
 
-        public async Task CreatePartialSnapshotAsync(GameModel game)
+        public Task CreateSnapshotAsync(GameModel game, bool completeTransaction = true)
         {
+            CallCount++;
+            Calls.Add(game);
+            game.Metadata.CurrentTurnId = Guid.NewGuid().ToString();
+            return Task.CompletedTask;
         }
     }
 
@@ -464,125 +481,132 @@ public class TurnStateProvider_Tests
     // ─── TransitionToExtraTurn ──────────────────────────────────────────
 
     [Fact]
-    public void TransitionToExtraTurn_FromEndOfTurn_SetsStartOfTurn()
+    public async Task TransitionToExtraTurn_FromEndOfTurn_SetsStartOfTurn()
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToExtraTurn(isTriple: false);
+        await provider.TransitionToExtraTurn(isTriple: false);
 
         Assert.Equal(TurnState.StartOfTurn, cache.TurnState);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_DoesNotAdvanceCurrentPlayer()
+    public async Task TransitionToExtraTurn_DoesNotAdvanceCurrentPlayer()
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToExtraTurn(isTriple: false);
+        await provider.TransitionToExtraTurn(isTriple: false);
 
         Assert.Equal(PlayerId, cache.Game.Metadata.CurrentPlayerId);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_DoesNotBumpTurnNumber()
+    public async Task TransitionToExtraTurn_BumpsTurnNumber()
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         var turnNumberBefore = cache.Game.Metadata.TurnNumber;
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToExtraTurn(isTriple: false);
+        await provider.TransitionToExtraTurn(isTriple: false);
 
-        Assert.Equal(turnNumberBefore, cache.Game.Metadata.TurnNumber);
+        Assert.Equal(turnNumberBefore + 1, cache.Game.Metadata.TurnNumber);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_AfterDouble_BumpsDoublesInRow()
+    public async Task TransitionToExtraTurn_AfterDouble_BumpsDoublesInRow()
     {
         var cache = CreateCache(initialDoublesInRow: 1);
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToExtraTurn(isTriple: false);
+        await provider.TransitionToExtraTurn(isTriple: false);
 
         Assert.Equal(2, cache.Game.Players.First(p => p.PlayerId == PlayerId).DoublesInRow);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_AfterDouble_ResetsTriplesInRow()
+    public async Task TransitionToExtraTurn_AfterDouble_ResetsTriplesInRow()
     {
         var cache = CreateCache(initialTriplesInRow: 2);
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToExtraTurn(isTriple: false);
+        await provider.TransitionToExtraTurn(isTriple: false);
 
         Assert.Equal(0, cache.Game.Players.First(p => p.PlayerId == PlayerId).TriplesInRow);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_AfterTriple_BumpsTriplesInRow()
+    public async Task TransitionToExtraTurn_AfterTriple_BumpsTriplesInRow()
     {
         var cache = CreateCache(initialTriplesInRow: 1);
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToExtraTurn(isTriple: true);
+        await provider.TransitionToExtraTurn(isTriple: true);
 
         Assert.Equal(2, cache.Game.Players.First(p => p.PlayerId == PlayerId).TriplesInRow);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_AfterTriple_ResetsDoublesInRow()
+    public async Task TransitionToExtraTurn_AfterTriple_ResetsDoublesInRow()
     {
         var cache = CreateCache(initialDoublesInRow: 2);
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToExtraTurn(isTriple: true);
+        await provider.TransitionToExtraTurn(isTriple: true);
 
         Assert.Equal(0, cache.Game.Players.First(p => p.PlayerId == PlayerId).DoublesInRow);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_ClearsEvents()
+    public async Task TransitionToExtraTurn_ClearsEvents()
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         cache.AddEvent(new PlayerMovedReceipt { PlayerId = PlayerId });
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToExtraTurn(isTriple: false);
+        await provider.TransitionToExtraTurn(isTriple: false);
 
         Assert.Empty(cache.Events);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_ReturnsSnapshot()
+    public async Task TransitionToExtraTurn_CallsSnapshotService()
     {
         var cache = CreateCache();
-        var provider = CreateProvider(cache);
+        var (provider, snapshots) = CreateProviderWithSnapshots(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        var snapshot = provider.TransitionToExtraTurn(isTriple: false);
+        await provider.TransitionToExtraTurn(isTriple: false);
 
-        Assert.NotNull(snapshot);
-        Assert.Same(cache.Game, snapshot);
+        // The captured GameModel reference is the working copy the
+        // transition handed to the snapshot service; it carries the
+        // bumped TurnNumber and the unchanged CurrentPlayerId. We don't
+        // Assert.Same against cache.Game because the trailing
+        // cache.SaveChanges() promotes that working copy into _game and
+        // the next cache.Game access lazily creates a fresh clone.
+        Assert.Equal(1, snapshots.CallCount);
+        Assert.Equal(2u, snapshots.Calls[0].Metadata.TurnNumber);
+        Assert.Equal(PlayerId, snapshots.Calls[0].Metadata.CurrentPlayerId);
     }
 
     [Fact]
-    public void TransitionToExtraTurn_RestampsConcurrency()
+    public async Task TransitionToExtraTurn_RestampsConcurrency()
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
         var stampBefore = cache.ConcurrencyStamp;
 
-        provider.TransitionToExtraTurn(isTriple: false);
+        await provider.TransitionToExtraTurn(isTriple: false);
 
         Assert.NotEqual(stampBefore, cache.ConcurrencyStamp);
     }
@@ -591,71 +615,108 @@ public class TurnStateProvider_Tests
     [InlineData(TurnState.StartOfTurn)]
     [InlineData(TurnState.PlayerRollMovement)]
     [InlineData(TurnState.ThirdDieMovement)]
-    public void TransitionToExtraTurn_FromWrongState_Throws(TurnState wrongState)
+    public async Task TransitionToExtraTurn_FromWrongState_Throws(TurnState wrongState)
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         AdvanceTo(provider, wrongState);
 
-        Assert.ThrowsAsync<InvalidOperationException>(() => provider.TransitionToExtraTurn(isTriple: false));
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.TransitionToExtraTurn(isTriple: false));
     }
 
 
     // ─── TransitionToNextPlayer ─────────────────────────────────────────
-    //
-    // AdvancePlayer is a TODO stub — these tests cover the framework behaviour
-    // (state transition, commit, event clearing, snapshot return). The
-    // player-advancement assertions (CurrentPlayerId rotates, TurnNumber++)
-    // are deliberately not here; they'll be added when AdvancePlayer is
-    // implemented.
 
     [Fact]
-    public void TransitionToNextPlayer_FromEndOfTurn_SetsStartOfTurn()
+    public async Task TransitionToNextPlayer_FromEndOfTurn_SetsStartOfTurn()
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToNextPlayer();
+        await provider.TransitionToNextPlayer();
 
         Assert.Equal(TurnState.StartOfTurn, cache.TurnState);
     }
 
     [Fact]
-    public void TransitionToNextPlayer_ClearsEvents()
+    public async Task TransitionToNextPlayer_AdvancesToNextOrderId()
+    {
+        // PlayerId has OrderId=0, OtherPlayerId has OrderId=1 — next from PlayerId is OtherPlayerId.
+        var cache = CreateCache();
+        var provider = CreateProvider(cache);
+        AdvanceTo(provider, TurnState.EndOfTurn);
+
+        await provider.TransitionToNextPlayer();
+
+        Assert.Equal(OtherPlayerId, cache.Game.Metadata.CurrentPlayerId);
+    }
+
+    [Fact]
+    public async Task TransitionToNextPlayer_WrapsAroundFromHighestOrderId()
+    {
+        // OtherPlayerId has OrderId=1 (highest); next should wrap to PlayerId (OrderId=0).
+        var cache = CreateCache(currentPlayerId: OtherPlayerId);
+        var provider = CreateProvider(cache);
+        AdvanceTo(provider, TurnState.EndOfTurn);
+
+        await provider.TransitionToNextPlayer();
+
+        Assert.Equal(PlayerId, cache.Game.Metadata.CurrentPlayerId);
+    }
+
+    [Fact]
+    public async Task TransitionToNextPlayer_BumpsTurnNumber()
+    {
+        var cache = CreateCache();
+        var provider = CreateProvider(cache);
+        var turnNumberBefore = cache.Game.Metadata.TurnNumber;
+        AdvanceTo(provider, TurnState.EndOfTurn);
+
+        await provider.TransitionToNextPlayer();
+
+        Assert.Equal(turnNumberBefore + 1, cache.Game.Metadata.TurnNumber);
+    }
+
+    [Fact]
+    public async Task TransitionToNextPlayer_ClearsEvents()
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         cache.AddEvent(new PlayerMovedReceipt { PlayerId = PlayerId });
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        provider.TransitionToNextPlayer();
+        await provider.TransitionToNextPlayer();
 
         Assert.Empty(cache.Events);
     }
 
     [Fact]
-    public void TransitionToNextPlayer_ReturnsSnapshot()
+    public async Task TransitionToNextPlayer_CallsSnapshotService()
     {
         var cache = CreateCache();
-        var provider = CreateProvider(cache);
+        var (provider, snapshots) = CreateProviderWithSnapshots(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
 
-        var snapshot = provider.TransitionToNextPlayer();
+        await provider.TransitionToNextPlayer();
 
-        Assert.NotNull(snapshot);
-        Assert.Same(cache.Game, snapshot);
+        // See TransitionToExtraTurn_CallsSnapshotService for why we
+        // assert on captured Metadata values rather than reference equality.
+        Assert.Equal(1, snapshots.CallCount);
+        Assert.Equal(2u, snapshots.Calls[0].Metadata.TurnNumber);
+        Assert.Equal(OtherPlayerId, snapshots.Calls[0].Metadata.CurrentPlayerId);
     }
 
     [Fact]
-    public void TransitionToNextPlayer_RestampsConcurrency()
+    public async Task TransitionToNextPlayer_RestampsConcurrency()
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         AdvanceTo(provider, TurnState.EndOfTurn);
         var stampBefore = cache.ConcurrencyStamp;
 
-        provider.TransitionToNextPlayer();
+        await provider.TransitionToNextPlayer();
 
         Assert.NotEqual(stampBefore, cache.ConcurrencyStamp);
     }
@@ -664,12 +725,13 @@ public class TurnStateProvider_Tests
     [InlineData(TurnState.StartOfTurn)]
     [InlineData(TurnState.PlayerRollMovement)]
     [InlineData(TurnState.ThirdDieMovement)]
-    public void TransitionToNextPlayer_FromWrongState_Throws(TurnState wrongState)
+    public async Task TransitionToNextPlayer_FromWrongState_Throws(TurnState wrongState)
     {
         var cache = CreateCache();
         var provider = CreateProvider(cache);
         AdvanceTo(provider, wrongState);
 
-        Assert.Throws<InvalidOperationException>(() => provider.TransitionToNextPlayer());
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.TransitionToNextPlayer());
     }
 }

@@ -46,4 +46,8 @@ public class GameModel
         Properties = model.Properties.Select(p => new PropertyModel(p)).ToList();
         CardDecks = new CardListModel(model.CardDecks);
     }
+    
+    
+    public PlayerModel CurrentPlayer() => Players.FirstOrDefault(p => p.PlayerId == Metadata.CurrentPlayerId)
+        ?? throw new InvalidOperationException("Current player not found in game players list.");
 }

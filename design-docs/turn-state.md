@@ -6,11 +6,14 @@ framework (`choice-events.md`) — together they cover both sides of the
 engine I/O loop. The prompt framework handles *engine pauses mid-execution*;
 turn-state handles *what the player can initiate when the engine is idle*.
 
-**Status:** design, foundational. The provider skeleton exists
-(`Services/Framework/TurnStateProvider.cs`); transition methods are wired,
-capability checks are wired, the player-advance step inside
-`TransitionToNextPlayer` is a TODO. No turn-loop orchestration consumes it
-yet — see §9.
+**Status:** built (foundation layer). The provider is implemented in
+`Services/Framework/TurnStateProvider.cs` — capability checks, transitions,
+snapshot writes via `ISnapshotService`, and basic player advancement all
+landed. 106 unit tests green in `MP.GameEngine.Tests/FrameworkTests/`.
+The harder cases of player advancement (skip bankrupt, decrement
+`TurnsToMiss`) are still open and will likely extract into a helper class
+above the provider — see §9. No turn-loop orchestration consumes the
+provider yet — that's the next layer up (rule services).
 
 ---
 
@@ -47,12 +50,7 @@ correct shape per the prompt-framework restart contract: a turn interrupted
 by a restart is lost, and the player re-rolls from the pre-turn snapshot.
 There is therefore no need to persist mid-turn phase — the snapshot is
 always taken at `StartOfTurn`, and the next thing that runs after a restart
-is `StartOfTurn` again.
-
-This contradicts `game-engine.md` §6 rule 1 ("the phase is part of the
-serialised state, so an interrupted turn resumes mid-phase") which predates
-the prompt-framework decision. That rule should be updated to reflect the
-cache-only model.
+is `StartOfTurn` again. `game-engine.md` §6 rule 1 reflects this.
 
 ---
 
@@ -155,13 +153,14 @@ state silently.
                      ▼                                           │
               ┌─────────────┐                                    │
               │  EndOfTurn  │── TransitionToExtraTurn(isTriple) ─┤
-              │             │   (same player, new snapshot,      │
-              │             │    NO TurnNumber bump, NO advance) │
+              │             │   (same player, bump TurnNumber,   │
+              │             │    new GameTurn + GameSnapshot)    │
               │             │                                    │
               │             │── TransitionToNextPlayer ──────────┘
               └─────────────┘   (advance player, bump TurnNumber,
-                                 new snapshot)
-                ▲   both return GameModel for the caller to persist
+                                 new GameTurn + GameSnapshot)
+                ▲   both write a snapshot via ISnapshotService
+                │   (caller-driven tx supported via overload)
                 │
             EndOfTurn is the deal/bankruptcy idle window — the player
             settles before either ending or taking their extra turn.
@@ -177,43 +176,49 @@ state silently.
   PlayerRollMovement (triple — skips ThirdDie per Triples rule 3; or
   3-in-a-row sending the roller to jail) or ThirdDieMovement (normal end
   — other players have moved).
-- **`TransitionToExtraTurn(bool isTriple)`** — EndOfTurn → StartOfTurn for
-  the *same* player. Commits the working state, clears the per-turn event
-  window, bumps the matching `DoublesInRow` / `TriplesInRow` counter
-  (and resets the other per `game-rules.md` Doubles/Triples rule 6), and
-  returns the resulting `GameModel` for the caller to persist as the
-  extra turn's snapshot. **Does not bump `TurnNumber` or change
-  `CurrentPlayerId`** — that's `TransitionToNextPlayer`'s job.
-- **`TransitionToNextPlayer()`** — EndOfTurn → StartOfTurn for the next
-  player. Commits the working game state, clears the per-turn event list,
-  advances the player, bumps `TurnNumber`, and **returns the resulting
-  `GameModel`** for the caller to persist and broadcast.
+- **`TransitionToExtraTurn(bool isTriple)`** — `async Task`. EndOfTurn →
+  StartOfTurn for the *same* player. Commits the working state, clears
+  the per-turn event window, bumps the matching `DoublesInRow` /
+  `TriplesInRow` counter (and resets the other per `game-rules.md`
+  Doubles/Triples rule 6), advances turn metadata (new `CurrentTurnId`,
+  `TurnNumber++`; `CurrentPlayerId` unchanged), and writes a snapshot
+  via `ISnapshotService.CreateSnapshotAsync` — a new `GameTurn` row plus
+  its `GameSnapshot`. **`CurrentPlayerId` is unchanged**; everything else
+  about the turn advances.
+- **`TransitionToNextPlayer()`** — `async Task`. EndOfTurn → StartOfTurn
+  for the next player. Commits the working game state, clears the per-
+  turn event list, advances the player (`AdvancePlayer` — see §9),
+  bumps `TurnNumber`, generates a new `CurrentTurnId`, and writes a
+  snapshot via `ISnapshotService.CreateSnapshotAsync` — a new `GameTurn`
+  row plus its `GameSnapshot` for the turn just beginning.
 
 ### "Extra turn" vs "next player"
 
-Both fire from EndOfTurn, both commit, both clear events, both return a
-`GameModel` for persistence. The differences are:
+Both fire from EndOfTurn, both commit, both clear events, both write a
+snapshot via `ISnapshotService`. The differences are:
 
 | | `TransitionToExtraTurn` | `TransitionToNextPlayer` |
 |---|---|---|
-| `CurrentPlayerId` | unchanged | advances to next player |
-| `TurnNumber` | unchanged | bumps |
-| `CurrentTurnId` (GameTurn) | **unchanged** — snapshot sits under the same GameTurn record | new GameTurn record created |
-| New GameSnapshot row | yes (under existing GameTurn) | yes (under the new GameTurn) |
+| `CurrentPlayerId` | **unchanged** | advances to next player |
+| `TurnNumber` | bumps | bumps |
+| `CurrentTurnId` | new (regenerated in `UpdateMetadata`) | new (regenerated in `UpdateMetadata`) |
+| New `GameTurn` + `GameSnapshot` row | yes | yes |
 | `DoublesInRow` / `TriplesInRow` | bumped per `isTriple`, the other resets | unchanged |
 | Result for the player | rolls again as the same player | their turn is over |
 
-The key model: **`GameTurn` is the "whose turn is it" record** — created
-exactly once per player-advance, holding `CurrentTurnId`, `TurnNumber`,
-`CurrentPlayerId`. **`GameSnapshot` is the per-state snapshot** — one row
-per commit (per turn boundary), multiple rows can sit under a single
-`GameTurn` when extra turns fire. So an extra turn is a *new snapshot* but
-the *same GameTurn*; a next-player advance is both a *new snapshot* and a
-*new GameTurn*.
+The only thing distinguishing an extra-turn `GameTurn` row from a
+next-player `GameTurn` row at the schema level is that consecutive rows
+share `CurrentPlayerId`. Everything else — new id, bumped TurnNumber,
+new snapshot, cleared events — is identical.
 
-This matches how players experience it — "you go again" feels like a new
-turn (full portfolio window, deal opportunity, fresh roll, fresh
-snapshot), but the turn pacing and turn count don't advance.
+The key model: **`GameTurn` is the "one snapshot's worth of turn"
+record**, 1:1 with `GameSnapshot` and identified by `CurrentTurnId`. A
+*player's* turn is a sequence of `GameTurn` rows sharing
+`CurrentPlayerId` (one row per roll-and-resolve cycle the player goes
+through). This matches how players experience it — "you go again" feels
+like a new turn (full portfolio window, deal opportunity, fresh roll,
+fresh snapshot) — and matches the schema cleanly without needing
+1:many.
 
 ### Why does the EndOfTurn idle window matter for extra turns?
 
@@ -225,33 +230,41 @@ every roll, not just between players. Same for voluntary bankruptcy.
 
 ---
 
-## 5. Snapshot Bubbling
+## 5. Snapshot Persistence — Through an Abstraction
 
-Both `TransitionToNextPlayer()` and `TransitionToExtraTurn()` return a
-`GameModel`. The engine knows nothing about storage (per
-`game-engine.md` §3), so the snapshot has to bubble up out of the engine
-to the web layer, which serialises and persists it. The return type is
-the engine's own `GameModel` (a plain POCO) — no JSON, no EF — so no
-storage concern leaks into the engine.
+Both `TransitionToNextPlayer()` and `TransitionToExtraTurn()` write a
+snapshot by calling `ISnapshotService.CreateSnapshotAsync(cache.Game)`.
+The engine still knows no storage *mechanism* — `ISnapshotService` is
+declared in `MP.GameEngine.Abstractions` and implemented in the web
+project, so the engine only knows "take a snapshot of this game", not
+whether the implementation writes DB rows, files, or anything else. See
+`game-engine.md` §3 rule 1.
 
-Higher-level orchestration (turn-loop / hub method) is then responsible
-for:
+The contract:
 
-1. Receiving the returned `GameModel`.
-2. Serialising and persisting it to the snapshot store.
-3. Broadcasting via SignalR if needed.
+1. **Producer mutates the model in place.** The snapshot service
+   generates the new `GameTurn.Id` and writes it back to
+   `game.Metadata.CurrentTurnId` on the passed `GameModel`. The
+   transition then calls `cache.SaveChanges()` to promote that mutation
+   into the committed cache state. This is the *only* way the engine
+   learns the just-persisted turn id.
+2. **Engine throws on persistence failure.** `CreateSnapshotAsync`
+   reports failure via exception only; there is no bool return. The
+   transition propagates — the cache state stays uncommitted.
+3. **Caller-driven transactions are supported.** The interface takes a
+   `bool completeTransaction = true` parameter; passing `false` lets the
+   caller compose the snapshot insert into a larger outer transaction
+   (used by `TryStartGame` to combine the initial snapshot with the
+   `Game.State` flip in one tx). The default `true` is right for the
+   transitions, which have no outer tx.
+4. **Broadcasting is still the caller's job.** The provider doesn't know
+   SignalR. The orchestration layer (turn-loop / hub) reads post-call
+   state from `cache.Game` and broadcasts as appropriate.
 
-The provider itself does none of this. Each transition produces a new
-`GameSnapshot` row; only `TransitionToNextPlayer` produces a new
-`GameTurn` row. An extra-turn snapshot sits *under the existing
-GameTurn* — same `CurrentTurnId`, same `TurnNumber`, same
-`CurrentPlayerId` — but is its own snapshot row with its own per-turn
-event window.
-
-This means the GameTurn↔GameSnapshot relationship is **1:many**, not 1:1
-as `game-engine.md` §8 currently states (the doc claims "shared primary
-key" — should be a FK from GameSnapshot to GameTurn instead). See §9
-TODO.
+Each transition produces one new `GameTurn` row + one new `GameSnapshot`
+row — the 1:1 relationship `game-engine.md` §8 describes is preserved.
+Extra-turn rows are distinguished from next-player rows only by sharing
+`CurrentPlayerId` with their predecessor (see §4 table).
 
 ---
 
@@ -280,17 +293,15 @@ the engine code that calls it.
 | `TurnState` | `GameCacheModel` | no | `TurnStateProvider` only (via internal `SetTurnState`) |
 | `PendingPrompt` | `GameCacheModel` | no | `PromptProvider` (via `SetPendingPrompt` / `ClearPendingPrompt`) |
 | Events for this turn | `GameCacheModel` | no | engine code (via `AddEvent` / `ClearEvents`) |
-| Game state (players, properties, money, etc.) | `GameCacheModel.Game` (`GameModel`) | **yes** (committed via `SaveChanges` at turn boundary, snapshot per turn) | rule code, persisted at `TransitionToNextPlayer` |
+| Game state (players, properties, money, etc.) | `GameCacheModel.Game` (`GameModel`) | **yes** (committed via `SaveChanges` at turn boundary; snapshot per turn via `ISnapshotService`) | rule code, persisted at both `TransitionToNextPlayer` *and* `TransitionToExtraTurn` |
 | `TurnDiceRoll` (current roll) | `GameCacheModel` | no | `SetTurnDiceRoll` |
 
 `SaveChanges` fires at every turn boundary that produces a snapshot —
-both `TransitionToNextPlayer` *and* `TransitionToExtraTurn`. Each commit
-yields a `GameModel` for the caller to persist as a new `GameSnapshot`
-row. `TurnNumber`, `CurrentPlayerId`, and `CurrentTurnId` all advance only
-on `TransitionToNextPlayer` (which also creates the new `GameTurn`
-record); `TransitionToExtraTurn` leaves all three unchanged — the new
-snapshot is unique by its own primary key, not by anything in the
-metadata.
+both `TransitionToNextPlayer` *and* `TransitionToExtraTurn` — and each
+transition calls `ISnapshotService.CreateSnapshotAsync` to persist. Both
+also bump `TurnNumber` and regenerate `CurrentTurnId` (via the shared
+`UpdateMetadata` helper); they differ only in whether `CurrentPlayerId`
+advances (next-player) or stays the same (extra-turn).
 
 ---
 
@@ -299,11 +310,16 @@ metadata.
 - **`choice-events.md` §2** — the commands vs prompts split. Turn-state
   gates commands; it is silent on prompts.
 - **`game-engine.md` §6** — describes the same phase machine in narrative
-  form. Note rule 1 conflict (§1 above) — needs updating.
+   form; rule 1 there now aligns with the cache-only model (§1 above).
+- **`game-engine.md` §3 + §8** — the engine's storage-contract layering
+  (engine knows the contract, not the mechanism) and the GameTurn /
+  GameSnapshot 1:1 schema.
 - **`game-rules.md`** — the rule references underlying each capability
   gate (Bankruptcy rule 1 for voluntary bankruptcy timing; Doubles /
   Triples rules for extra-turn branches; Default rule 7 for the sell-only
   restriction on buy/bid).
+- **`MP.GameEngine/Abstractions/ISnapshotService.cs`** — the persistence
+  contract both transitions invoke.
 
 ---
 
@@ -311,26 +327,22 @@ metadata.
 
 Tracked here until resolved.
 
-1. **`AdvancePlayer` is a stub.** `TransitionToNextPlayer` mutates the
-   state and returns the snapshot, but the actual "find the next eligible
-   player" logic is unimplemented. Real implementation needs to:
-   - Skip bankrupt players (`game-rules.md` Bankruptcy).
+1. **`AdvancePlayer` is a basic stub.** The current implementation does
+   next-OrderId-with-wraparound — enough to exercise the framework with
+   non-bankrupt, non-missing players. Two `game-rules.md` cases aren't
+   handled yet:
+   - Skip bankrupt players (Bankruptcy rule).
    - Decrement `TurnsToMiss` and skip missed-turn players (Double 2
      effect).
-   - Generate a new `CurrentTurnId`.
-   - Bump `TurnNumber`.
 
-   Borders on game logic, so deliberately kept out of the foundational
-   skeleton.
+   These will likely extract into a dedicated helper class above the
+   provider when the turn-loop orchestration shape is clearer. The
+   helper should decide which transition fires (extra-turn vs next-
+   player) and own these harder cases — keeping the provider a pure
+   state-machine and pulling the increasingly-game-logic bits out. See
+   the TODO comment on `TurnStateProvider.AdvancePlayer`.
 
-2. **`game-engine.md` §8 has the GameTurn↔GameSnapshot relationship
-   wrong.** It claims "1:1 with shared primary key". The correct model
-   (per the extra-turn distinction in §4 above) is 1:many — multiple
-   GameSnapshot rows can sit under a single GameTurn when extra turns
-   fire. GameSnapshot needs its own PK with an FK to GameTurn. The doc
-   should be updated.
-
-3. **Roll-phase transition is duplicated.** `TransitionToRollPhase()` on
+2. **Roll-phase transition is duplicated.** `TransitionToRollPhase()` on
    the provider and `cache.SetTurnDiceRoll(...)` both move StartOfTurn →
    PlayerRollMovement. The latter does it implicitly when the roll lands;
    the former is a manual entrypoint. Either:
@@ -339,31 +351,37 @@ Tracked here until resolved.
    - Have `SetTurnDiceRoll` call into the provider instead of
      `SetTurnState` directly (provider remains sole transitioner).
 
-   Worth deciding once the turn-loop orchestration shape is clearer.
+   Worth deciding once the turn-loop orchestration shape is clearer
+   (likely settled by `DiceService` — see `game-engine.md` §13 build
+   order).
 
-4. **`game-engine.md` §6 rule 1 contradicts the cache-only model.** That
-   doc says phase is in the serialised state; the prompt-framework restart
-   contract and this design say phase is cache-only. The doc should be
-   updated.
-
-5. **Counter management is a small bit of game logic in a framework
+3. **Counter management is a small bit of game logic in a framework
    method.** `TransitionToExtraTurn` bumps `DoublesInRow` / `TriplesInRow`
    and resets the other counter (Doubles/Triples rule 6). That's
    technically game logic, but the bump is intrinsic to the transition
    (the transition only fires because a double/triple granted the extra
    turn). The "right" place for the counter is debatable — could move to
-   engine code that triggers the transition, leaving the transition pure
-   state-machine. Flagged so the boundary is explicit.
+   the future advancement-helper (#1) that decides which transition to
+   fire, leaving the transition pure state-machine. Flagged so the
+   boundary is explicit.
 
-6. **Bilateral-deal gate.** `CanDeal(playerId)` only checks the calling
+4. **Bilateral-deal gate.** `CanDeal(playerId)` only checks the calling
    player is at their own turn boundary. A real deal needs *both*
    parties to be reachable — the other party must also be at a boundary.
    Engine layer responsibility for now; if the pattern repeats elsewhere,
    could factor into a `CanDealBetween(playerA, playerB)`.
 
-7. **No tests yet.** Each `Can…` method and each transition needs unit
-   tests covering the allowed/disallowed cases and the wrong-state
-   throws.
+### Resolved (kept here for the record)
+
+- ~~`game-engine.md` §6 rule 1 contradicts the cache-only model.~~
+  Updated 2026-05-25 — rule 1 now states phase is cache-only.
+- ~~`game-engine.md` §8 GameTurn↔GameSnapshot is 1:many.~~ Resolved by
+  design pivot 2026-05-25 — extra turns now mint their own GameTurn row,
+  so the 1:1 schema stands (see §4). No migration needed.
+- ~~No tests yet.~~ 106 tests in
+  `MP.GameEngine.Tests/FrameworkTests/TurnStateProvider_Tests.cs` cover
+  every `Can…` method and every transition (allowed / disallowed /
+  wrong-state-throws / snapshot-service invocation).
 
 ---
 

@@ -220,19 +220,26 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
 
     /// <summary>
     /// Advances <see cref="TurnMetadata.CurrentPlayerId"/> to the next
-    /// eligible player and bumps the turn counters. Intrinsic to "next
-    /// player" but borders on game logic — kept as a stub for now;
-    /// real implementation needs to skip bankrupt players
-    /// (<c>game-rules.md</c> Bankruptcy) and decrement
-    /// <see cref="PlayerModel.TurnsToMiss"/> to skip missed-turn players
-    /// (Double 2 effect).
+    /// player in seat order (wraps around). Intrinsic to "next player"
+    /// but borders on game logic.
     /// </summary>
+    /// <remarks>
+    /// TODO: extract into a dedicated helper class once the turn-loop
+    /// orchestration shape is clearer. The helper should sit *above* the
+    /// provider and decide which transition fires (extra-turn vs next-
+    /// player), and own the harder cases this stub doesn't handle yet:
+    /// skip bankrupt players (<c>game-rules.md</c> Bankruptcy) and
+    /// decrement <see cref="PlayerModel.TurnsToMiss"/> to skip missed-
+    /// turn players (Double 2 effect). Keeping it here would leak more
+    /// game logic into the foundation provider; pulling it out keeps
+    /// the provider a pure state-machine.
+    /// </remarks>
     private void AdvancePlayer()
     {
         var currentPlayer = CurrentPlayer();
         var allPlayers = cache.Game.Players.OrderBy(p => p.OrderId).ToList();
-        
-        var nextPlayer = allPlayers.FirstOrDefault(p => p.OrderId > currentPlayer.OrderId) 
+
+        var nextPlayer = allPlayers.FirstOrDefault(p => p.OrderId > currentPlayer.OrderId)
                          ?? allPlayers.MinBy(p => p.OrderId)
                          ?? throw new InvalidOperationException("No eligible players left in game.");
         UpdateMetadata(nextPlayer.PlayerId);

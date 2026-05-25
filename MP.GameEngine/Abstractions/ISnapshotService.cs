@@ -2,7 +2,6 @@ using MP.GameEngine.Models.Snapshot;
 
 namespace MP.GameEngine.Abstractions;
 
-//Implementation created in WebProject
 public interface ISnapshotService
 {
     /// <summary>
@@ -14,5 +13,5 @@ public interface ISnapshotService
     /// the call returns — callers should expect <c>game.Metadata</c> to
     /// be updated. Throws on persistence failure.
     /// </summary>
-    Task CreateSnapshotAsync(GameModel game);
+    Task CreateSnapshotAsync(GameModel game, bool completeTransaction = true);
 }

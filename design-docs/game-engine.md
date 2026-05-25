@@ -83,14 +83,21 @@ Razor Pages). The engine is added as new class-library projects.
 | `UltimateMonopoly.GameEngine.Tests` | Unit tests for the engine. | GameEngine |
 | `UltimateMonopoly` (existing web app) | Razor Pages UI, EF persistence, snapshot storage, wiring. | GameEngine |
 
-1. **The engine knows nothing about storage or the web.** It exposes a game
-   state object, accepts commands, and produces new state plus events. The web
-   project is responsible for loading/saving snapshots and rendering.
+1. **The engine knows no storage *mechanism*.** It does not touch EF, files,
+   or any specific persistence technology. Where it needs to persist (a
+   snapshot at a turn boundary, for example) it depends on a **contract**
+   (`ISnapshotService`) defined inside the engine assembly but implemented
+   in the web project. The engine calls "take a snapshot of this game"; it
+   does not know whether the implementation writes DB rows, files, or
+   anything else. Same shape for the cache lookup
+   (`IGameEngineFactory` → `GameCacheService` in the web layer).
 
-2. **The web project maps between worlds.** It loads the latest snapshot,
-   deserialises it into engine state, applies commands, then serialises the
-   result back. EF entities and the engine state never reference each other's
-   types directly.
+2. **The web project owns the impl side of every contract.** It implements
+   `ISnapshotService`, `IGameEngineFactory`, and the snapshot-hydration
+   path (load latest `GameSnapshot`, deserialise into engine state, hand
+   to the engine). EF entities and engine state never reference each
+   other's types directly — engine consumes DTOs (`GameDTO`, `PlayerDTO`)
+   on the way in and emits its own POCOs on the way out.
 
 3. **The board comes from the existing board-skin model.** The engine takes a
    resolved board definition (spaces, colours, prices) as input — it does not
@@ -187,8 +194,10 @@ Outline of the phases (to be refined against `game-rules.md` during build):
    by snapshotting (phase 1), so the snapshot always captures pre-turn state.
 
 1. **Phases gate which commands are legal.** The engine rejects a `BuyProperty`
-   command outside the phase where a purchase is offered. The phase is part of
-   the serialised state, so an interrupted turn resumes mid-phase.
+   command outside the phase where a purchase is offered. **Phase lives on
+   the cache, not the snapshot** — a turn interrupted by a restart is lost,
+   and the player re-rolls from the pre-turn snapshot. See `turn-state.md`
+   §1 ("Lives on the cache, not the snapshot") for the rationale.
 
 2. **Sub-turn events are plentiful.** Forward-and-back double movement, and the
    third-die movement of every player, each trigger space actions — a single
@@ -230,6 +239,12 @@ serialised document — not normalised into relational tables.
    DB rows, so it is transactional with the rest of the data, survives
    restarts, and needs no filesystem handling. Splitting the metadata from the
    blob keeps turn listing and ordering cheap without touching the JSON.
+
+   *Extra turns mint a new `GameTurn` row too* — the GameTurn unit is "one
+   snapshot's worth of turn", not "one full player rotation". Extra-turn
+   rows share `CurrentPlayerId` with their predecessor; next-player rows
+   advance it. This keeps the 1:1 schema clean and makes the per-snapshot
+   sequence trivially queryable (`ORDER BY TurnNumber`).
 
 3. **A thin relational header stays queryable.** The `Game` entity keeps the
    columns needed for cross-game queries — `State`, `Outcome`, `BoardId`,

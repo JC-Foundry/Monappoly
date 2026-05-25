@@ -102,5 +102,9 @@
         notify('Seat order updated.', 'success');
     });
 
+    connection.on('GameStarted', () => {
+        window.location.href = '/';
+    });
+
     connection.start().catch(err => console.error('Game setup hub failed to connect:', err));
 })();

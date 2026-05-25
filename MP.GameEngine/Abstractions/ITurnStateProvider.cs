@@ -13,6 +13,6 @@ public interface ITurnStateProvider
     void TransitionToRollPhase();
     void TransitionToThirdDie();
     void TransitionToEndOfTurn();
-    GameModel TransitionToExtraTurn(bool isTriple);
-    GameModel TransitionToNextPlayer();
+    Task TransitionToExtraTurn(bool isTriple);
+    Task TransitionToNextPlayer();
 }

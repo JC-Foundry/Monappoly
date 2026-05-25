@@ -43,7 +43,7 @@ public class GameCacheModel(GameDTO gameDto, GameModel game, Board board)
 
 
     //Game Metadata
-    public string GameId { get; } = gameDto.Id;
+    public string GameId { get; } = gameDto.Id; //Shared on cache and game model
     public string GameName { get; } = gameDto.Name;
     public string? BoardId { get; } = gameDto.BoardId;
     public string HostPlayerId { get; } = gameDto.HostPlayerId;

@@ -1,3 +1,4 @@
+using MP.GameEngine.Abstractions;
 using MP.GameEngine.Enums;
 using MP.GameEngine.Enums.Games;
 using MP.GameEngine.Helpers;
@@ -67,7 +68,18 @@ public class TurnStateProvider_Tests
         return new GameCacheModel(dto, game, board);
     }
 
-    private static TurnStateProvider CreateProvider(GameCacheModel cache) => new(cache);
+    private static TurnStateProvider CreateProvider(GameCacheModel cache) => new(cache, new SnapshotServiceMock());
+
+    private class SnapshotServiceMock : ISnapshotService
+    {
+        public async Task CreateSnapshotAsync(GameModel game)
+        {
+        }
+
+        public async Task CreatePartialSnapshotAsync(GameModel game)
+        {
+        }
+    }
 
     /// <summary>Advances the cache to the requested state via the provider's own transitions.</summary>
     private static void AdvanceTo(TurnStateProvider provider, TurnState state)
@@ -585,7 +597,7 @@ public class TurnStateProvider_Tests
         var provider = CreateProvider(cache);
         AdvanceTo(provider, wrongState);
 
-        Assert.Throws<InvalidOperationException>(() => provider.TransitionToExtraTurn(isTriple: false));
+        Assert.ThrowsAsync<InvalidOperationException>(() => provider.TransitionToExtraTurn(isTriple: false));
     }
 
 

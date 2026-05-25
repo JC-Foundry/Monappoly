@@ -5,13 +5,16 @@ using JC.Core.Services.DataRepositories;
 using JC.Web.UI.Helpers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using MP.GameEngine.Abstractions;
 using MP.GameEngine.Enums.Games;
 using MP.GameEngine.Helpers.RuleSet;
+using MP.GameEngine.Models.DTOs;
 using UltimateMonopoly.Helpers;
 using UltimateMonopoly.Hubs;
 using UltimateMonopoly.Models.DataModels.Games;
 using UltimateMonopoly.Models.ViewModels;
 using UltimateMonopoly.Services.BoardSkins;
+using UltimateMonopoly.Services.Cache;
 using UltimateMonopoly.Services.Friends;
 
 namespace UltimateMonopoly.Services.Games;
@@ -27,6 +30,10 @@ public class GameSetupService
     private readonly BlockAndReportService _blockAndReportService;
     private readonly IHubContext<GameSetupHub> _setupHub;
     private readonly FriendService _friendService;
+    private readonly BoardCacheService _boardCacheService;
+    private readonly MP.GameEngine.Services.GameEngineSetupService _engineEngineSetupService;
+    private readonly GameCacheService _gameCacheService;
+    private readonly ISnapshotService _snapshotService;
 
 
     public GameSetupService(IRepositoryManager repos,
@@ -37,7 +44,11 @@ public class GameSetupService
         UrlLinkService urlLinkService,
         BlockAndReportService blockAndReportService,
         IHubContext<GameSetupHub> setupHub,
-        FriendService friendService)
+        FriendService friendService,
+        BoardCacheService boardCacheService,
+        MP.GameEngine.Services.GameEngineSetupService engineEngineSetupService,
+        GameCacheService gameCacheService,
+        ISnapshotService snapshotService)
     {
         _repos = repos;
         _userInfo = userInfo;
@@ -48,6 +59,10 @@ public class GameSetupService
         _blockAndReportService = blockAndReportService;
         _setupHub = setupHub;
         _friendService = friendService;
+        _boardCacheService = boardCacheService;
+        _engineEngineSetupService = engineEngineSetupService;
+        _gameCacheService = gameCacheService;
+        _snapshotService = snapshotService;
     }
 
 
@@ -333,4 +348,51 @@ public class GameSetupService
             .UpdateRangeAsync(allPlayers, saveNow: saveNow);
         return true;
     }
+
+
+    #region Create and Cancel
+
+    public async Task<bool> TryStartGame(string gameId)
+    {
+        var game = await GetGame(gameId);
+        if (game == null) return false;
+        
+        if(game.CreatedById != _userInfo.UserId)
+            return false;
+
+        var boards = await _boardCacheService.GetAllBoards();
+        if (boards.Count == 0) return false;
+
+        var board = boards.FirstOrDefault(b => b.BoardId == game.BoardId);
+        if (board == null) return false;
+
+        var players = game.Players.Where(p => !p.IsDeleted).ToList();
+        if(players.Count is < RuleDictionary.MinimumPlayers or > RuleDictionary.MaximumPlayers)
+            return false;
+        
+        if(players.Any(p => p.Dice1 == null || p.Dice2 == null))
+            return false;
+        
+        var gameDto = new GameDTO(game.Id, game.Name, game.BoardId, game.RoundingRule, game.UserId, 
+            game.State, game.Outcome);
+        var playerDtos = players.Select(p => new PlayerDTO(p.UserId, p.OrderId, 
+                p.Dice1 ?? 1, p.Dice2 ?? 1))
+            .ToList();
+        
+        var cache = _engineEngineSetupService.SetupGameCache(gameDto, board, playerDtos);
+        await _snapshotService.CreateSnapshotAsync(cache.Game);
+        
+        _gameCacheService.PopulateGame(cache);
+        await _gameCacheService.SaveChangesAsync(gameId);
+
+        game.StartGame();
+        await _repos.GetRepository<Game>()
+            .UpdateAsync(game);
+
+        await _setupHub.Clients.Group(GameSetupHub.GroupName(gameId))
+            .SendAsync("GameStarted");
+        return true;
+    }
+
+    #endregion
 }

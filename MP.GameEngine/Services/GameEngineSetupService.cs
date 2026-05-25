@@ -1,5 +1,4 @@
 using System.Text.Json;
-using MP.GameEngine.Helpers.RuleSet;
 using MP.GameEngine.Models;
 using MP.GameEngine.Models.Boards;
 using MP.GameEngine.Models.DTOs;
@@ -7,27 +6,28 @@ using MP.GameEngine.Models.Snapshot;
 
 namespace MP.GameEngine.Services;
 
-public class GameSetupService
+public class GameEngineSetupService
 {
     private readonly PlayerService _playerService;
     private readonly PropertyService _propertyService;
 
-    public GameSetupService(PlayerService playerService,
+    public GameEngineSetupService(PlayerService playerService,
         PropertyService propertyService)
     {
         _playerService = playerService;
         _propertyService = propertyService;
     }
     
-    public GameCacheModel SetupGameCache(GameDTO gameDto, GameTurnDTO turnDto, Board board, List<PlayerDTO> playerDtos)
+    public GameCacheModel SetupGameCache(GameDTO gameDto, Board board, List<PlayerDTO> playerDtos)
     {
         var gameModel = new GameModel
         {
+            GameId = gameDto.Id,
             Metadata = new TurnMetadata
             {
-                CurrentTurnId = turnDto.Id,
-                CurrentPlayerId = turnDto.PlayerId,
-                TurnNumber = turnDto.TurnNumber
+                TurnNumber = 1,
+                CurrentPlayerId = playerDtos.MaxBy(p => p.Dice1 + p.Dice2)?.Id
+                    ?? throw new InvalidOperationException("No players in game")
             },
             Players = _playerService.GetPlayers(playerDtos),
             Properties = _propertyService.GetProperties(board)
@@ -47,5 +47,5 @@ public class GameSetupService
     }
     
     private GameCacheModel SetupGameCache(GameDTO gameDto, GameModel gameModel, Board board)
-        => new GameCacheModel(gameDto, gameModel, board);
+        => new(gameDto, gameModel, board);
 }

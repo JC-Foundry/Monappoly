@@ -1,6 +1,8 @@
 using JC.BackgroundJobs.Extensions;
 using JC.Core.Extensions;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MP.GameEngine.Abstractions;
+using MP.GameEngine.Extensions;
 using UltimateMonopoly.Models.DataModels.Boards;
 using UltimateMonopoly.Models.DataModels.Games;
 using UltimateMonopoly.Models.DataModels.Social;
@@ -8,6 +10,7 @@ using UltimateMonopoly.Services;
 using UltimateMonopoly.Services.BoardSkins;
 using UltimateMonopoly.Services.Cache;
 using UltimateMonopoly.Services.Friends;
+using UltimateMonopoly.Services.GameEngine;
 using UltimateMonopoly.Services.Games;
 using UltimateMonopoly.Services.Imports;
 
@@ -58,6 +61,12 @@ public static class ServiceRegistration
         services.TryAddScoped<GameSetupService>();
         services.TryAddScoped<GameService>();
         services.TryAddScoped<PlayerProfileService>();
+        services.TryAddScoped<GameCacheService>();
+        
+        // Game Engine
+        services.TryAddScoped<ISnapshotService, SnapshotService>();
+        services.TryAddScoped<IGameEngineFactory, GameEngineFactory>();
+        services.AddGameEngine();
 
         return services;
     }

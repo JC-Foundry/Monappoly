@@ -4,6 +4,8 @@ namespace MP.GameEngine.Models.Snapshot;
 
 public class GameModel
 {
+    public string GameId { get; set; }
+    
     /// <summary>
     /// This stores information about the turn that can be traced back to database models
     /// </summary>
@@ -34,6 +36,7 @@ public class GameModel
 
     public GameModel(GameModel model)
     {
+        GameId = model.GameId;
         Metadata = new TurnMetadata(model.Metadata);
         
         ReserveRuleActive = model.ReserveRuleActive;

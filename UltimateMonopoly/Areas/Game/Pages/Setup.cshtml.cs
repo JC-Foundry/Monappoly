@@ -88,6 +88,18 @@ public class SetupModel : PageModel
         return RedirectToPage(new { id });
     }
 
+    public async Task<IActionResult> OnPostStartAsync(string id)
+    {
+        if (!await ViewerIsHostOf(id))
+            return Forbid();
+
+        var ok = await _gameSetup.TryStartGame(id);
+        if (ok) return Redirect("/");
+
+        SetStatus(false, string.Empty, "Could not start the game.");
+        return RedirectToPage(new { id });
+    }
+
     private async Task<bool> ViewerIsHostOf(string gameId)
     {
         var game = await _gameSetup.GetSetupGame(gameId);

@@ -18,7 +18,7 @@ namespace MP.GameEngine.Services.Framework;
 /// provider only owns the rules of *what is allowed* and *what the next
 /// state is*.
 /// </remarks>
-public class TurnStateProvider(GameCacheModel cache) : ITurnStateProvider
+public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotService) : ITurnStateProvider
 {
     // ─── Private primitives ──────────────────────────────────────────────
 
@@ -100,10 +100,11 @@ public class TurnStateProvider(GameCacheModel cache) : ITurnStateProvider
 
     // ─── Transitions ────────────────────────────────────────────────────
     // Named transitions encode the branches of the turn loop. Both
-    // extra-turn and next-player fire from EndOfTurn, commit, and return a
-    // GameModel snapshot — they differ in whether TurnNumber / CurrentPlayerId
-    // advance. Each transition validates the current state before mutating,
-    // throwing if called from the wrong place.
+    // extra-turn and next-player fire from EndOfTurn, commit, and write a
+    // new GameTurn + GameSnapshot pair — they differ only in whether
+    // CurrentPlayerId advances (next-player) or stays (extra-turn). Each
+    // transition validates the current state before mutating, throwing
+    // if called from the wrong place.
 
     /// <summary>StartOfTurn → PlayerRollMovement. The player has finished any portfolio commands and is rolling.</summary>
     public void TransitionToRollPhase()
@@ -146,14 +147,18 @@ public class TurnStateProvider(GameCacheModel cache) : ITurnStateProvider
     /// turn. Commits the working state, clears the per-turn event window,
     /// bumps the matching <c>DoublesInRow</c> / <c>TriplesInRow</c> counter
     /// (and resets the other per <c>game-rules.md</c> Doubles/Triples rule
-    /// 6), and returns the resulting <see cref="GameModel"/> for the caller
-    /// to persist as a new <c>GameSnapshot</c> row. The
-    /// <c>GameTurn</c> record (and therefore <c>CurrentTurnId</c>,
-    /// <c>TurnNumber</c>, and <c>CurrentPlayerId</c>) is **unchanged** —
-    /// extra-turn snapshots sit under the same GameTurn. A new GameTurn is
-    /// only created by <see cref="TransitionToNextPlayer"/>.
+    /// 6), advances turn metadata (new <c>CurrentTurnId</c>,
+    /// <c>TurnNumber</c>++; <c>CurrentPlayerId</c> **unchanged**), and
+    /// writes a snapshot via <see cref="ISnapshotService.CreateSnapshotAsync"/>
+    /// — a new <c>GameTurn</c> row plus its <c>GameSnapshot</c>. At the
+    /// schema level the only thing distinguishing an extra-turn record from
+    /// a next-player record is that consecutive <c>GameTurn</c> rows share
+    /// <c>CurrentPlayerId</c>; see <see cref="TransitionToNextPlayer"/> for
+    /// the other path. The engine does not know *how* the snapshot is
+    /// persisted — only that one is taken at this boundary (see
+    /// <c>game-engine.md</c> §3).
     /// </summary>
-    public GameModel TransitionToExtraTurn(bool isTriple)
+    public async Task TransitionToExtraTurn(bool isTriple)
     {
         Expect(TurnState.EndOfTurn);
 
@@ -168,23 +173,28 @@ public class TurnStateProvider(GameCacheModel cache) : ITurnStateProvider
             player.DoublesInRow++;
             player.TriplesInRow = 0;
         }
+        
+        UpdateMetadata(player.PlayerId);
 
         cache.SaveChanges();
         cache.ClearEvents();
         cache.SetTurnState(TurnState.StartOfTurn);
-
-        return cache.Game;
+        
+        await snapshotService.CreateSnapshotAsync(cache.Game);
+        cache.SaveChanges();
     }
 
     /// <summary>
     /// EndOfTurn → StartOfTurn (for the next player). Commits the working
-    /// game state, clears the per-turn event list, and returns the resulting
-    /// <see cref="GameModel"/> — the snapshot for the turn just beginning.
-    /// The caller is responsible for persisting the returned snapshot and
-    /// broadcasting it (the engine knows nothing about storage — see
-    /// <c>game-engine.md</c> §3).
+    /// game state, clears the per-turn event list, and writes a snapshot
+    /// via <see cref="ISnapshotService.CreateSnapshotAsync"/> — a new
+    /// <c>GameTurn</c> row plus its <c>GameSnapshot</c> for the turn just
+    /// beginning. The engine does not know *how* the snapshot is persisted
+    /// — only that one is taken at this boundary (see
+    /// <c>game-engine.md</c> §3). Broadcasting is the caller's job;
+    /// post-call state can be read from <c>cache.Game</c>.
     /// </summary>
-    public GameModel TransitionToNextPlayer()
+    public async Task TransitionToNextPlayer()
     {
         Expect(TurnState.EndOfTurn);
 
@@ -193,8 +203,9 @@ public class TurnStateProvider(GameCacheModel cache) : ITurnStateProvider
         cache.SaveChanges();
         cache.ClearEvents();
         cache.SetTurnState(TurnState.StartOfTurn);
-
-        return cache.Game;
+        
+        await snapshotService.CreateSnapshotAsync(cache.Game);
+        cache.SaveChanges();
     }
 
 
@@ -212,9 +223,9 @@ public class TurnStateProvider(GameCacheModel cache) : ITurnStateProvider
     /// eligible player and bumps the turn counters. Intrinsic to "next
     /// player" but borders on game logic — kept as a stub for now;
     /// real implementation needs to skip bankrupt players
-    /// (<c>game-rules.md</c> Bankruptcy), decrement
-    /// <see cref="PlayerModel.TurnsToMiss"/> and skip missed-turn players
-    /// (Double 2 effect), and generate a new <c>CurrentTurnId</c>.
+    /// (<c>game-rules.md</c> Bankruptcy) and decrement
+    /// <see cref="PlayerModel.TurnsToMiss"/> to skip missed-turn players
+    /// (Double 2 effect).
     /// </summary>
     private void AdvancePlayer()
     {
@@ -224,9 +235,15 @@ public class TurnStateProvider(GameCacheModel cache) : ITurnStateProvider
         var nextPlayer = allPlayers.FirstOrDefault(p => p.OrderId > currentPlayer.OrderId) 
                          ?? allPlayers.MinBy(p => p.OrderId)
                          ?? throw new InvalidOperationException("No eligible players left in game.");
+        UpdateMetadata(nextPlayer.PlayerId);
+    }
 
-        //Turn ID is not set, since turn ID is the DB key for game turn info
-        cache.Game.Metadata.CurrentPlayerId = nextPlayer.PlayerId;
+    private void UpdateMetadata(string playerId)
+    {
+        // CurrentTurnId is not assigned here — the snapshot service
+        // generates the new GameTurn id and writes it back to
+        // Metadata.CurrentTurnId as part of CreateSnapshotAsync.
+        cache.Game.Metadata.CurrentPlayerId = playerId;
         cache.Game.Metadata.TurnNumber++;
     }
 }

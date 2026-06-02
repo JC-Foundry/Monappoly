@@ -73,6 +73,15 @@ public class GameCacheModel(GameDTO gameDto, GameModel game, Board board)
         ConcurrencyStamp = Guid.NewGuid().ToString();
     }
     
+    /// <summary>
+    /// Promotes the working copy to committed state (<c>_working</c> → <c>_game</c>)
+    /// and re-stamps. This is the engine's single commit point and runs
+    /// automatically on every turn-state change (<see cref="SetTurnState"/>).
+    /// Rule services must <b>not</b> call it mid-turn: promoting detaches the
+    /// model references (players, properties) that in-flight code still holds,
+    /// silently dropping their later mutations. The only direct callers are the
+    /// turn-boundary snapshot write-back and the one-off game bootstrap.
+    /// </summary>
     public void SaveChanges()
     {
         if (_working is null) return;
@@ -131,8 +140,7 @@ public class GameCacheModel(GameDTO gameDto, GameModel game, Board board)
         
         TurnDiceRoll = new DiceRoll(die1, die2, thirdDie);
         
-        //Internally stamps concurrency
-        SetTurnState(TurnState.PlayerRollMovement);
+        StampConcurrency();
         return TurnDiceRoll;
     }
     
@@ -142,9 +150,21 @@ public class GameCacheModel(GameDTO gameDto, GameModel game, Board board)
         StampConcurrency();
     }
 
+    /// <summary>
+    /// Sets the turn phase and commits the working copy via
+    /// <see cref="SaveChanges"/>. Turn-state changes are the engine's commit
+    /// boundary — the one place where promoting <c>_working</c> to <c>_game</c>
+    /// is safe, because no rule code is mid-mutation holding model references.
+    /// </summary>
     internal void SetTurnState(TurnState turnState)
     {
         TurnState = turnState;
-        StampConcurrency();
+        // A phase change is itself an observable state change clients must detect,
+        // so always re-stamp. When there are working-copy mutations to promote,
+        // SaveChanges does the stamp; otherwise stamp directly.
+        if (_working is not null)
+            SaveChanges();
+        else
+            StampConcurrency();
     }
 }

@@ -66,6 +66,7 @@ public class PlayerModel
         Dice1 = model.Dice1;
         Dice2 = model.Dice2;
         
+        InitialRoll = model.InitialRoll;
         HasPassedInitialGo = model.HasPassedInitialGo;
         Money = model.Money;
         BoardIndex = model.BoardIndex;

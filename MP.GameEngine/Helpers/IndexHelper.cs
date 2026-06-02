@@ -98,16 +98,20 @@ public static class IndexHelper
     /// </returns>
     public static ushort GoToJail() => JailSpace;
 
-    
+
     /// <summary>
     /// Determines whether the specified index corresponds to a property spaceType on the board.
     /// </summary>
     /// <param name="index">The index to check against property spaces.</param>
+    /// <param name="buildableOnly">Whether the index is only a buildable property. Includes stations and utilities when false.</param>
     /// <returns>
     /// <c>true</c> if the specified <paramref name="index"/> matches a property spaceType; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsProperty(this ushort index) => BuildablePropertyIndexes.Contains(index);
-
+    public static bool IsProperty(this ushort index, bool buildableOnly = true) 
+        => buildableOnly 
+            ? BuildablePropertyIndexes.Contains(index)
+            : AllPropertyIndexes.Contains(index);
+    
     /// <summary>
     /// Determines whether the specified index corresponds to a station spaceType on the board.
     /// </summary>

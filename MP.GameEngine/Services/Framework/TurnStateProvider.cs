@@ -129,7 +129,7 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
     // if called from the wrong place.
 
     /// <summary>StartOfTurn → PlayerRollMovement. The player has finished any portfolio commands and is rolling.</summary>
-    public void TransitionToRollPhase()
+    public void TransitionToRollMovementPhase()
     {
         Expect(TurnState.StartOfTurn);
         cache.SetTurnState(TurnState.PlayerRollMovement);
@@ -200,7 +200,6 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
         
         UpdateMetadata(player.PlayerId);
 
-        cache.SaveChanges();
         cache.ClearEvents();
         cache.SetTurnState(TurnState.StartOfTurn);
         
@@ -224,7 +223,6 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
 
         AdvancePlayer();
 
-        cache.SaveChanges();
         cache.ClearEvents();
         cache.SetTurnState(TurnState.StartOfTurn);
         

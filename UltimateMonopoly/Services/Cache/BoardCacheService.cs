@@ -37,10 +37,6 @@ public class BoardCacheService
 
     public async Task<List<Board>> GetAllBoards(bool includeDefault = true, string? userId = null)
     {
-        if (!string.IsNullOrEmpty(userId) && !_userInfo.IsInRole(SystemRoles.SystemAdmin))
-            //Only allow system admins to view other users' boards'
-            return [];
-        
         var defaultBoard = await GetDefaultBoard();
 
         var customBoards = await _memoryCache.GetOrCreateAsync(GetKey(false, userId), entry =>

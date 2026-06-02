@@ -43,15 +43,12 @@ public class JailService
         await _movementService.AdvancePlayer(engine, player, IndexHelper.JustVisitingSpace, 
             PlayerMovementDirection.CounterDirectionOfTravel, ct);
     }
-
-
-    private uint ComputeJailCost(PlayerModel player, GameRoundingRule roundingRule)
-        => (uint)_transactionService.ComputeGameRounding(player.JailCost, roundingRule, FinancialReason.JailFee);
+    
     
     public async Task ForcePlayerToLeaveJail(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
     {
         //Round the cost for front-end prompt:
-        var jailCost = ComputeJailCost(player, engine.Cache.RoundingRule);
+        var jailCost = MoneyHelper.NormaliseAmount(player.JailCost, engine.Cache.RoundingRule, FinancialReason.JailFee);
         
         var response = await engine.PromptProvider.RequestAsync(new LeaveJailPrompt
         {
@@ -83,9 +80,9 @@ public class JailService
         //Increase jail cost by 50% of original cost
         var increase = Math.Round((player.JailCost * 0.5), MidpointRounding.AwayFromZero);
         player.JailCost += (uint)increase;
-        
-        var increaseDisplay = _transactionService.ComputeGameRounding((long)increase, engine.Cache.RoundingRule, FinancialReason.JailFee);
-        var costDisplay = ComputeJailCost(player, engine.Cache.RoundingRule);
+
+        var increaseDisplay = MoneyHelper.NormaliseAmountToPositive((long)increase, engine.Cache.RoundingRule, FinancialReason.JailFee);
+        var costDisplay = MoneyHelper.NormaliseAmount(player.JailCost, engine.Cache.RoundingRule, FinancialReason.JailFee);
         
         _ = await engine.PromptProvider.Acknowledge(player.PlayerId, "Jail Fee Increased", 
             $"Your cost to leave jail has increased by {RuleDictionary.Currency}{increaseDisplay}, " +

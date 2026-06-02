@@ -24,5 +24,8 @@ public class GoService
         
         bonus *= goPasses;
         await _transactionService.ReceiveGoBonus(engine, player, bonus, ct);
+
+        //Player has now passed GO (assumed since they are collecting bonus)
+        player.HasPassedInitialGo = true;
     }
 }

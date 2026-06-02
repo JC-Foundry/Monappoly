@@ -11,7 +11,7 @@ public interface ITurnStateProvider
     bool CanEndTurn(string playerId, string submittingUserId);
     bool CanDeclareBankruptcy(string playerId, string submittingUserId);
 
-    void TransitionToRollPhase();
+    void TransitionToRollMovementPhase();
     void TransitionToThirdDie();
     void TransitionToEndOfTurn();
     Task TransitionToExtraTurn(bool isTriple);

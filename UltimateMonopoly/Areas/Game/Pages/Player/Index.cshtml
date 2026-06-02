@@ -112,10 +112,12 @@
 @* ---- Engine prompts ---- *@
 <partial name="Play/_DiceRollPrompt" />
 <partial name="Play/_AcknowledgePrompt" />
+<partial name="Play/_AcquirePropertyPrompt" />
 
 @section Scripts {
     @* Coordinator first — prompt handlers register against it, then it connects. *@
     <script src="~/scripts/InGame/game-play-hub.js" asp-append-version="true"></script>
     <script src="~/scripts/InGame/Prompts/dice-roll-prompt.js" asp-append-version="true"></script>
     <script src="~/scripts/InGame/Prompts/acknowledge-prompt.js" asp-append-version="true"></script>
+    <script src="~/scripts/InGame/Prompts/acquire-property-prompt.js" asp-append-version="true"></script>
 }

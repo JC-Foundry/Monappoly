@@ -392,7 +392,6 @@ public class GameSetupService
             cache = _engineEngineSetupService.SetupGameCache(gameDto, board, playerDtos);
             await _snapshotService.CreateSnapshotAsync(cache.Game, false);
             
-            
             await _repos.GetRepository<Game>()
                 .UpdateAsync(game, saveNow: false);
 
@@ -408,7 +407,9 @@ public class GameSetupService
         
         cache.SaveChanges();
         _gameCacheService.PopulateGame(cache);
-        _gameService.EnqueueTurn(gameId);
+        // Host kicks off the first turn — game.UserId is the host (cache.HostPlayerId),
+        // so the pump's CanStartTurn re-check authorises it whoever rolls first.
+        _gameService.EnqueueTurn(gameId, game.UserId);
 
         await _setupHub.Clients.Group(GameSetupHub.GroupName(gameId))
             .SendAsync("GameStarted");

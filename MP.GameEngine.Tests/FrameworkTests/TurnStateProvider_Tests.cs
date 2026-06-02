@@ -107,14 +107,14 @@ public class TurnStateProvider_Tests
             case TurnState.StartOfTurn:
                 return;
             case TurnState.PlayerRollMovement:
-                provider.TransitionToRollPhase();
+                provider.TransitionToRollMovementPhase();
                 return;
             case TurnState.ThirdDieMovement:
-                provider.TransitionToRollPhase();
+                provider.TransitionToRollMovementPhase();
                 provider.TransitionToThirdDie();
                 return;
             case TurnState.EndOfTurn:
-                provider.TransitionToRollPhase();
+                provider.TransitionToRollMovementPhase();
                 provider.TransitionToEndOfTurn();
                 return;
         }
@@ -420,7 +420,7 @@ public class TurnStateProvider_Tests
     }
 
 
-    // ─── TransitionToRollPhase ──────────────────────────────────────────
+    // ─── TransitionToRollMovementPhase ──────────────────────────────────────────
 
     [Fact]
     public void TransitionToRollPhase_FromStartOfTurn_SetsPlayerRollMovement()
@@ -428,7 +428,7 @@ public class TurnStateProvider_Tests
         var cache = CreateCache();
         var provider = CreateProvider(cache);
 
-        provider.TransitionToRollPhase();
+        provider.TransitionToRollMovementPhase();
 
         Assert.Equal(TurnState.PlayerRollMovement, cache.TurnState);
     }
@@ -440,7 +440,7 @@ public class TurnStateProvider_Tests
         var provider = CreateProvider(cache);
         var stampBefore = cache.ConcurrencyStamp;
 
-        provider.TransitionToRollPhase();
+        provider.TransitionToRollMovementPhase();
 
         Assert.NotEqual(stampBefore, cache.ConcurrencyStamp);
     }
@@ -455,7 +455,7 @@ public class TurnStateProvider_Tests
         var provider = CreateProvider(cache);
         AdvanceTo(provider, wrongState);
 
-        Assert.Throws<InvalidOperationException>(provider.TransitionToRollPhase);
+        Assert.Throws<InvalidOperationException>(provider.TransitionToRollMovementPhase);
     }
 
 

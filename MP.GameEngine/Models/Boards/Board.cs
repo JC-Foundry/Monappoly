@@ -1,3 +1,6 @@
+using MP.GameEngine.Helpers;
+using MP.GameEngine.Models.Snapshot;
+
 namespace MP.GameEngine.Models.Boards;
 
 public class Board(string name, List<BoardSpace> spaces, string? boardId = null)
@@ -9,4 +12,11 @@ public class Board(string name, List<BoardSpace> spaces, string? boardId = null)
     
     public BoardSpace GetBoardSpace(ushort index) => Spaces.FirstOrDefault(s => s.Index == index)
         ?? throw new ArgumentException($"Board space with index {index} not found");
+
+    public List<(PropertyModel Model, BoardSpace Space)> GetPropertySpaces(List<PropertyModel> properties)
+        => Spaces
+            .Where(s => s.Index.IsProperty(false))
+            .Select(s => (properties.FirstOrDefault(p => p.BoardIndex == s.Index) 
+                          ?? throw new InvalidOperationException("Space not found for property"), s))
+            .ToList();
 }

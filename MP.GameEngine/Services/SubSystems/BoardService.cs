@@ -6,6 +6,22 @@ namespace MP.GameEngine.Services.SubSystems;
 
 public class BoardService
 {
+    private readonly GoService _goService;
+    private readonly JailService _jailService;
+    private readonly FreeParkingService _fpService;
+    private readonly PropertyService _propertyService;
+
+    public BoardService(GoService goService, 
+        JailService jailService,
+        FreeParkingService fpService,
+        PropertyService propertyService)
+    {
+        _goService = goService;
+        _jailService = jailService;
+        _fpService = fpService;
+        _propertyService = propertyService;
+    }
+    
     public async Task ResolveBoardSpaceForPlayer(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
     {
         var space = engine.Cache.Board.GetBoardSpace(player.BoardIndex);
@@ -16,20 +32,22 @@ public class BoardService
             switch (propertySpace.State)
             {
                 case PropertyState.NotOwned:
-                    //TODO call to buy/auction property
+                    if(player.HasPassedInitialGo)
+                        await _propertyService.ProcessUnownedProperty(engine, player, space, propertySpace, ct);
                     break;
                 case PropertyState.FreeParking:
-                    //TODO, pay fee into free parking (rent on FP prop goes into FP)
+                    //Only needs the board space info (rents), "single" rent always assumed for FP property
+                    //propertySpace is not needed as state already validated as being in FP
+                    await _fpService.PayPropertyFee(engine, player, space, ct);
                     break;
                 case PropertyState.Owned:
-                    //TODO, pay rent to owner
+                    await _propertyService.PayPropertyRent(engine, player, space, propertySpace, ct);
                     break;
                 case PropertyState.Mortgaged:
                 case PropertyState.Reserved:
-                    //TODO, pay nothing (ignored)
-                    break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    //nothing happens
+                    break;
             }
         }
         else
@@ -48,9 +66,6 @@ public class BoardService
                 case BoardSpaceType.Go:
                     //TODO call GO service to get GO card, and collect 200/do what card says
                     break;
-                case BoardSpaceType.Jail:
-                    //TODO - ignore, your now in jail, end turn/progress to end turn
-                    break;
                 case BoardSpaceType.JustVisiting:
                     //TODO - Call just visiting service to get just visiting card, and do what card says
                     break;
@@ -65,8 +80,10 @@ public class BoardService
                 case BoardSpaceType.Utility:
                     //Property should be in list of properties
                     throw new InvalidOperationException("Property should be in list of properties");
+                case BoardSpaceType.Jail:
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    //nothing, since jail is no-op
+                    break;
             }
         }
     }

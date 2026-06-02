@@ -13,36 +13,53 @@ public class PlayerTurnOrchestrator
     private readonly MovementService _movementService;
     private readonly PlayerService _playerService;
     private readonly JailService _jailService;
+    private readonly BoardService _boardService;
 
     public PlayerTurnOrchestrator(DiceService diceService,
         MovementService movementService,
         PlayerService playerService,
-        JailService jailService)
+        JailService jailService,
+        BoardService boardService)
     {
         _diceService = diceService;
         _movementService = movementService;
         _playerService = playerService;
         _jailService = jailService;
+        _boardService = boardService;
     }
 
 
     public async Task StartPlayerTurn(Framework.GameEngine engine, CancellationToken ct)
     {
+        // Defensive no-op: a turn is only kicked off from StartOfTurn. A stale or
+        // duplicate StartTurn (e.g. a second tap that queued behind the first)
+        // refuses here rather than rolling into the engine and throwing — an
+        // illegal mutation no-ops, it does not fault the turn. Mirrors the guard
+        // in ResolveThirdDieMovement.
+        if (engine.Cache.TurnState != TurnState.StartOfTurn)
+            return;
+        
+        //Roll dice
+        var dice = await _diceService.RollTurnDice(engine, ct);
+        
+        //Start roll movement phase for player
+        engine.TurnStateProvider.TransitionToRollMovementPhase();
+
         var player = engine.Cache.Game.CurrentPlayer();
         if (player == null) throw new InvalidOperationException("Current player not found in game players list.");
         
         //Existing player is not included, and list is ordered by clockwise from player POV by default
         var otherPlayers = engine.Cache.Game.GetPlayers();
 
-        ushort movement;
-        var dice = await _diceService.RollTurnDice(engine, ct);
         var playerIdWithMatchingDiceNum = engine.Cache.Game.CheckAnyDiceNumbers(dice);
         if(!string.IsNullOrEmpty(playerIdWithMatchingDiceNum))
             await _playerService.ResolveDiceNumber(engine, playerIdWithMatchingDiceNum, ct);
 
         if (player.IsInJail)
             player.JailTurnCounter++;
-        
+
+        ushort movement;
+        var transitionToThirdDie = true;
         switch (dice.RollType)
         {
             case DiceRollType.Normal:
@@ -54,6 +71,7 @@ public class PlayerTurnOrchestrator
                     //Standard roll, move them normally:
                     movement = (ushort)(dice.Die1 + (dice.Die2 ?? throw new InvalidOperationException("Second die cannot be null")));
                     await _movementService.MovePlayer(engine, player, movement, ct);
+                    await _boardService.ResolveBoardSpaceForPlayer(engine, player, ct);
                 }
                 else if(player.JailTurnCounter == (player.MaxJailTurnsOverride ?? RuleDictionary.MaxJailTurns))
                 {
@@ -61,7 +79,6 @@ public class PlayerTurnOrchestrator
                     await _jailService.ForcePlayerToLeaveJail(engine, player, ct);
                 }
                 
-                engine.TurnStateProvider.TransitionToThirdDie();
                 break;
             
             case DiceRollType.Double:
@@ -79,6 +96,7 @@ public class PlayerTurnOrchestrator
                         foreach (var step in effect.RollerSteps)
                         {
                             await _movementService.MovePlayer(engine, player, step, ct);
+                            await _boardService.ResolveBoardSpaceForPlayer(engine, player, ct);
                         }
                     
                     //Increment miss turns if effect requires it
@@ -93,6 +111,7 @@ public class PlayerTurnOrchestrator
                             {
                                 //Will only be one step (per player), double foreach not a concern
                                 await _movementService.MovePlayer(engine, p, step, ct);
+                                await _boardService.ResolveBoardSpaceForPlayer(engine, p, ct);
                             }
                         
                         //Increment other player's miss turns if effect requires it'
@@ -109,7 +128,6 @@ public class PlayerTurnOrchestrator
                     await _jailService.SendPlayerToJail(engine, player, ct);
                 }
                 
-                engine.TurnStateProvider.TransitionToThirdDie();
                 break;
             
             case DiceRollType.Triple:
@@ -122,6 +140,7 @@ public class PlayerTurnOrchestrator
                     
                     movement = (ushort)((dice.Die1 + dice.Die2 + dice.ThirdDie) ?? throw new InvalidOperationException("Dice roll result cannot be null"));
                     await _movementService.MovePlayer(engine, player, movement, ct);
+                    await _boardService.ResolveBoardSpaceForPlayer(engine, player, ct);
                 }
                 else
                 {
@@ -129,18 +148,21 @@ public class PlayerTurnOrchestrator
                     _ = await engine.PromptProvider.Acknowledge(player.PlayerId, "Going to Jail!", "You have rolled too many triples in a row.", ct: ct);
                     await _jailService.SendPlayerToJail(engine, player, ct);
                 }
-                
-                //Triple doesnt grant third die movement
-                engine.TurnStateProvider.TransitionToEndOfTurn();
+
+                transitionToThirdDie = false;
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
 
-        if(player.InitialRoll)
+        if(player.InitialRoll && player.BoardIndex != IndexHelper.GoSpace)
             player.InitialRoll = false;
         
-        engine.Cache.SaveChanges();
+        if(transitionToThirdDie)
+            engine.TurnStateProvider.TransitionToThirdDie();
+        else
+            //Triple doesnt grant third die movement
+            engine.TurnStateProvider.TransitionToEndOfTurn();
     }
 
     
@@ -158,14 +180,21 @@ public class PlayerTurnOrchestrator
         {
             //Move each player based on third die, if not in jail
             await _movementService.MovePlayer(engine, player, thirdDie, ct);
+            await _boardService.ResolveBoardSpaceForPlayer(engine, player, ct);
         }
         
-        engine.Cache.SaveChanges();
         engine.TurnStateProvider.TransitionToEndOfTurn();
     }
 
     public async Task EndPlayerTurn(Framework.GameEngine engine, CancellationToken ct)
     {
+        // Defensive no-op: a turn is only ended from EndOfTurn. A stale or duplicate
+        // EndTurn (e.g. queued behind the first, which already advanced the player
+        // and cleared the dice roll) refuses here rather than throwing on the now-null
+        // roll below.
+        if (engine.Cache.TurnState != TurnState.EndOfTurn)
+            return;
+
         var diceRoll = engine.Cache.TurnDiceRoll;
         if (diceRoll == null) throw new InvalidOperationException("Turn dice roll cannot be null");
         

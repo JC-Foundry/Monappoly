@@ -7,13 +7,10 @@ namespace MP.GameEngine.Services.SubSystems;
 
 public class MovementService
 {
-    private readonly BoardService _boardService;
     private readonly GoService _goService;
 
-    public MovementService(BoardService boardService,
-        GoService goService)
+    public MovementService(GoService goService)
     {
-        _boardService = boardService;
         _goService = goService;
     }
     
@@ -35,7 +32,6 @@ public class MovementService
             Direction = amount > 0 ? PlayerMovementDirection.DirectionOfTravel : PlayerMovementDirection.CounterDirectionOfTravel,
             IsAdvance = false
         });
-        await _boardService.ResolveBoardSpaceForPlayer(engine, player, ct);
     }
 
     public async Task AdvancePlayer(Framework.GameEngine engine, PlayerModel player, ushort boardIndex, PlayerMovementDirection direction, 
@@ -57,7 +53,6 @@ public class MovementService
             Direction = direction,
             IsAdvance = true
         });
-        await _boardService.ResolveBoardSpaceForPlayer(engine, player, ct);
     }
 
     public async Task SendPlayerToJail(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)

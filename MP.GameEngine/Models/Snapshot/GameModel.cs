@@ -1,5 +1,6 @@
 using MP.GameEngine.Enums.Properties;
 using MP.GameEngine.Helpers;
+using MP.GameEngine.Models.Boards;
 using MP.GameEngine.Models.Snapshot.Cards;
 
 namespace MP.GameEngine.Models.Snapshot;
@@ -298,7 +299,7 @@ public class GameModel
                                       || p.StreetRuleQualifier == StreetRuleQualifier.Qualified) 
                                      && streetIndexes.Contains(p.BoardIndex)) == streetIndexes.Count;
     }
-
+    
     #endregion
     
     

@@ -1,5 +1,7 @@
 using System.Text.Json;
+using JC.Core.Models;
 using JC.Core.Services.DataRepositories;
+using JC.Identity.Models;
 using MP.GameEngine.Abstractions;
 using MP.GameEngine.Models.Snapshot;
 using UltimateMonopoly.Models.DataModels.Games;
@@ -36,10 +38,10 @@ public class SnapshotService : ISnapshotService
         try
         {
             await _repos.GetRepository<GameTurn>()
-                .AddAsync(turn, saveNow: false);
+                .AddAsync(turn, userId: IUserInfo.SYSTEM_USER_ID, saveNow: false);
             
             await _repos.GetRepository<GameSnapshot>()
-                .AddAsync(snapshot, saveNow: false);
+                .AddAsync(snapshot, userId: IUserInfo.SYSTEM_USER_ID, saveNow: false);
 
             if (!completeTransaction) return;
             

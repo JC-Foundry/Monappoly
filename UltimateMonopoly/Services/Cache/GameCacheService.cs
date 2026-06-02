@@ -4,9 +4,13 @@ using JC.Core.Services.DataRepositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using MP.GameEngine.Models;
+using MP.GameEngine.Models.Boards;
 using MP.GameEngine.Models.DTOs;
 using MP.GameEngine.Services;
+using UltimateMonopoly.Data;
+using UltimateMonopoly.Models.DataModels.Boards;
 using UltimateMonopoly.Models.DataModels.Games;
+using UltimateMonopoly.Services.Imports;
 
 namespace UltimateMonopoly.Services.Cache;
 
@@ -15,23 +19,28 @@ public class GameCacheService
     private readonly IMemoryCache _cache;
     private readonly IRepositoryManager _repos;
     private readonly BoardCacheService _boardCache;
+    private readonly BoardImportService _boardImportService;
     private readonly GameEngineSetupService _engineSetup;
 
     private const string CacheKey = "GameCache";
+    private const string GameBoardsKey = "GameBoards";
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(12);
 
     public GameCacheService(IMemoryCache cache,
         IRepositoryManager repos,
         BoardCacheService boardCache,
+        BoardImportService boardImportService,
         GameEngineSetupService engineSetup)
     {
         _cache = cache;
         _repos = repos;
         _boardCache = boardCache;
+        _boardImportService = boardImportService;
         _engineSetup = engineSetup;
     }
 
     private string GetKey(string gameId) => $"{CacheKey}__{gameId}";
+    private string GetBoardsKey(string skinId) => $"{GameBoardsKey}__{skinId}";
 
     public async Task<GameCacheModel?> GetGame(string gameId)
     {
@@ -46,6 +55,9 @@ public class GameCacheService
         if (game == null!) return;
 
         _cache.Set(GetKey(game.GameId), game, CacheExpiration);
+        
+        if(!string.IsNullOrEmpty(game.BoardId))
+            _cache.Set(GetBoardsKey(game.BoardId), game.Board, CacheExpiration);
     }
 
     /// <summary>
@@ -77,9 +89,7 @@ public class GameCacheService
             .FirstOrDefaultAsync();
         if (snapshot is null) return null;
 
-        var board = string.IsNullOrEmpty(game.BoardId)
-            ? await _boardCache.GetDefaultBoard()
-            : (await _boardCache.GetAllBoards()).FirstOrDefault(b => b.BoardId == game.BoardId);
+        var board = await GetGameBoard(game.UserId, game.BoardId);
         if (board is null) return null;
 
         var gameDto = new GameDTO(game.Id, game.Name, game.BoardId, game.RoundingRule,
@@ -88,5 +98,20 @@ public class GameCacheService
         var cache = _engineSetup.SetupGameCache(gameDto, snapshot.StateJson, board);
         _cache.Set(GetKey(gameId), cache, CacheExpiration);
         return cache;
+    }
+    
+    
+    
+    //Game Boards (cached boards for in-play games, even when shared board is no longer shared)
+    public async Task<Board?> GetGameBoard(string userId, string? skinId = null)
+    {
+        if(string.IsNullOrEmpty(skinId))
+            return await _boardCache.GetDefaultBoard();
+        
+        return await _cache.GetOrCreateAsync(GetBoardsKey(skinId), async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheExpiration;
+            return await _boardImportService.GetGameBoard(await _boardCache.GetDefaultBoard(), skinId, userId);
+        });
     }
 }

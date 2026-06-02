@@ -67,13 +67,13 @@ public class BoardImportService
             : new Board(_boardName, spaces);
     }
 
-    public async Task<List<Board>> GetBoardSkins(Board defaultBoard, string? userId = null)
+
+    private async Task<List<Board>> FilterBoardSkins(Board defaultBoard, string userId, bool activeShareOnly)
     {
-        userId ??= _userInfo.UserId;
         var customBoards = await _repos.GetRepository<BoardSkin>()
             .AsQueryable().FilterDeleted(DeletedQueryType.OnlyActive)
             .Include(b => b.Spaces)
-            .Where(b => b.UserId == userId || b.SharedWith.Any(sbs => !sbs.IsDeleted && sbs.UserId == userId))
+            .Where(b => b.UserId == userId || b.SharedWith.Any(sbs => (!activeShareOnly || !sbs.IsDeleted) && sbs.UserId == userId))
             .ToListAsync();
 
         var boards = (from customBoard in customBoards
@@ -88,4 +88,14 @@ public class BoardImportService
             ? throw new InvalidOperationException($"All custom boards must have {IndexHelper.BoardSize} spaces") 
             : boards;
     }
+    
+    public async Task<List<Board>> GetBoardSkins(Board defaultBoard, string? userId = null)
+    {
+        userId ??= _userInfo.UserId;
+        return await FilterBoardSkins(defaultBoard, userId, true);
+    }
+    
+    public async Task<Board?> GetGameBoard(Board defaultBoard, string skinId, string userId)
+        //Gets board skins, even if previously shared (IsDeleted=true) - used for in-play games
+        => (await FilterBoardSkins(defaultBoard, userId, false)).FirstOrDefault(b => b.BoardId == skinId);
 }

@@ -32,6 +32,11 @@ public sealed class AcquirePropertyPrompt : Prompt<AcquirePropertyResponse>
     /// passing it on.
     /// </summary>
     public uint Cost { get; init; }
+    
+    /// <summary>
+    /// Whether the player is acquiring a standard property or a reservation.
+    /// </summary>
+    public bool IsReserve { get; init; }
 
     public override PromptTarget Target => PromptTarget.SinglePlayer(PlayerId);
 }

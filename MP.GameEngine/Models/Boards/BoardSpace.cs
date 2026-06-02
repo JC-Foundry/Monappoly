@@ -32,7 +32,7 @@ public class BoardSpace
         var result = SetProperties(import);
         if (!result) throw new ArgumentException("Invalid board space import");
         
-        if(Index.IsProperty() || Index.IsStation() || Index.IsUtility())
+        if(Index.IsProperty(false))
             PurchaseCost = import.PurchaseCost;
         
         if(Index.IsProperty())

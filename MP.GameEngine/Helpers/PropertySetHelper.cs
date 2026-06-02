@@ -1,5 +1,7 @@
 
 using MP.GameEngine.Enums.Properties;
+using MP.GameEngine.Models.Snapshot;
+
 namespace MP.GameEngine.Helpers;
 
 public static class PropertySetHelper
@@ -79,4 +81,14 @@ public static class PropertySetHelper
             PropertySet.Utility => UtilityIndexes.ToList(),
             _ => throw new ArgumentOutOfRangeException(nameof(set), set, null)
         };
+
+    public static bool MustReserve(PropertySet set, List<PropertyModel> ownedPropertiesInSet)
+    {
+        var propIndexes = ownedPropertiesInSet.Select(p => p.BoardIndex).ToList();
+        return MustReserve(set, propIndexes);
+    }
+
+    public static bool MustReserve(PropertySet set, List<ushort> ownedPropertiesInSet)
+        => set is not (PropertySet.Station or PropertySet.Utility)
+           && GetIndexes(set).Count - 1 == ownedPropertiesInSet.Count;
 }

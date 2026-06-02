@@ -1,6 +1,7 @@
 using MP.GameEngine.Enums;
 using MP.GameEngine.Enums.Games;
 using MP.GameEngine.Enums.Properties;
+using MP.GameEngine.Helpers;
 using MP.GameEngine.Helpers.RuleSet;
 using MP.GameEngine.Models.EventReceipts;
 using MP.GameEngine.Models.Prompts.PromptTypes;
@@ -40,8 +41,7 @@ public class TransactionService
         if (!space.IsRentable) return;
 
         var property = engine.Cache.Game.GetPropertySpace(propertyIndex);
-        if (property is null) return;
-        if (property.OwnerPlayerId is null) return;
+        if (property?.OwnerPlayerId is null) return;
         if (property.State is not PropertyState.Owned) return;          // mortgaged/reserved → no rent
 
         var owner = engine.Cache.Game.GetPlayer(property.OwnerPlayerId);
@@ -111,6 +111,20 @@ public class TransactionService
     /// </summary>
     public Task PurchaseProperty(Framework.GameEngine engine, PlayerModel player, uint amount, ushort counterpartyPropertyIndex, CancellationToken ct)
         => Move(engine, player, -amount, FinancialReason.Purchase,
+            counterparty: TransactionCounterparty.Bank,
+            counterpartyPropertyIndex: counterpartyPropertyIndex,
+            allowShortfall: false,
+            ct: ct);
+
+    /// <summary>
+    /// Removes the reserve status from a property for the specified <paramref name="player"/>.
+    /// Updates the financial state by deducting the specified <paramref name="amount"/>
+    /// and assigns the transaction reason as "UnReserve". The transaction is conducted with the bank,
+    /// targeting the property identified by <paramref name="counterpartyPropertyIndex"/>.
+    /// The operation does not permit shortfalls.
+    /// </summary>
+    public Task UnReserveProperty(Framework.GameEngine engine, PlayerModel player, uint amount, ushort counterpartyPropertyIndex, CancellationToken ct)
+        => Move(engine, player, -amount, FinancialReason.UnReserve,
             counterparty: TransactionCounterparty.Bank,
             counterpartyPropertyIndex: counterpartyPropertyIndex,
             allowShortfall: false,
@@ -251,7 +265,12 @@ public class TransactionService
     /// (per the engine policy — mutations against the rules don't throw).
     ///
     /// Emits one <see cref="FinancialTransactionReceipt"/> from each affected
-    /// player's perspective, then promotes the cache via <c>SaveChanges()</c>.
+    /// player's perspective. Mutations land on the cache working copy and are
+    /// <b>not</b> committed here — promotion to committed state happens only at
+    /// the turn-state boundary (<see cref="GameCacheModel.SetTurnState"/>).
+    /// Committing mid-move would promote <c>_working</c> to <c>_game</c> and
+    /// detach the player references this (and any later) move still holds. See
+    /// <c>design-docs/transactions.md</c> §7.
     /// </summary>
     private async Task Move(
         Framework.GameEngine engine,
@@ -266,7 +285,7 @@ public class TransactionService
     {
         if(amount == 0) return;
         
-        amount = ComputeGameRounding(amount, engine.Cache.RoundingRule, reason);
+        amount = MoneyHelper.NormaliseAmount(amount, engine.Cache.RoundingRule, reason);
         switch (amount)
         {
             case 0:
@@ -304,7 +323,11 @@ public class TransactionService
 
         ApplyBalances(engine, player, amount, counterparty, counterpartyPlayer);
         EmitReceipts(engine, player, amount, reason, counterparty, counterpartyPlayer, counterpartyPropertyIndex);
-        engine.Cache.SaveChanges();
+        
+        //This has been kept for reference that save changes should NEVER be called inside services
+        //Save changes will detatch objects (like players) from the GameModel (since _working is promoted to _game)
+        //Save changes should only EVERY be called at turn state boundaries (turn state provider), where we have no detatched objects
+        //engine.Cache.SaveChanges();
     }
 
     private void ApplyBalances(
@@ -359,37 +382,6 @@ public class TransactionService
             CounterpartyPlayerId = player.PlayerId,
             CounterpartyPropertyIndex = counterpartyPropertyIndex
         });
-    }
-
-    public long ComputeGameRounding(long amount, GameRoundingRule roundingRule, FinancialReason reason )
-    {
-        var value = roundingRule switch
-        {
-            GameRoundingRule.None => amount,
-            GameRoundingRule.To5 => (long)(Math.Round(amount / 5.0, MidpointRounding.AwayFromZero) * 5),
-            GameRoundingRule.To10 => (long)(Math.Round(amount / 10.0, MidpointRounding.AwayFromZero) * 10),
-            GameRoundingRule.To20 => (long)(Math.Round(amount / 20.0, MidpointRounding.AwayFromZero) * 20),
-            GameRoundingRule.To50 => (long)(Math.Round(amount / 50.0, MidpointRounding.AwayFromZero) * 50),
-            _ => throw new ArgumentOutOfRangeException(nameof(roundingRule), roundingRule, null)
-        };
-        
-        if(reason == FinancialReason.Rent) 
-            //Rent that resolves to 0, is 0. All others round UP to minimum value
-            return value;
-        
-        var positive = amount > 0;
-        if (value == 0)
-            value = roundingRule switch
-            {
-                GameRoundingRule.None => value,
-                GameRoundingRule.To5 => positive ? 5 : -5,
-                GameRoundingRule.To10 => positive ? 10 : -10,
-                GameRoundingRule.To20 => positive ? 20 : -20,
-                GameRoundingRule.To50 => positive ? 50 : -50,
-                _ => throw new ArgumentOutOfRangeException(nameof(roundingRule), roundingRule, null)
-            };
-        
-        return value;
     }
 
 

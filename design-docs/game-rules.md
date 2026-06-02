@@ -10,8 +10,11 @@ The baseline rules that apply to every game unless overridden by a custom
 rule set.
 
 1. **Buying requires passing GO.** A player cannot buy properties until they
-   have passed GO at least once. The initial pass off GO at the start of the
-   game does not count.
+   have passed GO at least once; the initial pass off GO at the start of the
+   game does not count. A player who lands on an unowned property *before* they
+   have passed GO does nothing with it — the property is **not** bought and is
+   **not** auctioned (the one exception to rule 6). It simply stays with the
+   bank, available to whoever can later take it.
 
 2. **No building or collecting rent while in jail.** A player in jail cannot
    build houses or collect rent.
@@ -27,10 +30,12 @@ rule set.
 5. **Fines go to Free Parking.** All fines are paid into Free Parking, not to
    the bank.
 
-6. **Declined or unaffordable purchases go to auction.** If a player cannot
-   afford — or chooses not to buy — a property they land on, that property
-   automatically goes to auction. Every player may bid, including the player
-   who declined it and any players currently in jail.
+6. **Declined or unaffordable purchases go to auction.** If a player who is
+   eligible to buy cannot afford — or chooses not to buy — a property they land
+   on, that property automatically goes to auction. Every player may bid,
+   including the player who declined it and any players currently in jail. (A
+   player who is not *eligible* to buy because they have not yet passed GO is
+   the exception: they trigger no auction at all — see rule 1.)
 
 7. **No raising funds to buy or bid.** Buying a property and bidding in an
    auction must be paid from money the player genuinely has. A player cannot
@@ -403,6 +408,15 @@ A player who runs short of money may borrow from the bank.
    third-die movement. A property that has been unmortgaged before GO is passed
    is not charged.
 
+4. **A mortgaged property does not count toward its set.** A mortgaged property
+   earns no rent, and it is also ignored when working out the rent level of the
+   rest of its set. The other members of a colour set lose their double (set)
+   rent, and a station's combined-count rent drops, until the mortgaged property
+   is unmortgaged — so mortgaging one property suspends the set bonus for the
+   whole group, not just for the mortgaged property itself. (This is the
+   *opposite* of how mortgaged stations are treated for the **purchase**
+   surcharge — see Stations, rule 2.)
+
 ---
 
 ## Reserved Properties
@@ -439,6 +453,58 @@ final property. Once every player has their first set, the mechanic is spent
 
 ---
 
+## Auctions
+
+When a player does not take a property they land on, it is offered to the rest
+of the table by auction (see Default Monopoly Rules, rule 6).
+
+1. **What triggers an auction.** A property is auctioned when a player who is
+   *eligible to buy it* lands on it and does not take it — they either decline
+   or cannot afford its purchase price. Two cases do **not** trigger an auction:
+   - A player who **has not passed GO** cannot buy (Default rule 1), so the
+     property is left with the bank — no auction.
+   - A property offered under the **Reserved Properties** rule: while the reserve
+     rule is active, landing on a set-completing property is a reserve-or-ignore
+     choice, and ignoring it simply ends the player's action on that space.
+
+2. **The minimum bid.** Bidding does not start at zero. The minimum bid for any
+   auctioned property is **half its purchase price** — the same value as its
+   reserve price — rounded according to the game's rounding rule. The auction
+   opens at this floor.
+
+3. **Who may bid.** Every player may bid, including the player who declined the
+   property and any players currently in jail. Bids must be paid from money the
+   player genuinely has — a player cannot mortgage, sell buildings, or make a
+   deal to raise funds for a bid (see Default Monopoly Rules, rule 7). A player
+   who cannot afford even the minimum bid takes no part in the auction.
+
+4. **Bidding order and raising.** Bidding proceeds clockwise, starting with the
+   player who landed on the property — or, if they cannot afford the minimum
+   bid, the next eligible player clockwise. On their go a player either raises
+   the current bid or passes. A raise must exceed the current bid; the amounts a
+   player may raise by are tied to the game's rounding rule (with no rounding a
+   player may raise by £1, £5, £10, £20, £50 or £100; under round-to-50, only
+   £50 or £100).
+
+5. **Passing is final.** A player who passes drops out of the auction for the
+   rest of it and cannot re-enter. The auction continues among the players who
+   remain.
+
+6. **Winning.** The last player remaining wins the property and pays their
+   current bid. A player can win **without ever raising**: if every other player
+   passes, the last one remaining wins at the minimum bid. Because the player
+   who declined the property may still bid, they too can end up the last player
+   remaining and so be made to take it at the minimum bid. The winning bid is
+   the price paid — no other purchase-cost rule applies (the station
+   price-scaling, for example, applies only when buying a station outright, not
+   when winning one at auction).
+
+7. **Nobody can afford it.** If no player — not even the one who landed on it —
+   can afford the minimum bid, the auction does not take place and the property
+   simply remains with the bank. (Rare, but possible late in a game.)
+
+---
+
 ## Stations
 
 1. **Station price scales with stations owned.** The price of a station rises
@@ -452,9 +518,16 @@ final property. Once every player has their first set, the mechanic is spent
    - **3rd station** — £200 base + £100 rent = **£300**.
    - **4th station** — £200 base + £200 rent = **£400**.
 
-2. **Only currently owned stations count.** The surcharge is based on the
-   stations the buyer owns at the time of purchase — not any stations they
-   owned previously and have since lost.
+2. **Only currently owned stations count — including mortgaged ones.** The
+   surcharge is based on the stations the buyer owns at the time of purchase —
+   not any they owned previously and have since lost. A **mortgaged** station
+   still counts: the player still controls it, so it still pushes up the price
+   of the next station. This is deliberately the opposite of how mortgaging
+   affects *rent* (see Mortgaging, rule 4, where a mortgaged property is
+   ignored): counting it for the purchase price closes a loophole — otherwise a
+   player could buy a station, mortgage it, buy the next at the base price
+   again, and so on, undercutting the escalating cost (£800 for all four instead
+   of the intended £200 + £250 + £300 + £400 = £1,150).
 
 3. **No surcharge for non-purchase acquisitions.** A player pays no surcharge
    for a station gained through Free Parking, a card, or a deal — the scaling

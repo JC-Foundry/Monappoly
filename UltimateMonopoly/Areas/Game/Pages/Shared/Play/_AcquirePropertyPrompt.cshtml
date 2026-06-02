@@ -1,0 +1,48 @@
+@using System.Text.Json
+@using JC.Core.Extensions
+@using MP.GameEngine.Helpers
+@{
+    // Board index → property-set slug (e.g. 6 → "blue", 37 → "dark-blue",
+    // 5 → "station"), built server-side via PropertySetHelper and the same
+    // ToDisplayName().ToSlug() mapping the board uses. The handler
+    // (acquire-property-prompt.js) reads this to colour the card by the set of
+    // the property carried on the prompt (BoardIndex). Computed here, not in JS,
+    // so the index→set rules stay in one place (the engine).
+    var propColours = IndexHelper.AllPropertyIndexes
+        .Where(i => PropertySetHelper.ResolveSet(i) is not null)
+        .ToDictionary(i => i, i => PropertySetHelper.ResolveSet(i)!.Value.ToDisplayName().ToSlug());
+}
+@*
+    ACQUIRE-PROPERTY PROMPT  (player profile only — Game-UI.md "Where prompts surface")
+    A static-backdrop modal driven by the engine's AcquirePropertyPrompt — a binary
+    take-it / decline. It covers both BUY (decline → auction) and RESERVE (decline →
+    no-op), switched by the prompt's IsReserve flag; the handler sets the wording and
+    button labels. Markup only; all behaviour (show/hide on PromptOpened/PromptClosed,
+    colour-by-set, submit) lives in /scripts/InGame/Prompts/acquire-property-prompt.js.
+    The element ids + the colour-map script id below are that script's contract — keep
+    them in sync.
+
+    The card is coloured by the property's set: the handler applies a
+    .text-bg-prop-{slug} header and a .border-prop-{slug} border per prompt, from the
+    index→slug map below.
+*@
+<script type="application/json" id="acquirePropertyColours">@Html.Raw(JsonSerializer.Serialize(propColours))</script>
+
+<div class="modal fade" id="acquirePropertyModal" tabindex="-1" aria-labelledby="acquirePropertyTitle"
+     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border border-2" id="acquirePropertyContent">
+            <div class="modal-header border-0" id="acquirePropertyHeader">
+                <h5 class="modal-title" id="acquirePropertyTitle"></h5>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" id="acquirePropertyBody"></p>
+                <div class="alert alert-warning d-none mt-3 mb-0" id="acquirePropertyError" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="acquirePropertyDecline"></button>
+                <button type="button" class="btn btn-primary" id="acquirePropertyAccept"></button>
+            </div>
+        </div>
+    </div>
+</div>

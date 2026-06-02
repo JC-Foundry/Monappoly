@@ -28,4 +28,10 @@ public static class RuleDictionary
     public const ushort GoPassClockwiseBonus = 200;
     public const ushort GoPassCounterClockwiseBonus = 100;
     public const ushort LandOnGoBonus = 200;
+    
+    //Station Rules
+    public const ushort SingleStationCost = 200;
+    public const ushort SecondStationCost = SingleStationCost + 50; //2 stations grants rent of 50, so increase by 50
+    public const ushort ThirdStationCost = SingleStationCost + 100; //3 stations grants rent of 100, so increase by 100
+    public const ushort FourthStationCost = SingleStationCost + 200; //4 stations grants rent of 200, so increase by 200
 }

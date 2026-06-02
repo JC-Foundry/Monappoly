@@ -122,7 +122,7 @@ public class GameService
             .AnyAsync(p => !p.Game.IsDeleted && p.GameId == gameId && p.UserId == userId);
 
 
-    public void EnqueueTurn(string gameId)
+    public void EnqueueTurn(string gameId, string submittingUserId)
     {
         // Kick off the first player's turn on the game's single-writer executor.
         // The work item resolves the orchestrator in its own scope and runs off
@@ -130,16 +130,29 @@ public class GameService
         // broadcast and the GamePlayHub.GetCurrentPrompt pull on connect.
         _executor.Enqueue(gameId, async (engine, sp, ct) =>
         {
+            // Authoritative gate re-check on the writer thread. The hub's pre-check
+            // can go stale before this item runs (another queued item may have moved
+            // the turn on), so a no-longer-valid command no-ops here rather than
+            // running into the engine and throwing. See web-orchestration.md §5.
+            var current = engine.Cache.Game.CurrentPlayer();
+            if (current is null || !engine.TurnStateProvider.CanStartTurn(current.PlayerId, submittingUserId))
+                return;
+
             var orchestrator = sp.GetRequiredService<MP.GameEngine.Services.PlayerTurnOrchestrator>();
             await orchestrator.StartPlayerTurn(engine, ct);
             await orchestrator.ResolveThirdDieMovement(engine, ct);
         });
     }
-    
-    public void EnqueueEndTurn(string gameId)
+
+    public void EnqueueEndTurn(string gameId, string submittingUserId)
     {
         _executor.Enqueue(gameId, async (engine, sp, ct) =>
         {
+            // Authoritative gate re-check on the writer thread (see EnqueueTurn).
+            var current = engine.Cache.Game.CurrentPlayer();
+            if (current is null || !engine.TurnStateProvider.CanEndTurn(current.PlayerId, submittingUserId))
+                return;
+
             var orchestrator = sp.GetRequiredService<MP.GameEngine.Services.PlayerTurnOrchestrator>();
             await orchestrator.EndPlayerTurn(engine, ct);
         });

@@ -94,7 +94,7 @@ public class GamePlayHub : GameBaseHub
         if (!engine.TurnStateProvider.CanStartTurn(current.PlayerId, Context.UserIdentifier))
             return false;
 
-        _gameService.EnqueueTurn(gameId);
+        _gameService.EnqueueTurn(gameId, Context.UserIdentifier);
         return true;
     }
 
@@ -117,7 +117,7 @@ public class GamePlayHub : GameBaseHub
         if (!engine.TurnStateProvider.CanEndTurn(current.PlayerId, Context.UserIdentifier))
             return false;
 
-        _gameService.EnqueueEndTurn(gameId);
+        _gameService.EnqueueEndTurn(gameId, Context.UserIdentifier);
         return true;
     }
 }

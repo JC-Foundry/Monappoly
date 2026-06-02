@@ -38,6 +38,9 @@ public enum FinancialReason
 
     /// <summary>Buying a property (uses <see cref="FinancialTransactionReceipt.CounterpartyPropertyIndex"/>).</summary>
     Purchase,
+    
+    /// <summary>Unreserving a property (uses <see cref="FinancialTransactionReceipt.CounterpartyPropertyIndex"/>).</summary>
+    UnReserve,
 
     /// <summary>Winning an auction (uses <see cref="FinancialTransactionReceipt.CounterpartyPropertyIndex"/>).</summary>
     Auction,

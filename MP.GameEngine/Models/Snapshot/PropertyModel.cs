@@ -84,5 +84,13 @@ public class PropertyModel
         State = PropertyState.Reserved;
     }
     
+    public bool BuiltOn() 
+        => RentLevel is RentLevel.ONE_HOUSE 
+        or RentLevel.TWO_HOUSES 
+        or RentLevel.THREE_HOUSES 
+        or RentLevel.FOUR_HOUSES 
+        or RentLevel.HOTEL 
+        or RentLevel.DOUBLE_HOTEL;
+    
     #endregion
 }

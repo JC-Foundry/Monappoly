@@ -811,16 +811,22 @@ response branches on game state to either `MarkPropertyOwned` or
 
 - `PlayerId` (inherited) — the lander.
 - `BoardIndex: ushort` — the property's board index. Set/colour resolves via
-  `PropertySetHelper.ResolveColour(ushort)`.
+  `PropertySetHelper.ResolveSet(ushort)`.
 - `Cost: uint` — what the lander would pay for the offered action (full price
   for a buy, half price for a reserve). The engine computes this; the
   framework does not interpret it.
+- `IsReserve: bool` — `true` when this is a reservation offer, `false` for a
+  standard buy offer. A frontend hint only: it tells the client which wording
+  to render ("Reserve … for £X?" vs "Buy … for £X, or auction it?"). The engine
+  still branches on its own state, and the validator ignores it.
 - `Title`, `Body` (inherited) — from the `Prompt` base.
 
 **Response payload**
 
-- `Accept: bool` — `true` = take it (buy or reserve, engine decides), `false`
-  = decline (→ auction).
+- `Accept: bool` — `true` = take it (buy or reserve, per `IsReserve`); `false`
+  = decline. Declining a **buy** sends the property to auction; declining a
+  **reserve** is a no-op — the property stays bank-owned (reservable properties
+  are never auctioned).
 
 **Authorisation**
 
@@ -829,13 +835,14 @@ the lander's behalf via the tablet).
 
 **Notes**
 
-- Affordability is gated *before* this prompt opens. If the lander can't
-  afford the offered action, the engine emits an `AcknowledgePrompt`
-  ("can't afford, auction begins") and skips this prompt entirely.
-- The prompt does *not* carry a "this is a reserve" flag. That information
-  lives in the engine's local state when constructing the prompt and again
-  when handling the response. Title/Body carry whatever the player needs to
-  see ("Reserve Pall Mall for £70 — completes pink set").
+- Affordability is gated *before* this prompt opens. If the lander can't afford
+  the offered action, the engine emits an `AcknowledgePrompt` (for a buy,
+  "can't afford — auction begins"; for a reserve, "can't afford to reserve") and
+  skips this prompt entirely.
+- `IsReserve` lets the client pick reserve-vs-buy wording without inferring it
+  from `Title`/`Body`. The deeper branching — what "yes" actually does (buy at
+  full price → auction on decline, vs reserve at half price → no-op on decline)
+  — still lives in the engine that created the prompt, not in the framework.
 
 ### 15.5 `TargetPlayerPrompt` — *implemented*
 
@@ -973,9 +980,11 @@ propose a settling deal) or to surrender (declare bankruptcy). See
 
 Sequential bidding prompt for the auction loop triggered by `game-rules.md`
 Default rule 6 (declined or unaffordable purchases). The engine opens one
-of these per bidder per round, in clockwise order, until the auction
-resolves. Every player may bid, including the player who declined the
-purchase and any players currently in jail (Default rule 6).
+of these per bidder, in clockwise order, until the auction resolves
+(pass = out — a bidder who passes drops out for the rest of the auction).
+The full mechanics — the 50% minimum-bid floor, the affordability filter,
+pass-out elimination and the forced last-survivor win — live in
+`auction-flow.md`; this entry covers only the prompt contract.
 
 |  |  |
 |---|---|
@@ -989,25 +998,37 @@ purchase and any players currently in jail (Default rule 6).
 
 - `PlayerId` (inherited) — the bidder being asked.
 - `BoardIndex: ushort` — the property being auctioned.
-- `CurrentHighBid: uint` — the highest bid so far. `0` before the first
-  bid; a new bid must strictly exceed this.
+- `CurrentHighBid: uint` — the highest bid so far. At the start of the
+  auction this is the **minimum bid** — the property's reserve price (50% of
+  its purchase cost, grid-rounded; `MoneyHelper.MinAuctionBid`), **not `0`**.
+  A raise must strictly exceed it.
 - `CurrentHighBidderId: string?` — the player currently winning, if any.
+  `null` before the first raise (the auction sits at the minimum bid).
   Informational for the frontend; not consulted by validation.
 - `PlayerBalance: uint` — the bidder's available cash. Bids cannot exceed
   this — `game-rules.md` Default rule 7 bars raising funds to bid.
+- `AllowedIncrements: IReadOnlyList<ushort>` — the raise amounts the bidder
+  may add to `CurrentHighBid`, derived from the game's rounding rule
+  (`MoneyHelper.AuctionIncrements`): `[1,5,10,20,50,100]` with no rounding,
+  narrowing to `[50,100]` under "round to 50". The client renders a button
+  per increment (each gated against `PlayerBalance`) and submits
+  `CurrentHighBid + increment`. Server-computed so the rounding→increment
+  mapping is a single source of truth.
 - `Title`, `Body` (inherited) — from the `Prompt` base.
 
 **Response payload**
 
-- `Action: AuctionBidAction` — `Bid` or `Pass`.
-- `BidAmount: uint?` — required when `Action == Bid`; must be `null` when
-  `Action == Pass`.
+- `Action: AuctionBidAction` — `Bid` or `Pass` (Pass drops the bidder out).
+- `BidAmount: uint?` — the absolute new bid (`CurrentHighBid + increment`).
+  Required when `Action == Bid`; must be `null` when `Action == Pass`.
 
 **Authorisation and validation**
 
 - Submitter must equal `PlayerId` or `cache.HostPlayerId`.
 - `Bid` → `BidAmount` must be present, strictly greater than
-  `CurrentHighBid`, and not greater than `PlayerBalance`.
+  `CurrentHighBid`, and not greater than `PlayerBalance`. (The validator does
+  not re-check grid alignment — bids are built from `AllowedIncrements` off
+  the grid-aligned floor, so they are grid-aligned by construction.)
 - `Pass` → `BidAmount` must be `null`.
 
 ### 15.9 `CardOptionPrompt` — *implemented*

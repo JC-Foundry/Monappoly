@@ -67,4 +67,22 @@
             btn.disabled = false;   // re-enable on transient failure
         });
     });
+
+    // Custom loan repayment — reads the amount from the sibling input and invokes
+    // RepayLoanCustom (pays the oldest loan first). Whole pounds, > 0; the engine
+    // re-gates, normalises, and caps to the player's cash.
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-loan-repay]');
+        if (!btn || btn.disabled || !window.GamePlayHub) return;
+
+        const input = btn.closest('.input-group')?.querySelector('[data-loan-amount]');
+        const amount = input ? Math.floor(Number(input.value)) : 0;
+        if (!Number.isInteger(amount) || amount <= 0) return;
+
+        btn.disabled = true;
+        GamePlayHub.invoke('RepayLoanCustom', amount).catch(err => {
+            console.error('RepayLoanCustom failed:', err);
+            btn.disabled = false;   // re-enable on transient failure
+        });
+    });
 })();

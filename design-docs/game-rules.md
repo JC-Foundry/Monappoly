@@ -416,12 +416,12 @@ A player who runs short of money may borrow from the bank.
 ## Mortgaging
 
 1. **Repayment on passing GO.** Each time a player passes GO they must repay
-   10% of the purchase cost of every property they have mortgaged.
+   20% of the purchase cost of every property they have mortgaged.
 
 2. **Applies to forced mortgages.** This repayment applies to every mortgaged
    property, including any the player was forced to mortgage.
 
-3. **Only properties still mortgaged at GO count.** The 10% is charged only on
+3. **Only properties still mortgaged at GO count.** The 20% is charged only on
    properties that are still mortgaged at the moment the player passes GO —
    whether they pass GO during their own turn's movement or during their
    third-die movement. A property that has been unmortgaged before GO is passed

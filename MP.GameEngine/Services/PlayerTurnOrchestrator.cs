@@ -126,7 +126,7 @@ public class PlayerTurnOrchestrator
                             p.TurnsToMiss++;
                     }
                     
-                    player.FlipDirection();
+                    player.FlipDirection(engine);
                 }
                 else
                 {

@@ -112,6 +112,19 @@ public class PlayerProfileService
         => EnqueuePortfolioCommand(gameId, submittingUserId,
             (svc, engine, ct) => svc.SellOnAllProperties(engine, ct));
 
+    // Custom loan repayment — current-player portfolio command, but it resolves
+    // LoanService (not PropertyService), so it has its own enqueue with the same
+    // writer-thread gate re-check. RepayLoansCustom resolves the current player itself.
+    public void EnqueueRepayLoanCustom(string gameId, string submittingUserId, uint amount)
+        => _executor.Enqueue(gameId, async (engine, sp, ct) =>
+        {
+            var current = engine.Cache.Game.CurrentPlayer();
+            if (current is null || !engine.TurnStateProvider.CanPortfolioCommand(current.PlayerId, submittingUserId))
+                return;
+
+            await sp.GetRequiredService<LoanService>().RepayLoansCustom(engine, amount, ct);
+        });
+
     private void EnqueuePortfolioCommand(string gameId, string submittingUserId,
         Func<PropertyService, EngineRuntime, CancellationToken, Task> command)
     {

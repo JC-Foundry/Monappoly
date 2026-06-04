@@ -48,6 +48,18 @@
                 if (space.IsBuildable)
                     tipContent += $"\nBuild: {RuleDictionary.Currency}{space.BuildCost}";
                 tipContent += $"\nOwner: {owner}";
+
+                // Rent level + current rent — only once owned (mortgaged/reserved show level too,
+                // but rent is 0). Utilities are dice-multiplied, so show the multiplier.
+                if (prop is not null && !string.IsNullOrEmpty(prop.OwnerPlayerId))
+                {
+                    var rentText = prop.State is PropertyState.Mortgaged or PropertyState.Reserved
+                        ? $"{RuleDictionary.Currency}0"
+                        : space.PropertySet == PropertySet.Utility
+                            ? $"{space.GetRent(prop.RentLevel) ?? 0}× dice"
+                            : $"{RuleDictionary.Currency}{space.GetRent(prop.RentLevel) ?? 0}";
+                    tipContent += $"\nRent level: {RentLevelName(prop.RentLevel)}\nRent: {rentText}";
+                }
             }
             else if (space.IsTaxable)
             {
@@ -119,6 +131,23 @@
 </div>
 
 @functions {
+    // Rent-level label for the popover (plain text — the visual badge/pips can't render
+    // in a plain-text popover; the property tab shows those via the _RentLevel partial).
+    static string RentLevelName(RentLevel level) => level switch
+    {
+        RentLevel.SINGLE => "Single",
+        RentLevel.SET => "Set",
+        RentLevel.DOUBLE => "Double",
+        RentLevel.TRIPLE => "Triple",
+        RentLevel.ONE_HOUSE => "1 house",
+        RentLevel.TWO_HOUSES => "2 houses",
+        RentLevel.THREE_HOUSES => "3 houses",
+        RentLevel.FOUR_HOUSES => "4 houses",
+        RentLevel.HOTEL => "Hotel",
+        RentLevel.DOUBLE_HOTEL => "Double hotel",
+        _ => level.ToString()
+    };
+
     static string SideClass(BoardSide side) => side switch
     {
         BoardSide.Top => "side-top",

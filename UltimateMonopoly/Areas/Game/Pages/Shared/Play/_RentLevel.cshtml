@@ -1,0 +1,46 @@
+@using MP.GameEngine.Enums.Properties
+@model RentLevel
+@{
+    // Shared rent-level visual. SINGLE/SET/DOUBLE/TRIPLE render a text badge; the house
+    // levels render N green pips; HOTEL / DOUBLE_HOTEL render 1 / 2 red pips.
+    // (DOUBLE/TRIPLE are station-only set levels.)
+    string? badge = Model switch
+    {
+        RentLevel.SINGLE => "Single",
+        RentLevel.SET => "Set",
+        RentLevel.DOUBLE => "Double",
+        RentLevel.TRIPLE => "Triple",
+        _ => null
+    };
+    var houses = Model switch
+    {
+        RentLevel.ONE_HOUSE => 1,
+        RentLevel.TWO_HOUSES => 2,
+        RentLevel.THREE_HOUSES => 3,
+        RentLevel.FOUR_HOUSES => 4,
+        _ => 0
+    };
+    var hotels = Model switch
+    {
+        RentLevel.HOTEL => 1,
+        RentLevel.DOUBLE_HOTEL => 2,
+        _ => 0
+    };
+}
+@if (badge is not null)
+{
+    <span class="badge text-bg-secondary rent-badge">@badge</span>
+}
+else
+{
+    <span class="rent-pips" aria-label="@houses house(s), @hotels hotel(s)">
+        @for (var h = 0; h < houses; h++)
+        {
+            <span class="rent-pip rent-pip-house"></span>
+        }
+        @for (var h = 0; h < hotels; h++)
+        {
+            <span class="rent-pip rent-pip-hotel"></span>
+        }
+    </span>
+}

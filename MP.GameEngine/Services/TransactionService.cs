@@ -3,10 +3,12 @@ using MP.GameEngine.Enums.Games;
 using MP.GameEngine.Enums.Properties;
 using MP.GameEngine.Helpers;
 using MP.GameEngine.Helpers.RuleSet;
+using MP.GameEngine.Models;
 using MP.GameEngine.Models.EventReceipts;
 using MP.GameEngine.Models.Prompts.PromptTypes;
 using MP.GameEngine.Models.Prompts.PromptTypes.Responses;
 using MP.GameEngine.Models.Snapshot;
+using MP.GameEngine.Services.SubSystems;
 
 namespace MP.GameEngine.Services;
 
@@ -93,13 +95,13 @@ public class TransactionService
             ct: ct);
 
     /// <summary>
-    /// The 10% mortgage fee paid each time a player passes GO with mortgaged
-    /// properties (game-rules.md Mortgaging rule 1). Per-property. Shortfall allowed.
+    /// The 20% mortgage fee paid each time a player passes GO with mortgaged
+    /// properties (game-rules.md Mortgaging rule 1). Charged as one aggregate
+    /// amount across all the player's mortgaged properties. Shortfall allowed.
     /// </summary>
-    public Task PayMortgageFee(Framework.GameEngine engine, PlayerModel player, uint amount, ushort counterpartyPropertyIndex, CancellationToken ct)
+    public Task PayMortgageFee(Framework.GameEngine engine, PlayerModel player, uint amount, CancellationToken ct)
         => Move(engine, player, -amount, FinancialReason.MortgageFee,
             counterparty: TransactionCounterparty.Bank,
-            counterpartyPropertyIndex: counterpartyPropertyIndex,
             allowShortfall: true,
             ct: ct);
 
@@ -300,7 +302,7 @@ public class TransactionService
                 {
                     if (!allowShortfall) return;        // caller pre-gated and got it wrong → silent no-op
 
-                    var outcome = await ResolveShortfall(engine, player, debit,
+                    var outcome = await engine.ShortfallService.ResolveShortfall(engine, player, debit,
                         counterpartyPlayer?.PlayerId, counterpartyPropertyIndex, ct);
 
                     switch (outcome)
@@ -385,96 +387,5 @@ public class TransactionService
             CounterpartyPlayerId = player.PlayerId,
             CounterpartyPropertyIndex = counterpartyPropertyIndex
         });
-    }
-
-
-    // ───────────────────── Shortfall ─────────────────────
-
-    /// <summary>
-    /// Outcome of a shortfall-prompt round. Dictates whether the outer
-    /// transaction should apply (FundsRaised) or be abandoned (DebtSettled,
-    /// Bankrupted).
-    /// </summary>
-    private enum ShortfallOutcome
-    {
-        /// <summary>Loan / mortgage / sell-building gave the player enough cash; outer transaction continues.</summary>
-        FundsRaised,
-
-        /// <summary>A creditor deal discharged the debt; outer transaction must not also apply.</summary>
-        DebtSettled,
-
-        /// <summary>Player declared bankruptcy; outer transaction stops here.</summary>
-        Bankrupted
-    }
-
-    /// <summary>
-    /// Opens a <see cref="ShortfallPrompt"/> and dispatches the chosen action to the
-    /// relevant sub-service.
-    /// </summary>
-    /// <remarks>
-    /// Sub-services (LoanService, MortgageService, SellService, DealService,
-    /// BankruptcyService) are not yet implemented — see the payment-service-pending
-    /// project memory. The branches are TODO-stubbed and currently report the
-    /// expected outcome shape so the outer <see cref="Move"/> logic can be wired
-    /// against the final contract.
-    /// </remarks>
-    private async Task<ShortfallOutcome> ResolveShortfall(
-        Framework.GameEngine engine,
-        PlayerModel player,
-        uint shortfallAmount,
-        string? owedToPlayerId,
-        ushort? counterpartyPropertyIndex,
-        CancellationToken ct)
-    {
-        var remainingShortfall = shortfallAmount;
-        while (remainingShortfall != 0)
-        {
-            var response = await engine.PromptProvider.RequestAsync(new ShortfallPrompt
-            {
-                PlayerId = player.PlayerId,
-                Title = "You can't afford this",
-                Body = $"You owe {RuleDictionary.Currency}{shortfallAmount} but only have {RuleDictionary.Currency}{player.Money}. Choose how to settle.",
-                PlayerBalance = player.Money,
-                Cost = shortfallAmount,
-                OwedToPlayerId = owedToPlayerId
-            }, ct);
-
-            //TODO: These methods needs to modify remaining shortfall amount:
-            //This is so we can keep prompting for shortfall until the player has raised enough.
-            //original shortfallAmount variable kept for prompt, and final settlement - shortfallAmount = amount owed
-            switch (response.Action)
-            {
-                case ShortfallAction.TakeLoan:
-                    //TODO LoanService.TakeLoanForShortfall(engine, player, shortfallAmount, ct);
-                    return ShortfallOutcome.FundsRaised;
-
-                case ShortfallAction.Mortgage:
-                    //TODO MortgageService.MortgageForShortfall(engine, player, shortfallAmount, ct);
-                    return ShortfallOutcome.FundsRaised;
-
-                case ShortfallAction.SellHouses:
-                    //TODO PropertyService.SellBuildingsForShortfall(engine, player, shortfallAmount, ct);
-                    return ShortfallOutcome.FundsRaised;
-
-                case ShortfallAction.ProposeDeal:
-                    //TODO DealService.ProposeSettlingDeal(engine, player, owedToPlayerId!, shortfallAmount, ct);
-                    //  A creditor-deal that's accepted DISCHARGES the original debt — the
-                    //  deal itself is the settlement (game-rules.md Default rule 7). Return
-                    //  DebtSettled so the outer transaction does NOT apply.
-                    //  A creditor-deal that's rejected re-opens the shortfall prompt; the
-                    //  deal sub-service handles that loop internally before returning here.
-                    return ShortfallOutcome.DebtSettled;
-
-                case ShortfallAction.DeclareBankruptcy:
-                    //TODO BankruptcyService.Declare(engine, player, owedToPlayerId, ct);
-                    return ShortfallOutcome.Bankrupted;
-
-                default:
-                    throw new ArgumentOutOfRangeException(
-                        nameof(response.Action), response.Action, "Unhandled shortfall action.");
-            }
-        }
-
-        return ShortfallOutcome.DebtSettled;
     }
 }

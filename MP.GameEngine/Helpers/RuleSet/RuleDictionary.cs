@@ -39,4 +39,12 @@ public static class RuleDictionary
     public const ushort HouseCount = 32;
     public const ushort HotelCount = 12;
     public const ushort MaxDoubleHotelsPerSet = 1;
+    
+    //Loans
+    public const ushort MaxLoans = 3;
+    public const ushort BalanceToKeep = 200;    //This is the amount the player is allowed to keep back before taking a loan
+    public const float LoanRepayment = 0.1f;
+    
+    //Mortgage Fee
+    public const float MortgageFee = 0.2f;
 }

@@ -1,0 +1,63 @@
+@using MP.GameEngine.Helpers.RuleSet
+@using MP.GameEngine.Models.Prompts.PromptTypes
+@model ShortfallPrompt
+@{
+    const string cur = RuleDictionary.Currency;
+}
+@*
+    SHORTFALL PROMPT — server-rendered fragment. The player can't meet a payment and must
+    choose how to settle. Every option is a single ShortfallResponse { Action } — each button
+    is [data-prompt-submit] carrying data-shortfall-action (numeric ShortfallAction):
+        TakeLoan = 0, Mortgage = 1, SellHouses = 2, ProposeDeal = 3, DeclareBankruptcy = 4.
+    ingame-prompts.js reads the action off the clicked button. No decline — a shortfall must
+    be resolved. The prompt itself is danger-styled. The engine drives the follow-on flow for
+    whichever action is chosen (and re-opens this prompt if the player is still short).
+    Deal is shown only when the debt is owed to another player — the validator rejects
+    ProposeDeal when it's owed to the bank (OwedToPlayerId is null).
+*@
+<div class="pp-prompt-card border border-2 border-danger">
+    <div class="pp-prompt-head text-bg-danger">
+        @(string.IsNullOrEmpty(Model.Title) ? "You can't afford this" : Model.Title)
+    </div>
+    <div class="pp-prompt-body">
+        @if (!string.IsNullOrEmpty(Model.Body))
+        {
+            <p class="mb-2">@Model.Body</p>
+        }
+        <dl class="row mb-3 small">
+            <dt class="col-7 text-body-secondary fw-normal">You owe</dt>
+            <dd class="col-5 text-end mb-1">@cur@Model.Cost</dd>
+            <dt class="col-7 text-body-secondary fw-normal">Your balance</dt>
+            <dd class="col-5 text-end mb-1">@cur@Model.PlayerBalance</dd>
+            <dt class="col-7 fw-semibold text-danger">Short by</dt>
+            <dd class="col-5 text-end fw-semibold text-danger mb-0">@cur@Model.AmountOwed</dd>
+        </dl>
+
+        <div class="text-body-secondary small mb-1">Raise the funds:</div>
+        <div class="d-grid gap-2">
+            <button type="button" class="btn btn-warning" data-prompt-submit data-shortfall-action="0">
+                <i class="bi bi-cash-stack me-1"></i> Take out a loan
+            </button>
+            <button type="button" class="btn btn-info" data-prompt-submit data-shortfall-action="1">
+                <i class="bi bi-bank me-1"></i> Mortgage a property
+            </button>
+            <button type="button" class="btn btn-info" data-prompt-submit data-shortfall-action="2">
+                <i class="bi bi-house-dash me-1"></i> Sell buildings
+            </button>
+            @if (Model.OwedToPlayerId is not null)
+            {
+                <button type="button" class="btn btn-primary" data-prompt-submit data-shortfall-action="3">
+                    <i class="bi bi-arrow-left-right me-1"></i> Settle with a deal
+                </button>
+            }
+        </div>
+
+        <div class="text-danger small d-none mt-2" data-prompt-error></div>
+    </div>
+    <div class="pp-prompt-foot">
+        @* Surrender — the last resort (game-rules.md Bankruptcy). *@
+        <button type="button" class="btn btn-hero-danger w-100" data-prompt-submit data-shortfall-action="4">
+            <i class="bi bi-flag-fill me-1"></i> Declare bankruptcy
+        </button>
+    </div>
+</div>

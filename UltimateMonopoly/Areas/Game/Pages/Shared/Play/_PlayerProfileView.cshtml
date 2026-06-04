@@ -65,7 +65,8 @@
 
     var owned = game.GetOwnedProperties(playerId);
     var mortgaged = owned.Where(p => p.State == PropertyState.Mortgaged).ToList();
-    var mortgageFeeRaw = (long)mortgaged.Sum(p => (board.GetBoardSpace(p.BoardIndex).PurchaseCost ?? 0) * 0.10);
+    // Sum the shared per-property MoneyHelper.MortgageFee — identical rounding to the engine charge, so display == charge.
+    var mortgageFeeRaw = mortgaged.Sum(p => (long)MoneyHelper.MortgageFee(p.BoardIndex, board, rule));
 
     // Houses/hotels: this player's built count (pass the id) vs the table-wide
     // remaining pool (no id → global). Two distinct figures, per Game-UI.md.
@@ -84,10 +85,9 @@
     var loans = player.Loans;
     var outstandingLoans = loans.Where(l => l.IsOutstanding).ToList();
     var loanRemaining = outstandingLoans.Sum(l => (long)l.Amount - l.PaidBack);
-    // 5% of each original amount (Loans rules 5 & 7). Rule says round *up*;
-    // NormaliseAmount rounds to-nearest — acceptable for a display figure.
-    var loanCostRaw = (long)Math.Ceiling(outstandingLoans.Sum(l => l.Amount * 0.05));
-    var canTakeLoan = canPortfolio && outstandingLoans.Count < 3;
+    // The real GO instalment (10% of outstanding originals) — same value ForcedRepayLoans
+    // charges, routed through Cost()/MoneyHelper so the display matches the charge.
+    var loanCostRaw = (long)player.MinimumLoanRepayment();
 
     var fpSets = player.FPHandedInSets.Distinct().ToList();
 
@@ -103,6 +103,8 @@
         AcknowledgePrompt => "Acknowledge",
         AcquirePropertyPrompt => "AcquireProperty",
         AuctionBidPrompt => "AuctionBid",
+        ShortfallPrompt => "Shortfall",
+        TargetPropertyPrompt => "TargetProperty",
         _ => null
     };
 }
@@ -135,6 +137,12 @@
                                 break;
                             case AuctionBidPrompt p:
                                 <partial name="Play/_AuctionBidPrompt" model="p" />
+                                break;
+                            case ShortfallPrompt p:
+                                <partial name="Play/_ShortfallPrompt" model="p" />
+                                break;
+                            case TargetPropertyPrompt p:
+                                <partial name="Play/_TargetPropertyPrompt" model="p" />
                                 break;
                         }
                     </div>
@@ -259,6 +267,14 @@
                     @{
                         var nowSpace = board.GetBoardSpace(player.BoardIndex);
                         var nowProp = game.GetPropertySpace(player.BoardIndex);
+                        // Current rent on this space (when owned): 0 if mortgaged/reserved,
+                        // multiplier for utilities, the rounded rent for the level otherwise.
+                        var nowRentText = nowProp is null ? null
+                            : nowProp.State is PropertyState.Mortgaged or PropertyState.Reserved
+                                ? $"{cur}0"
+                                : nowSpace.PropertySet == PropertySet.Utility
+                                    ? $"{nowSpace.GetRent(nowProp.RentLevel) ?? 0}× dice"
+                                    : $"{cur}{MoneyHelper.NormaliseAmountToPositive(nowSpace.GetRent(nowProp.RentLevel) ?? 0, rule, FinancialReason.Rent)}";
                     }
                     <div class="pp-now mb-3">
                         <div class="pp-now-space">
@@ -269,30 +285,32 @@
                                     <span class="p-2"><b>@(nowProp?.Name)</b></span>
                                     @if (!string.IsNullOrWhiteSpace(nowProp?.OwnerPlayerId))
                                     {
-                                        <br/>
                                         <span class="p-2"><b>Owner: </b>@(await PlayerCache.GetPlayerName(nowProp.OwnerPlayerId))</span>
+                                        <span class="p-2 d-inline-flex align-items-center gap-1">
+                                            <b>Rent level:</b> <partial name="Play/_RentLevel" model="nowProp!.RentLevel" />
+                                        </span>
+                                        <span class="p-2"><b>Rent:</b> @nowRentText</span>
                                     }
                                 </div>
                             }
                             else if (player.BoardIndex.IsChance())
                             {
                                 <div class="pp-now-body pp-now-icon">
-                                    <i class="bi bi-question-lg"></i><br/>
+                                    <i class="bi bi-question-lg"></i>
                                     <span class="p-2">@nowSpace.Name</span>
                                 </div>
                             }
                             else if (player.BoardIndex.IsComChest())
                             {
                                 <div class="pp-now-body pp-now-icon">
-                                    <i class="bi bi-archive-fill"></i><br/>
+                                    <i class="bi bi-archive-fill"></i>
                                     <span class="p-2">@nowSpace.Name</span>
-                                    
                                 </div>
                             }
                             else if (player.BoardIndex.IsTax())
                             {
                                 <div class="pp-now-body pp-now-icon">
-                                    <i class="bi bi-bank2"></i><br/>
+                                    <i class="bi bi-bank2"></i>
                                     <span class="p-2">@nowSpace.Name</span>
                                 </div>
                             }
@@ -446,6 +464,13 @@
                                                     var space = board.GetBoardSpace(prop.BoardIndex);
                                                     var purchase = (long)(space.PurchaseCost ?? 0);
                                                     var built = prop.BuiltOn();
+                                                    // Rent shown now: 0 when mortgaged/reserved; utilities are dice-multiplied
+                                                    // (show the multiplier); otherwise the rounded rent for the current level.
+                                                    var rentText = prop.State is PropertyState.Mortgaged or PropertyState.Reserved
+                                                        ? $"{cur}0"
+                                                        : space.PropertySet == PropertySet.Utility
+                                                            ? $"{space.GetRent(prop.RentLevel) ?? 0}× dice"
+                                                            : $"{cur}{MoneyHelper.NormaliseAmountToPositive(space.GetRent(prop.RentLevel) ?? 0, rule, FinancialReason.Rent)}";
 
                                                     <div class="pp-space border border-prop-@slug">
                                                         <div class="pp-space-head text-bg-prop-@slug">
@@ -460,6 +485,14 @@
                                                             }
                                                         </div>
                                                         <div class="pp-space-body">
+                                                            <div class="d-flex align-items-center justify-content-between small mb-1">
+                                                                <span class="text-body-secondary">Rent level:</span>
+                                                                <partial name="Play/_RentLevel" model="prop.RentLevel" />
+                                                            </div>
+                                                            <div class="small mb-2">
+                                                                <span class="text-body-secondary">Rent:</span>
+                                                                <span class="fw-semibold">@rentText</span>
+                                                            </div>
                                                             <div class="small mb-2">
                                                                 @if (prop.State == PropertyState.Reserved)
                                                                 {
@@ -535,23 +568,23 @@
                                 {
                                     <dt class="col-7 text-body-secondary fw-normal">Total still owed</dt>
                                     <dd class="col-5 text-end mb-2">@cur@loanRemaining</dd>
-                                    <dt class="col-7 text-body-secondary fw-normal">Repayment at GO / Free Parking</dt>
+                                    <dt class="col-7 text-body-secondary fw-normal">Repayment at GO</dt>
                                     <dd class="col-5 text-end mb-0">@Cost(loanCostRaw, FinancialReason.LoanRepay)</dd>
                                 }
                             </dl>
-                            <div class="d-grid gap-2">
-                                @* TODO(no-op): take-loan command not built. Max 3 outstanding (Loans rule 4). *@
-                                <button type="button" class="btn btn-outline-primary btn-sm" data-noop disabled="@(!canTakeLoan)">
-                                    <i class="bi bi-cash-stack me-1"></i> Take out a loan
-                                </button>
-                                @if (outstandingLoans.Count > 0)
-                                {
-                                    @* TODO(no-op): custom repayment command not built (pays the first loan first). *@
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-noop disabled="@(!canPortfolio)">
-                                        <i class="bi bi-coin me-1"></i> Pay a custom amount
+                            @* Custom repayment (Loans rule 7) — pays the oldest loan first, cascading.
+                               Loans are only ever taken to cover a shortfall, so there's no voluntary
+                               "take out a loan" action. Gated by the portfolio command window. *@
+                            @if (outstandingLoans.Count > 0)
+                            {
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">@cur</span>
+                                    <input type="number" class="form-control" data-loan-amount min="0" step="50" placeholder="Amount to repay" />
+                                    <button type="button" class="btn btn-outline-secondary" data-loan-repay disabled="@(!canPortfolio)">
+                                        <i class="bi bi-coin me-1"></i> Repay
                                     </button>
-                                }
-                            </div>
+                                </div>
+                            }
                         </div>
                     </div>
 

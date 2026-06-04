@@ -1,5 +1,6 @@
 using MP.GameEngine.Enums;
 using MP.GameEngine.Enums.Games;
+using MP.GameEngine.Helpers.RuleSet;
 using MP.GameEngine.Models.Boards;
 using MP.GameEngine.Models.Snapshot;
 
@@ -37,9 +38,26 @@ public static class MoneyHelper
             _ => throw new ArgumentOutOfRangeException(nameof(roundingRule), roundingRule, null)
         };
 
-        if (reason == FinancialReason.Rent)
-            //Rent that resolves to 0, is 0. All others round UP to minimum value
-            return value;
+        switch (reason)
+        {
+            case FinancialReason.Rent:
+                //Rent that resolves to 0, is 0. All others round UP to minimum value
+                return value;
+            case FinancialReason.LoanTake:
+                //Loan take is always rounded UP
+                value = value < amount
+                    ? value + roundingRule switch
+                    {
+                        GameRoundingRule.None => 0,
+                        GameRoundingRule.To5 => 5,
+                        GameRoundingRule.To10 => 10,
+                        GameRoundingRule.To20 => 20,
+                        GameRoundingRule.To50 => 50,
+                        _ => throw new ArgumentOutOfRangeException(nameof(roundingRule), roundingRule, null)
+                    }
+                    : value;
+                break;
+        }
 
         var positive = amount > 0;
         if (value == 0)
@@ -132,6 +150,23 @@ public static class MoneyHelper
         //Mortgage value is half the purchase price, same as reserve price
         //NOTE: checks if purchasable, but all mortgageable properties are purchasable
         => ReservePrice(index, board, roundingRule);
+
+    /// <summary>
+    /// The GO repayment fee for a single mortgaged property — a percentage of its
+    /// <b>purchase cost</b> (<c>game-rules.md</c> Mortgaging rule 1), grid-rounded
+    /// per property (never to zero). Shared by the engine charge
+    /// (<c>PropertyService.PayMortgageFee</c>) and the profile display so the two
+    /// always agree; sum it across the player's mortgaged properties for the total.
+    /// </summary>
+    public static uint MortgageFee(ushort index, Board board, GameRoundingRule roundingRule)
+    {
+        var space = board.GetBoardSpace(index);
+        if (!space.IsPurchasable || space.PurchaseCost == null)
+            return 0;
+
+        var fee = (uint)Math.Round(((uint)space.PurchaseCost * RuleDictionary.MortgageFee), MidpointRounding.AwayFromZero);
+        return NormaliseAmount(fee, roundingRule, FinancialReason.MortgageFee);
+    }
     
     public static uint MinAuctionBid(ushort index, Board board, GameRoundingRule roundingRule)
         //Minimum bid price is half the purchase price, same as reserve price

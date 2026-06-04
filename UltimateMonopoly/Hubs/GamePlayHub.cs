@@ -162,6 +162,11 @@ public class GamePlayHub : GameBaseHub
     public Task<bool> SellAll()
         => RunPortfolioCommand(_playerProfiles.EnqueueSellAll);
 
+    // Custom loan repayment — pays the oldest loan first (Loans rule 7). Carries an
+    // amount rather than a board index, so it closes over it into the no-index path.
+    public Task<bool> RepayLoanCustom(uint amount)
+        => RunPortfolioCommand((gameId, userId) => _playerProfiles.EnqueueRepayLoanCustom(gameId, userId, amount));
+
     private Task<bool> RunPortfolioCommand(ushort boardIndex, Action<string, string, ushort> enqueue)
         => RunPortfolioCommand((gameId, userId) => enqueue(gameId, userId, boardIndex));
 

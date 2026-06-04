@@ -49,6 +49,22 @@
                     ? { response: { '$type': 'AuctionBid', promptId: promptId, action: 1, bidAmount: null } }
                     : { response: { '$type': 'AuctionBid', promptId: promptId, action: 0, bidAmount: Number(btn.dataset.bidAmount) } };
 
+            case 'Shortfall':
+                // ShortfallAction is numeric over the wire (TakeLoan 0, Mortgage 1, SellHouses 2,
+                // ProposeDeal 3, DeclareBankruptcy 4) — each button carries its own value.
+                return { response: { '$type': 'Shortfall', promptId: promptId, action: Number(btn.dataset.shortfallAction) } };
+
+            case 'TargetProperty': {
+                // Collect the checked toggles; must be exactly Count (carried on [data-target-count]).
+                const selected = Array.from(promptEl.querySelectorAll('input.btn-check[data-target-index]:checked'))
+                    .map(i => Number(i.dataset.targetIndex));
+                const countEl = promptEl.querySelector('[data-target-count]');
+                const count = countEl ? Number(countEl.dataset.targetCount) : selected.length;
+                if (selected.length !== count)
+                    return { error: count === 1 ? 'Select one property.' : ('Select exactly ' + count + ' properties.') };
+                return { response: { '$type': 'TargetProperty', promptId: promptId, selectedBoardIndexes: selected } };
+            }
+
             default:
                 return null;
         }

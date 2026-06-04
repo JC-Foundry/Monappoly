@@ -63,6 +63,17 @@ public class TransactionService_Tests
         public void PromptClosed(string gameId, string promptId, string concurrencyStamp) { }
         public void StateChanged(GameCacheModel cache) { }
     }
+    
+    private sealed class NoOpShortfallService : IShortfallService
+    {
+        public Task<ShortfallOutcome> ResolveShortfall(Services.Framework.GameEngine engine,
+            PlayerModel player,
+            uint shortfallAmount,
+            string? owedToPlayerId,
+            ushort? counterpartyPropertyIndex,
+            CancellationToken ct)
+            => Task.FromResult(ShortfallOutcome.DebtSettled);
+    }
 
     // ─── Fixtures ───────────────────────────────────────────────────────
 
@@ -150,7 +161,7 @@ public class TransactionService_Tests
     }
 
     private static Services.Framework.GameEngine CreateEngine(GameCacheModel cache)
-        => new(cache, new NoOpSnapshotService(), new NoOpNotifier());
+        => new(cache, new NoOpSnapshotService(), new NoOpNotifier(), new NoOpShortfallService());
 
     private static TransactionService CreateService() => new();
 
@@ -261,7 +272,7 @@ public class TransactionService_Tests
         var engine = CreateEngine(cache);
         var txn = CreateService();
 
-        await txn.PayMortgageFee(engine, cache.Game.GetPlayer(P1)!, 6, PropertyIndex, CancellationToken.None);
+        await txn.PayMortgageFee(engine, cache.Game.GetPlayer(P1)!, 6, CancellationToken.None);
 
         Assert.Equal(494u, Money(cache, P1));
         var receipt = SingleReceipt(cache);

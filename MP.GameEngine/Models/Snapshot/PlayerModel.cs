@@ -2,6 +2,8 @@ using System.Text.Json.Serialization;
 using MP.GameEngine.Enums.Players;
 using MP.GameEngine.Enums.Properties;
 using MP.GameEngine.Helpers;
+using MP.GameEngine.Helpers.RuleSet;
+using MP.GameEngine.Models.EventReceipts;
 using MP.GameEngine.Models.Snapshot.Cards;
 
 namespace MP.GameEngine.Models.Snapshot;
@@ -94,12 +96,21 @@ public class PlayerModel
 
     #region Player Primitive Methods
 
-    public void FlipDirection()
+    public void FlipDirection(Services.Framework.GameEngine engine)
     {
-        if(HasPassedInitialGo)
-            Direction = Direction == PlayerDirection.Forward 
-                ? PlayerDirection.Backward 
-                : PlayerDirection.Forward;
+        if (!HasPassedInitialGo) return;
+        
+        var initialDirection = Direction;
+        Direction = Direction == PlayerDirection.Forward
+            ? PlayerDirection.Backward
+            : PlayerDirection.Forward;
+            
+        engine.EventEmitter.Emit(new PlayerDirectionChangedReceipt
+        {
+            PlayerId = PlayerId,
+            InitialDirection = initialDirection,
+            FinalDirection = Direction
+        });
     }
 
 
@@ -111,7 +122,39 @@ public class PlayerModel
         return (d1 == Dice1 && d2 == Dice2) || (d1 == Dice2 && d2 == Dice1);
     }
 
+
+    public bool CanTakeLoan()
+        => Loans.Count(l => l.IsOutstanding) < RuleDictionary.MaxLoans;
+
+    public List<LoanModel> GetOutstandingLoans()
+        => Loans.Where(l => l.IsOutstanding).ToList();
+    
+    public List<LoanModel> GetPaidLoans()
+        => Loans.Where(l => !l.IsOutstanding).ToList();
+
+    public uint LoanTotalAmount()
+    {
+        var outstanding = GetOutstandingLoans();
+        return (uint)outstanding.Sum(l => l.Amount);
+    }
+
+    public uint MinimumLoanRepayment()
+    {
+        var total = LoanTotalAmount();
+        return (uint)Math.Round((total * RuleDictionary.LoanRepayment), MidpointRounding.AwayFromZero);
+    }
+
+    public LoanModel? FirstOutstandingLoan()
+    {
+        var loans = GetOutstandingLoans();
+        if (loans.Count == 0)
+            return null;
+        
+        return loans.MinBy(l => l.DateTaken) 
+               ?? throw new InvalidOperationException("No outstanding loans found.");
+    }
+
     #endregion
-    
-    
+
+
 }

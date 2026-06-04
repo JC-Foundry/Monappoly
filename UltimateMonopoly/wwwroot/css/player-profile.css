@@ -145,6 +145,7 @@
 .pp-now-body {
     flex: 1 1 auto;
     display: flex;
+    flex-direction: column;     /* stack lines (name / owner / rent level / rent), so they don't run together */
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -160,3 +161,20 @@
     padding: 0.2rem;
     font-weight: 700;
 }
+
+/* Rent-level visual (shared via _RentLevel partial): a Single/Set/Double/Triple
+   badge, or coloured pips — green per house, red per hotel. */
+.rent-pips {
+    display: inline-flex;
+    gap: 2px;
+    vertical-align: middle;
+}
+.rent-pip {
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+}
+.rent-pip-house { background-color: var(--bs-success); }
+.rent-pip-hotel { background-color: var(--bs-danger); }

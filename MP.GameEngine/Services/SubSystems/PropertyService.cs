@@ -276,11 +276,11 @@ public class PropertyService
 
     #region Mortgage/Unmortgage/Unreserve
 
-    private async Task<(bool Success, PlayerModel? Player, BoardSpace? Space, PropertyModel? Property)> 
-        PropertyActionValidation(Framework.GameEngine engine, ushort boardIndex, CancellationToken ct)
+    private (bool Success, PlayerModel? Player, BoardSpace? Space, PropertyModel? Property) 
+        PropertyActionValidation(Framework.GameEngine engine, ushort boardIndex, string? playerId = null)
     {
         //Get and check the current player:
-        var player = engine.Cache.Game.CurrentPlayer();
+        var player = engine.Cache.Game.GetPlayer(playerId ?? engine.Cache.Game.Metadata.CurrentPlayerId);
         if (player is null)
             return (false, null, null, null);
         
@@ -307,7 +307,7 @@ public class PropertyService
             return;
 
         //Validate
-        var (success, player, space, property) = await PropertyActionValidation(engine, boardIndex, ct);
+        var (success, player, space, property) = PropertyActionValidation(engine, boardIndex);
         if (!success || player is null || space is null || property is null)
             return;
 
@@ -343,10 +343,10 @@ public class PropertyService
         NormaliseRentLevels(engine);
     }
 
-    public async Task MortgageProperty(Framework.GameEngine engine, ushort boardIndex, CancellationToken ct)
+    public async Task MortgageProperty(Framework.GameEngine engine, ushort boardIndex, CancellationToken ct, string? playerId = null)
     {
         //Validate
-        var (success, player, space, property) = await PropertyActionValidation(engine, boardIndex, ct);
+        var (success, player, space, property) = PropertyActionValidation(engine, boardIndex, playerId);
         if (!success || player is null || space is null || property is null)
             return;
         
@@ -382,11 +382,32 @@ public class PropertyService
         property.MortgageProperty();
         NormaliseRentLevels(engine);
     }
+
+
+    public async Task PayMortgageFee(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
+    {
+        var properties = engine.Cache.Game.GetOwnedProperties(player.PlayerId, includeReserved: false);
+        if (properties.Count == 0)
+            return;
+        
+        properties = properties.Where(p => p.State == PropertyState.Mortgaged).ToList();
+        if (properties.Count == 0)
+            return;
+
+        //Sum the per-property mortgage fee (20% of purchase cost, grid-rounded per property — Mortgaging rule 1)
+        var fee = properties.Aggregate<PropertyModel, uint>(0,
+            (current, p) => current + MoneyHelper.MortgageFee(p.BoardIndex, engine.Cache.Board, engine.Cache.RoundingRule));
+        _ = await engine.PromptProvider.Acknowledge(player.PlayerId, "Mortgage Fee",
+            $"You are being charged a mortgage fee of {RuleDictionary.Currency}{fee} (total) for {properties.Count} mortgaged properties.", ct: ct);
+        
+        await _transactionService.PayMortgageFee(engine, player, fee, ct);
+    }
+    
     
     public async Task UnmortgageProperty(Framework.GameEngine engine, ushort boardIndex, CancellationToken ct)
     {
         //Validate
-        var (success, player, space, property) = await PropertyActionValidation(engine, boardIndex, ct);
+        var (success, player, space, property) = PropertyActionValidation(engine, boardIndex);
         if (!success || player is null || space is null || property is null)
             return;
 
@@ -629,14 +650,14 @@ public class PropertyService
 
     #region Sell On Properties
 
-    public async Task SellOnProperty(Framework.GameEngine engine, ushort boardIndex, CancellationToken ct)
+    public async Task SellOnProperty(Framework.GameEngine engine, ushort boardIndex, CancellationToken ct, string? playerId = null)
     {
         //Single property sell
         var canSell = engine.Cache.Game.CanDecreaseRentLevel(boardIndex);
         if(!canSell)
             return;
         
-        var player = engine.Cache.Game.CurrentPlayer();
+        var player = engine.Cache.Game.GetPlayer(playerId ?? engine.Cache.Game.Metadata.CurrentPlayerId);
         if (player is null)
             return;
         

@@ -90,6 +90,8 @@ public class BankruptcyService
         if(otherPlayers.Count > 1)
         {
             //End players turn, and transition to next player:
+            //TODO: Decide if its End of turn, OR player roll (for 3rd die):
+            //optionally, pass in bool to transition to next player so that it doesnt progress turn state (if current player is bankrupted player)
             engine.Cache.SetTurnState(TurnState.EndOfTurn);
             await engine.TurnStateProvider.TransitionToNextPlayer();
             return;

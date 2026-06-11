@@ -1,6 +1,7 @@
 using MP.GameEngine.Abstractions;
 using MP.GameEngine.Enums;
 using MP.GameEngine.Models;
+using MP.GameEngine.Services.Cards;
 using MP.GameEngine.Services.SubSystems;
 
 namespace MP.GameEngine.Services.Framework;
@@ -8,7 +9,8 @@ namespace MP.GameEngine.Services.Framework;
 public sealed class GameEngine(GameCacheModel cache, 
     ISnapshotService snapshotService, 
     IEngineNotifier notifier, 
-    IShortfallService shortfallService)
+    IShortfallService shortfallService,
+    CardService cardService)
 {
     public GameCacheModel Cache { get; } = cache;
     public IPromptProvider PromptProvider { get; } = new PromptProvider(cache, notifier);
@@ -17,6 +19,7 @@ public sealed class GameEngine(GameCacheModel cache,
     public IEngineNotifier Notifier { get; } = notifier;
     
     public IShortfallService ShortfallService { get; } = shortfallService;
+    public CardService CardService { get; } = cardService;
 
     /// <summary>
     /// Adds the provided rule code to the game engine's cache.

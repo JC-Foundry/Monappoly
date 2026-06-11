@@ -1,4 +1,5 @@
 using MP.GameEngine.Enums;
+using MP.GameEngine.Enums.Cards;
 using MP.GameEngine.Enums.Properties;
 using MP.GameEngine.Models.Snapshot;
 
@@ -64,10 +65,12 @@ public class BoardService
                     await _taxService.PayTax(engine, player, ct);
                     break;
                 case BoardSpaceType.Chance:
-                    //TODO Call Card service to get card, and do what card says
+                    await engine.CardService.DrawCard(engine, player, CardType.Chance, ct);
+                    //TODO: take percent + third when going backwards
                     break;
                 case BoardSpaceType.ComChest:
-                    //TODO call card service to get card, and do what card says
+                    await engine.CardService.DrawCard(engine, player, CardType.CommunityChest, ct);
+                    //TODO take percent + third when going backwards
                     break;
                 case BoardSpaceType.Go:
                     await _goService.LandOnGo(engine, player, ct);

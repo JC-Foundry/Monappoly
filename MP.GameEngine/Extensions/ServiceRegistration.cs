@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MP.GameEngine.Abstractions;
 using MP.GameEngine.Services;
+using MP.GameEngine.Services.Cards;
 using MP.GameEngine.Services.Statistics;
 using MP.GameEngine.Services.SubSystems;
 
@@ -39,6 +40,9 @@ public static class ServiceRegistration
         services.TryAddScoped<PropertyTransferService>();
         services.TryAddScoped<IShortfallService, ShortfallService>();
         services.TryAddScoped<StatisticsOrchestrator>();
+        
+        //Cards
+        services.TryAddScoped<CardService>();
 
         return services;
     }

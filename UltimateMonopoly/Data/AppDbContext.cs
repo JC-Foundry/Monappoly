@@ -14,6 +14,7 @@ using JC.Github.Models;
 using JC.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using UltimateMonopoly.Models;
+using UltimateMonopoly.Models.DataModels;
 using UltimateMonopoly.Models.DataModels.Boards;
 using UltimateMonopoly.Models.DataModels.Games;
 using UltimateMonopoly.Models.DataModels.Social;
@@ -37,6 +38,9 @@ public class AppDbContext : IdentityDataDbContext<AppUser, AppRole>,
     public DbSet<GameSnapshot> GameSnapshots { get; set; }
     public DbSet<GameTurnEvents> GameTurnEvents { get; set; }
     public DbSet<PlayerGameStat> PlayerGameStats { get; set; }
+    
+    //Card IDs persistence
+    public DbSet<PersistedCardIds> PersistedCardIds { get; set; }
     
     // Social
     public DbSet<Friend> Friends { get; set; }

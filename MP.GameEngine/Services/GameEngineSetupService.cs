@@ -1,8 +1,10 @@
 using System.Text.Json;
+using MP.GameEngine.Helpers.Cards;
 using MP.GameEngine.Models;
 using MP.GameEngine.Models.Boards;
 using MP.GameEngine.Models.DTOs;
 using MP.GameEngine.Models.Snapshot;
+using MP.GameEngine.Services.Cards;
 using MP.GameEngine.Services.SubSystems;
 
 namespace MP.GameEngine.Services;
@@ -36,7 +38,8 @@ public class GameEngineSetupService
             FreeParkingAmount = 0
         };
 
-        //TODO Load cards!
+        //TODO: Replace TEMP_CARDS with actual imported cards
+        //gameModel.CardDecks = CardDeckHelper.BuildCardDecks(TEMP_CARDS.LIST);
         
         return SetupGameCache(gameDto, gameModel, board);
     }

@@ -1,4 +1,5 @@
 using MP.GameEngine.Abstractions;
+using MP.GameEngine.Services.Cards;
 using MP.GameEngine.Services.SubSystems;
 using UltimateMonopoly.Services.Cache;
 
@@ -18,16 +19,19 @@ public class GameEngineFactory : IGameEngineFactory
     private readonly ISnapshotService _snapshotService;
     private readonly IEngineNotifier _engineNotifier;
     private readonly IShortfallService _shortfallService;
+    private readonly CardService _cardService;
 
     public GameEngineFactory(GameCacheService cacheService,
         ISnapshotService snapshotService,
         IEngineNotifier engineNotifier,
-        IShortfallService shortfallService)
+        IShortfallService shortfallService,
+        CardService cardService)
     {
         _cacheService = cacheService;
         _snapshotService = snapshotService;
         _engineNotifier = engineNotifier;
         _shortfallService = shortfallService;
+        _cardService = cardService;
     }
 
     public async Task<MP.GameEngine.Services.Framework.GameEngine> GetAsync(string gameId)
@@ -36,6 +40,6 @@ public class GameEngineFactory : IGameEngineFactory
             ?? throw new InvalidOperationException(
                 $"No active game cache for gameId '{gameId}' — game may not be started, or its snapshot could not be hydrated.");
 
-        return new MP.GameEngine.Services.Framework.GameEngine(cache, _snapshotService, _engineNotifier, _shortfallService);
+        return new MP.GameEngine.Services.Framework.GameEngine(cache, _snapshotService, _engineNotifier, _shortfallService, _cardService);
     }
 }

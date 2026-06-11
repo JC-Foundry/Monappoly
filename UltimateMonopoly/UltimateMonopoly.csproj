@@ -8,15 +8,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-              <PackageReference Include="JC.BackgroundJobs" Version="3.6.1" />
-              <PackageReference Include="JC.Communication" Version="3.6.1" />
-              <PackageReference Include="JC.Communication.Web" Version="3.6.1" />
-              <PackageReference Include="JC.Core" Version="3.6.1" />
-              <PackageReference Include="JC.Github" Version="3.6.1" />
-              <PackageReference Include="JC.Identity" Version="3.6.1" />
-              <PackageReference Include="JC.MySql" Version="3.6.1" />
-              <PackageReference Include="JC.SqlServer.Hangfire" Version="3.6.1" />
-              <PackageReference Include="JC.Web" Version="3.6.3" />
+        <PackageReference Include="JC.BackgroundJobs" Version="3.6.1" />
+        <PackageReference Include="JC.Communication" Version="3.6.1" />
+        <PackageReference Include="JC.Communication.Web" Version="3.6.1" />
+        <PackageReference Include="JC.Core" Version="3.6.1" />
+        <PackageReference Include="JC.Github" Version="3.6.1" />
+        <PackageReference Include="JC.Identity" Version="3.6.1" />
+        <PackageReference Include="JC.MySql" Version="3.6.1" />
+        <PackageReference Include="JC.SqlServer.Hangfire" Version="3.6.1" />
+        <PackageReference Include="JC.Web" Version="3.6.3" />
         <!-- Syncfusion -->
         <PackageReference Include="Syncfusion.EJ2.AspNet.Core" Version="33.2.6" />
     </ItemGroup>

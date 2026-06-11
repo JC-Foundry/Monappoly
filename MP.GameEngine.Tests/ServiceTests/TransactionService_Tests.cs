@@ -170,7 +170,7 @@ public class TransactionService_Tests
     }
 
     private static Services.Framework.GameEngine CreateEngine(GameCacheModel cache)
-        => new(cache, new NoOpSnapshotService(), new NoOpNotifier(), new NoOpShortfallService());
+        => new(cache, new NoOpSnapshotService(), new NoOpNotifier(), new NoOpShortfallService(), null);
 
     private static TransactionService CreateService() => new();
 

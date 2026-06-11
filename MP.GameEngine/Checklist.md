@@ -13,7 +13,7 @@
 - [ ] Get a FP card
 - [x] Resolve a  FP scenarios
 - [x] Update player(s) and free parking pot
-- [ ] Purging properties
+- [x] Purging properties
 
 ## Cards
 - Defered on purpose

@@ -8,5 +8,7 @@ public enum PlayerTarget
     /// <summary>A player the holder chooses (resolved via a TargetPlayer prompt).</summary>
     ChosenPlayer,
     /// <summary>Every other (non-bankrupt) player.</summary>
-    AllOthers
+    AllOthers,
+    /// <summary>Every (non-bankrupt) player, the holder included.</summary>
+    Everyone
 }

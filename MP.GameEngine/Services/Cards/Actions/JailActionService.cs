@@ -47,6 +47,12 @@ public class JailActionService : ICardActionService<JailAction>
                 case JailKind.Release when target.IsInJail:
                     await _jailService.LeaveJailByCard(engine, target, ct);
                     break;
+                case JailKind.ModifyLeaveFee:
+                    if (action.LeaveFeeSetTo is { } fee)
+                        target.JailCost = fee;
+                    else if (action.LeaveFeeMultiplier is { } multiplier)
+                        target.JailCost *= multiplier;
+                    break;
             }
         }
     }

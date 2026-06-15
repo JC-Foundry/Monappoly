@@ -19,4 +19,16 @@ public sealed class JailAction : CardAction
     /// for 10 turns" → <c>PlayerModel.MaxJailTurnsOverride</c>). Null = the default limit.
     /// </summary>
     public ushort? TurnsOverride { get; set; }
+
+    /// <summary>
+    /// For <see cref="JailKind.ModifyLeaveFee"/>: set the player's jail-leave cost
+    /// (<c>PlayerModel.JailCost</c>) to this exact amount (e.g. "reset to £50").
+    /// </summary>
+    public ushort? LeaveFeeSetTo { get; set; }
+
+    /// <summary>
+    /// For <see cref="JailKind.ModifyLeaveFee"/>: multiply the player's jail-leave cost
+    /// (e.g. "tripled" → 3). Ignored when <see cref="LeaveFeeSetTo"/> is set.
+    /// </summary>
+    public ushort? LeaveFeeMultiplier { get; set; }
 }

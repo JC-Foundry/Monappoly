@@ -4,6 +4,7 @@ using MP.GameEngine.Models;
 using MP.GameEngine.Models.Boards;
 using MP.GameEngine.Models.DTOs;
 using MP.GameEngine.Models.Snapshot;
+using MP.GameEngine.Models.Snapshot.Cards;
 using MP.GameEngine.Services.Cards;
 using MP.GameEngine.Services.SubSystems;
 
@@ -21,7 +22,7 @@ public class GameEngineSetupService
         _propertyService = propertyService;
     }
     
-    public GameCacheModel SetupGameCache(GameDTO gameDto, Board board, List<PlayerDTO> playerDtos)
+    public GameCacheModel SetupGameCache(GameDTO gameDto, Board board, List<CardModel> cards, List<PlayerDTO> playerDtos)
     {
         var gameModel = new GameModel
         {
@@ -35,12 +36,10 @@ public class GameEngineSetupService
             Players = _playerService.GetPlayers(playerDtos),
             Properties = _propertyService.GetProperties(board),
             ReserveRuleActive = true,
-            FreeParkingAmount = 0
+            FreeParkingAmount = 0,
+            CardDecks = CardDeckHelper.BuildCardDecks(cards)
         };
 
-        //TODO: Replace TEMP_CARDS with actual imported cards
-        gameModel.CardDecks = CardDeckHelper.BuildCardDecks(TEMP_CARDS.LIST);
-        
         return SetupGameCache(gameDto, gameModel, board);
     }
 

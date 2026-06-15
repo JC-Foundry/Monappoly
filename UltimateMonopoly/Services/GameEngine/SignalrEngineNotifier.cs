@@ -31,8 +31,12 @@ public sealed class SignalrEngineNotifier : IEngineNotifier
         => Send(gameId, "PromptClosed", new PromptClosedMessage(promptId, concurrencyStamp));
 
     public void StateChanged(GameCacheModel cache)
-        // Ships the whole cache (Board + Events are [JsonIgnore]d); ConcurrencyStamp is the version.
-        => Send(cache.GameId, "StateChanged", cache);
+        // The client never reads this payload — it re-fetches the server-rendered partial over
+        // HTTP on any StateChanged (play-state.js / player-state.js / player-drawer.js). So ship
+        // only a tiny signal (gameId + version), not the whole serialised GameCacheModel: the old
+        // shape pushed tens of KB to every device on every state change, for nothing — punishing
+        // exactly the constrained mobile links that struggle. ConcurrencyStamp is the version.
+        => Send(cache.GameId, "StateChanged", new StateChangedMessage(cache.GameId, cache.ConcurrencyStamp));
 
     public void GameCompleted(string gameId)
         => Send(gameId, "GameCompleted", new GameCompletedMessage(gameId));
@@ -72,6 +76,13 @@ public sealed record PromptOpenedMessage(Prompt Prompt, string ConcurrencyStamp)
 
 /// <summary>Wire payload for <c>PromptClosed</c>.</summary>
 public sealed record PromptClosedMessage(string PromptId, string ConcurrencyStamp);
+
+/// <summary>
+/// Wire payload for <c>StateChanged</c> — a lightweight "something changed, re-fetch" signal.
+/// Clients render from the server-side partial they pull over HTTP, not from this payload, so it
+/// deliberately carries no game state: just the game id and the version stamp.
+/// </summary>
+public sealed record StateChangedMessage(string GameId, string ConcurrencyStamp);
 
 /// <summary>Wire payload for <c>GameCompleted</c> — the in-game pages redirect to the finished-game page.</summary>
 public sealed record GameCompletedMessage(string GameId);

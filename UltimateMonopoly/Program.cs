@@ -30,8 +30,16 @@ builder.Services.AddControllers();
 // Antiforgery — expose a header so AJAX calls can send the token
 builder.Services.AddAntiforgery(opts => opts.HeaderName = "RequestVerificationToken");
 
-// SignalR
-builder.Services.AddSignalR();
+// SignalR. Explicit keep-alive / timeout so the server↔client heartbeat is documented and the
+// 2:1 ClientTimeout:KeepAlive ratio (the SignalR-recommended floor) is guaranteed: the server
+// pings every 15s and considers a client gone after 30s of silence. Detailed errors only in dev.
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+});
 
 // Database
 builder.Services.AddMySqlDatabase<AppDbContext>(builder.Configuration, migrationsAssembly: "UltimateMonopoly");

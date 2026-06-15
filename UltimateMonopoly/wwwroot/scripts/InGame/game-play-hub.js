@@ -33,9 +33,11 @@
     const handlers = new Map();   // $type -> handler
     const observers = [];         // type-agnostic { onOpen, onClose } prompt observers
     const queued = [];            // { event, callback } raw subscriptions queued pre-connect
+    const resyncHandlers = [];    // callbacks run on (re)connect / wake to re-pull live state
     let connection = null;
     let ctx = null;
     let started = false;
+    let stopped = false;          // set only on intentional teardown (none today) — guards reconnect loops
 
     function registerPrompt(handler) {
         if (handler && handler.type) handlers.set(handler.type, handler);
@@ -52,6 +54,14 @@
     function on(event, callback) {
         if (connection) connection.on(event, callback);
         else queued.push({ event, callback });
+    }
+
+    // Register a callback to run whenever the live connection is (re)established or the page
+    // wakes from sleep — i.e. the moments where buffered StateChanged frames were missed. The
+    // state modules (play-state / player-state / drawer) register their re-fetch here so that a
+    // reconnect refreshes the *whole view*, not just the open prompt.
+    function onResync(callback) {
+        if (callback) resyncHandlers.push(callback);
     }
 
     // Invoke a hub method (e.g. a command like EndTurn). Rejects if called before
@@ -83,6 +93,58 @@
         } catch (e) {
             console.error('GetCurrentPrompt failed:', e);
         }
+    }
+
+    // Full re-sync after a (re)connect or wake: re-pull the open prompt AND tell every state
+    // listener to re-fetch its rendered view. SignalR doesn't buffer group broadcasts for a
+    // dropped client, so without this a reconnected device sits on a stale board until the next
+    // live frame happens to fire. The state re-fetch is plain HTTP, so it works even while the
+    // socket is still mid-reconnect.
+    function resync() {
+        if (connection) refresh();
+        resyncHandlers.forEach(cb => { try { cb(); } catch (e) { console.error('resync handler failed:', e); } });
+    }
+
+    // Capped, never-give-up reconnect: the SignalR default ([0,2,10,30]s then STOP) leaves a
+    // slept/flaky phone permanently dead after ~30s, forcing a manual reload. Retry forever,
+    // backing off to a 10s ceiling, so a connection always heals on its own once the network
+    // returns. Returning a number (never null) is what keeps it retrying indefinitely.
+    const retryPolicy = {
+        nextRetryDelayInMilliseconds: function (ctxRetry) {
+            const steps = [0, 2000, 5000, 10000];
+            return ctxRetry.previousRetryCount < steps.length
+                ? steps[ctxRetry.previousRetryCount]
+                : 10000;
+        }
+    };
+
+    // Manual cold-start loop. withAutomaticReconnect only covers a connection that was once up;
+    // if the very first start fails, or onclose fires (e.g. the page was hidden long enough that
+    // the reconnect attempts elapsed against a suspended timer), we keep retrying ourselves.
+    async function startWithRetry() {
+        let delay = 2000;
+        while (!stopped) {
+            try {
+                await connection.start();
+                resync();
+                return;
+            } catch (err) {
+                console.error('Game play hub connect failed, retrying:', err);
+                await new Promise(r => setTimeout(r, delay));
+                delay = Math.min(delay * 2, 10000);
+            }
+        }
+    }
+
+    // When a slept phone wakes, the reconnect timers were suspended while locked, so the socket
+    // can be a zombie (client still thinks it's "Connected") or fully dropped. On becoming
+    // visible: if we're disconnected, kick a fresh start; otherwise resync immediately — the
+    // GetCurrentPrompt invoke surfaces a dead socket (triggering reconnect) while the HTTP state
+    // re-fetch repaints the view now, without waiting for the keep-alive to time the zombie out.
+    function onWake() {
+        if (!connection || stopped) return;
+        if (connection.state === signalR.HubConnectionState.Disconnected) startWithRetry();
+        else resync();
     }
 
     // Fatal game error (GameFaulted): the server abandoned the game's pump, so
@@ -138,7 +200,7 @@
         started = true;
         connection = new signalR.HubConnectionBuilder()
             .withUrl('/hubs/game-play?gameId=' + encodeURIComponent(gameId))
-            .withAutomaticReconnect()
+            .withAutomaticReconnect(retryPolicy)
             .build();
 
         ctx = {
@@ -163,15 +225,21 @@
         connection.on('GameCancelled', () => { window.location.href = '/Index'; });
         queued.forEach(h => connection.on(h.event, h.callback));
 
-        // Re-sync the open prompt after a dropped connection is restored.
-        connection.onreconnected(refresh);
+        // Re-pull prompt + state after a dropped connection is restored.
+        connection.onreconnected(resync);
+        // If the connection closes for good (rare with the infinite policy, but possible if it
+        // never came up, or the page was hidden past the reconnect window), drive our own retry.
+        connection.onclose(() => { if (!stopped) startWithRetry(); });
 
-        connection.start()
-            .then(refresh)
-            .catch(err => console.error('Game play hub failed to connect:', err));
+        // Wake handlers: a locked/backgrounded phone suspends the reconnect timers, so re-check
+        // the connection the instant the page is shown again. pageshow also covers bfcache restores.
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') onWake(); });
+        window.addEventListener('pageshow', onWake);
+
+        startWithRetry();
     }
 
-    window.GamePlayHub = { registerPrompt: registerPrompt, observePrompts: observePrompts, on: on, invoke: invoke };
+    window.GamePlayHub = { registerPrompt: registerPrompt, observePrompts: observePrompts, on: on, onResync: onResync, invoke: invoke };
 
     // Defer start until handler modules loaded after this script have registered.
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

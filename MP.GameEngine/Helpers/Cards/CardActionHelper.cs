@@ -33,6 +33,11 @@ public static class CardActionHelper
                 return [holder];
             case PlayerTarget.AllOthers:
                 return engine.Cache.Game.GetPlayers(holder.PlayerId);
+            case PlayerTarget.Everyone:
+                // The holder first, then every other active player (clockwise from the holder).
+                var everyone = new List<PlayerModel> { holder };
+                everyone.AddRange(engine.Cache.Game.GetPlayers(holder.PlayerId));
+                return everyone;
             case PlayerTarget.ChosenPlayer:
                 var others = engine.Cache.Game.GetPlayers(holder.PlayerId);
                 if (others.Count == 0)

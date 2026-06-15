@@ -33,6 +33,7 @@ public class GameSetupService
     private readonly IHubContext<GameSetupHub> _setupHub;
     private readonly FriendService _friendService;
     private readonly BoardCacheService _boardCacheService;
+    private readonly CardCacheService _cardCacheService;
     private readonly MP.GameEngine.Services.GameEngineSetupService _engineEngineSetupService;
     private readonly GameCacheService _gameCacheService;
     private readonly ISnapshotService _snapshotService;
@@ -49,6 +50,7 @@ public class GameSetupService
         IHubContext<GameSetupHub> setupHub,
         FriendService friendService,
         BoardCacheService boardCacheService,
+        CardCacheService cardCacheService,
         MP.GameEngine.Services.GameEngineSetupService engineEngineSetupService,
         GameCacheService gameCacheService,
         ISnapshotService snapshotService,
@@ -64,6 +66,7 @@ public class GameSetupService
         _setupHub = setupHub;
         _friendService = friendService;
         _boardCacheService = boardCacheService;
+        _cardCacheService = cardCacheService;
         _engineEngineSetupService = engineEngineSetupService;
         _gameCacheService = gameCacheService;
         _snapshotService = snapshotService;
@@ -371,6 +374,7 @@ public class GameSetupService
         var board = boards.FirstOrDefault(b => b.BoardId == game.BoardId);
         if (board == null) return false;
 
+
         var players = game.Players.Where(p => !p.IsDeleted).ToList();
         if(players.Count is < RuleDictionary.MinimumPlayers or > RuleDictionary.MaximumPlayers)
             return false;
@@ -386,12 +390,14 @@ public class GameSetupService
         var playerDtos = players.Select(p => new PlayerDTO(p.UserId, p.OrderId, 
                 p.Dice1 ?? 1, p.Dice2 ?? 1))
             .ToList();
+        
+        var cards = await _cardCacheService.GetCards();
 
         GameCacheModel? cache;
         await _repos.BeginTransactionAsync();
         try
         {
-            cache = _engineEngineSetupService.SetupGameCache(gameDto, board, playerDtos);
+            cache = _engineEngineSetupService.SetupGameCache(gameDto, board, cards, playerDtos);
             await _snapshotService.CreateSnapshotAsync(cache.Game, false);
             
             await _repos.GetRepository<Game>()

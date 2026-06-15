@@ -30,6 +30,7 @@ namespace MP.GameEngine.Models.EventReceipts;
 [JsonDerivedType(typeof(CardPlayedReceipt), "CardPlayed")]
 [JsonDerivedType(typeof(FinancialTransactionReceipt), "FinancialTransaction")]
 [JsonDerivedType(typeof(PropertyTransferReceipt), "PropertyTransfer")]
+[JsonDerivedType(typeof(PropertyPurgedReceipt), "PropertyPurged")]
 public abstract class EventReceipt
 {
     /// <summary>The subject of the receipt — the player it is about. Producer sets this at construction.</summary>

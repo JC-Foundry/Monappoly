@@ -146,7 +146,16 @@
             @if (prompt is not null && promptType is not null)
             {
                 <div class="pp-prompt" data-prompt-id="@prompt.PromptId" data-prompt-type="@promptType" data-stamp="@cache.ConcurrencyStamp">
-                    <div class="pp-prompt-backdrop"></div>
+                    @* Hide (don't cancel) — the prompt stays open server-side; this only hides the
+                       overlay so the viewer can browse the tabs. Reopen via the floating button
+                       below. Backdrop carries the same data hook so tapping the dim area hides too.
+                       Wired on both hosts that run this partial — the phone profile and the play
+                       page's drawer (prompt-hide.js / player-profile.css scope to each). *@
+                    <div class="pp-prompt-backdrop" data-prompt-hide></div>
+                    <button type="button" class="btn btn-light pp-prompt-hide" data-prompt-hide
+                            aria-label="Hide prompt" title="Hide — reopen from the button above the menu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                     <div class="pp-prompt-dialog">
                         @switch (prompt)
                         {
@@ -186,6 +195,13 @@
                         }
                     </div>
                 </div>
+
+                @* Floating "Open Prompt" bar — pinned full-width above the phone's tab bar or to
+                   the drawer's bottom (positioned per host in player-profile.css).
+                   Hidden until the viewer dismisses the overlay (prompt-hide.js toggles d-none). *@
+                <button type="button" class="btn btn-primary pp-prompt-reopen d-none" data-prompt-open>
+                    <i class="bi bi-chat-left-dots-fill me-2"></i>Open Prompt
+                </button>
             }
 
             @* ───────────────── Header (shared across tabs) ───────────────── *@
@@ -287,13 +303,12 @@
                                 <dd class="col-5 text-end fw-semibold mb-2">@cur@player.Money</dd>
 
                                 <dt class="col-7 text-body-secondary fw-normal"><i class="bi bi-building-lock me-1"></i> Jail cost</dt>
-                                <dd class="col-5 text-end mb-2">@cur@player.JailCost</dd>
+                                <dd class="col-5 text-end mb-2">@cur@(MoneyHelper.NormaliseAmountToPositive(player.JailCost, cache.RoundingRule, FinancialReason.JailFee))</dd>
 
                                 <dt class="col-7 text-body-secondary fw-normal"><i class="bi bi-dice-3 me-1"></i> Triple bonus</dt>
                                 <dd class="col-5 text-end mb-2">@cur@player.TripleBonus</dd>
 
                                 <dt class="col-7 text-body-secondary fw-normal"><i class="bi bi-percent me-1"></i> Card %cap</dt>
-                                @* TODO(mock): %cap tier needs a building-state helper (John to provide) -- to be refactored into helper. *@
                                 <dd class="col-5 text-end mb-0">
                                     <span class="badge text-bg-secondary">@(game.PlayerPercentCap(playerId))%</span>
                                 </dd>

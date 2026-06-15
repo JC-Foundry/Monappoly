@@ -258,6 +258,8 @@ public class GameModel
     {
         var properties = Properties
             .Where(pr => !string.IsNullOrEmpty(pr.OwnerPlayerId) && pr.OwnerPlayerId == playerId)
+            .OrderBy(p => PropertySetHelper.ResolveSet(p.BoardIndex))
+            .ThenBy(p => p.BoardIndex)
             .ToList();
         
         if (!includeMortgaged) 

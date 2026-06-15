@@ -49,6 +49,13 @@ public static class ServiceRegistration
         services.TryAddScoped<ICardActionService<MoneyAction>, MoneyActionService>();
         services.TryAddScoped<ICardActionService<MovementAction>, MovementActionService>();
         services.TryAddScoped<ICardActionService<JailAction>, JailActionService>();
+        services.TryAddScoped<ICardActionService<TurnsAction>, TurnsActionService>();
+        services.TryAddScoped<ICardActionService<DirectionAction>, DirectionActionService>();
+        services.TryAddScoped<ICardActionService<LoansAction>, LoansActionService>();
+        services.TryAddScoped<ICardActionService<BuildingAction>, BuildingActionService>();
+        services.TryAddScoped<ICardActionService<PropertyAction>, PropertyActionService>();
+        services.TryAddScoped<ICardActionService<GlobalEventAction>, GlobalEventActionService>();
+        services.TryAddScoped<ICardActionService<DeckDrawAction>, DeckDrawActionService>();
 
         return services;
     }

@@ -10,11 +10,28 @@ namespace MP.GameEngine.Models.Cards.Actions;
 /// </summary>
 public sealed class MoneyAction : CardAction
 {
-    /// <summary>Base amount before per-unit / dice / percentage scaling.</summary>
+    /// <summary>Base amount before per-unit / dice / percentage scaling. Read as a <i>percent</i> for the percentage <see cref="Basis"/> values.</summary>
     public long Amount { get; set; }
 
     public MoneyDirection Direction { get; set; }
     public MoneyCounterparty Counterparty { get; set; }
+
+    /// <summary>
+    /// Whose money moves. <see cref="PlayerTarget.Self"/> (default) = the holder, with
+    /// <see cref="Counterparty"/> driving where it flows (the original behaviour). Any other value =
+    /// each targeted player is the subject of a Bank / Free Parking move ("each player receives
+    /// £1000 from the bank").
+    /// </summary>
+    public PlayerTarget Target { get; set; } = PlayerTarget.Self;
+
+    /// <summary>Where the amount is derived from (a fixed figure, a fraction of cash / the FP pot, the triple bonus, …).</summary>
+    public MoneyAmountBasis Basis { get; set; } = MoneyAmountBasis.Fixed;
+
+    /// <summary>
+    /// When true, swaps the holder's entire cash balance with the counterparty — a chosen player,
+    /// or the highest/lowest dice-off roller (per <see cref="Counterparty"/>). Ignores the amount.
+    /// </summary>
+    public bool SwapCash { get; set; }
 
     /// <summary>Multiplies <see cref="Amount"/> by the player's houses / hotels / properties.</summary>
     public MoneyPerUnit PerUnit { get; set; }

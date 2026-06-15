@@ -26,6 +26,16 @@ public class GameCacheService
     private const string GameBoardsKey = "GameBoards";
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(12);
 
+    // The live working copy is held on a *sliding* window, not the 12h absolute the boards use:
+    // every engine work item and every client state-fetch touches it, so an active game keeps
+    // resetting the slide and stays warm, while an abandoned game's (potentially large) GameModel
+    // is reclaimed ~2h after the last access instead of lingering for 12h. Pump teardown
+    // (GameExecutor's sweeper) reclaims the cheap pump sooner; this reclaims the memory.
+    private static readonly TimeSpan GameCacheSliding = TimeSpan.FromHours(2);
+
+    private static MemoryCacheEntryOptions GameEntryOptions() =>
+        new() { SlidingExpiration = GameCacheSliding };
+
     public GameCacheService(IMemoryCache cache,
         IRepositoryManager repos,
         BoardCacheService boardCache,
@@ -54,8 +64,8 @@ public class GameCacheService
     {
         if (game == null!) return;
 
-        _cache.Set(GetKey(game.GameId), game, CacheExpiration);
-        
+        _cache.Set(GetKey(game.GameId), game, GameEntryOptions());
+
         if(!string.IsNullOrEmpty(game.BoardId))
             _cache.Set(GetBoardsKey(game.BoardId), game.Board, CacheExpiration);
     }
@@ -96,7 +106,7 @@ public class GameCacheService
             game.UserId, game.State, game.Outcome);
 
         var cache = _engineSetup.SetupGameCache(gameDto, snapshot.StateJson, board);
-        _cache.Set(GetKey(gameId), cache, CacheExpiration);
+        _cache.Set(GetKey(gameId), cache, GameEntryOptions());
         return cache;
     }
     

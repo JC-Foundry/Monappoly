@@ -39,4 +39,6 @@
     }
 
     GamePlayHub.on('StateChanged', refresh);
+    // Also repaint on reconnect / wake — broadcasts missed while disconnected aren't replayed.
+    GamePlayHub.onResync(refresh);
 })();

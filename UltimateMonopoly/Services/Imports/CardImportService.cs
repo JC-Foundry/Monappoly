@@ -4,7 +4,9 @@ using JC.Core.Extensions;
 using JC.Core.Models;
 using JC.Core.Services.DataRepositories;
 using Microsoft.EntityFrameworkCore;
+using MP.GameEngine.Enums.Cards;
 using MP.GameEngine.Helpers.Cards;
+using MP.GameEngine.Models.Imports;
 using MP.GameEngine.Models.Snapshot.Cards;
 using UltimateMonopoly.Models.DataModels;
 
@@ -44,11 +46,7 @@ public class CardImportService
 
     public async Task<List<CardModel>> ImportCards()
     {
-        //TODO - Cards will be imported via import objects:
-        //With the import we then check + grab persisted IDs
-        //For compile, import object is "dynamic"
-
-        var cardImports = new List<dynamic>();
+        var cardList = new List<CardModel>();
         foreach (var fileName in _cardFileNames)
         {
             var path = _filePathProvider.GetFilePath(FilePathProvider.FileCategory.Card);
@@ -57,11 +55,20 @@ public class CardImportService
                 continue;
 
             var txt = await _filePathProvider.ReadFileAsync(path);
-            cardImports.Add(JsonSerializer.Deserialize<dynamic>(txt));
+            var cards = JsonSerializer.Deserialize<List<CardJsonImport>>(txt);
+            if(cards == null || cards.Count == 0)
+                continue;
+
+            cardList.AddRange(cards.Select(import => new CardModel
+            {
+                CardText = import.RawText,
+                CardType = EnumExtensions.TryParse<CardType>(import.CardType),
+                Groups = import.Groups.AsReadOnly(),
+                Conditions = import.Conditions.AsReadOnly(),
+                ConditionType = EnumExtensions.TryParse<CardConditionType>(import.ConditionType),
+                SuppressDefault = import.SuppressDefault
+            }));
         }
-        
-        //TODO: Import Objects would then be translated into a List of CardModel
-        var cardList = new List<CardModel>();
 
         //Enrich card model list with persisted card ids
         var persistedIdsToAdd = new List<PersistedCardIds>();

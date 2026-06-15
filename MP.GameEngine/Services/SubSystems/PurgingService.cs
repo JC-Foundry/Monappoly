@@ -1,4 +1,5 @@
 using MP.GameEngine.Enums.Properties;
+using MP.GameEngine.Models.EventReceipts;
 using MP.GameEngine.Models.Prompts.PromptTypes;
 using MP.GameEngine.Models.Snapshot;
 
@@ -73,6 +74,12 @@ public class PurgingService
             property.IsPurged = true;
             property.HasBeenPurged = true;
             property.RentLevel = RentLevel.SET;
+            
+            engine.EventEmitter.Emit(new PropertyPurgedReceipt
+            {
+                PlayerId = purgingPlayer.PlayerId,
+                PropertyBoardIndex = index
+            });
         }
         
         _ = await engine.PromptProvider.Acknowledge(purgingPlayer.PlayerId, 

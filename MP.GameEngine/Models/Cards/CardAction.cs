@@ -15,6 +15,13 @@ namespace MP.GameEngine.Models.Cards;
 [JsonDerivedType(typeof(MoneyAction), "Money")]
 [JsonDerivedType(typeof(MovementAction), "Movement")]
 [JsonDerivedType(typeof(JailAction), "Jail")]
+[JsonDerivedType(typeof(TurnsAction), "Turns")]
+[JsonDerivedType(typeof(DirectionAction), "Direction")]
+[JsonDerivedType(typeof(LoansAction), "Loans")]
+[JsonDerivedType(typeof(BuildingAction), "Building")]
+[JsonDerivedType(typeof(PropertyAction), "Property")]
+[JsonDerivedType(typeof(GlobalEventAction), "GlobalEvent")]
+[JsonDerivedType(typeof(DeckDrawAction), "DeckDraw")]
 public abstract class CardAction
 {
     /// <summary>Stable identity (GUID), shared with the persisted card definition on re-import.</summary>

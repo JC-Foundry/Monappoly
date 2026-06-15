@@ -20,8 +20,20 @@ public sealed class MovementAction : CardAction
     /// <summary>Kind to seek for <see cref="MovementKind.AdvanceToNearest"/>.</summary>
     public NearestKind Nearest { get; set; }
 
+    /// <summary>
+    /// When true, an <see cref="MovementKind.AdvanceToNearest"/> seeks only a space owned by
+    /// <i>another</i> player ("nearest station owned by someone else"). Default false = any.
+    /// </summary>
+    public bool NearestOwnedByOther { get; set; }
+
     /// <summary>Who moves.</summary>
     public PlayerTarget Target { get; set; } = PlayerTarget.Self;
+
+    /// <summary>
+    /// Filters the resolved <see cref="Target"/> players by jail state — e.g. mass breakout
+    /// (<see cref="MovementJailFilter.OnlyJailed"/>) or "call a meeting" (<see cref="MovementJailFilter.OnlyNotJailed"/>).
+    /// </summary>
+    public MovementJailFilter JailFilter { get; set; }
 
     /// <summary>"Do not pass GO" cards set this false to suppress the GO bonus when crossing.</summary>
     public bool CollectGoBonus { get; set; } = true;

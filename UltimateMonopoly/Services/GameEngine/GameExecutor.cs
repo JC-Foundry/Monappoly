@@ -47,12 +47,30 @@ public sealed class GameExecutor : IGameExecutor, IAsyncDisposable
     private const string FaultMessage =
         "An unexpected error occurred and the game cannot continue. You'll be returned to the home screen.";
 
+    // Idle-pump reclamation. Pumps are otherwise immortal — only finish/cancel/fault remove them —
+    // so an abandoned game leaks its pump (a parked task + channel + CTS) for the life of the
+    // process. The sweeper reclaims them on two thresholds:
+    //   • Idle (not busy, no work for IdleThreshold): the game is dormant at a turn boundary. Drop
+    //     the pump but NOT the cache — the warm working copy is preserved so a resumed game loses
+    //     nothing; the cache reclaims itself via its sliding expiry (GameCacheService).
+    //   • Wedged (busy, but the current item has been in flight past WedgeThreshold): a turn parked
+    //     on a prompt nobody answered (a slept phone, host never stepped in). Drop the pump AND
+    //     invalidate the cache, so the next access re-hydrates from the last snapshot and the lost
+    //     turn is re-rolled — the automatic version of the "restart IIS to unstick it" workaround.
+    private static readonly TimeSpan SweepInterval = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan IdleThreshold = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan WedgeThreshold = TimeSpan.FromHours(2);
+
+    private readonly CancellationTokenSource _sweepCts = new();
+    private readonly Task _sweepTask;
+
     public GameExecutor(IServiceScopeFactory scopeFactory, ILogger<GameExecutor> logger,
         IHubContext<GamePlayHub> hub)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
         _hub = hub;
+        _sweepTask = Task.Run(() => SweepLoopAsync(_sweepCts.Token));
     }
 
     public void Enqueue(string gameId, GameWorkItem work)
@@ -94,6 +112,62 @@ public sealed class GameExecutor : IGameExecutor, IAsyncDisposable
         _ = BroadcastFaultAsync(gameId);
     }
 
+    private async Task SweepLoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(SweepInterval);
+            while (await timer.WaitForNextTickAsync(ct))
+                Sweep();
+        }
+        catch (OperationCanceledException)
+        {
+            // Shutdown — expected.
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Game pump sweeper stopped unexpectedly.");
+        }
+    }
+
+    private void Sweep()
+    {
+        var now = DateTime.UtcNow;
+        foreach (var (gameId, pump) in _pumps)
+        {
+            try
+            {
+                if (!pump.IsBusy && now - pump.LastActivityUtc > IdleThreshold)
+                    Reclaim(gameId, pump, invalidateCache: false, reason: "idle");
+                else if (pump.IsBusy && now - pump.WorkStartedUtc > WedgeThreshold)
+                    Reclaim(gameId, pump, invalidateCache: true, reason: "wedged");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to reclaim pump for game {GameId}.", gameId);
+            }
+        }
+    }
+
+    private void Reclaim(string gameId, GamePump pump, bool invalidateCache, string reason)
+    {
+        // Remove the exact instance only; a concurrent fault/finish/replace leaves the new one alone.
+        if (!_pumps.TryRemove(new KeyValuePair<string, GamePump>(gameId, pump)))
+            return;
+
+        _logger.LogInformation("Reclaiming {Reason} pump for game {GameId}.", reason, gameId);
+
+        // A wedged pump's working copy may be mid-turn dirty, so force a re-hydrate from the last
+        // snapshot. An idle pump sits at a turn boundary — keep the warm cache for a clean resume.
+        if (invalidateCache)
+            using (var scope = _scopeFactory.CreateScope())
+                scope.ServiceProvider.GetRequiredService<GameCacheService>().Invalidate(gameId);
+
+        // Fire-and-forget: DisposeAsync cancels the pump's token, which cancels any parked prompt
+        // await and unwinds the work item cleanly. Don't block the sweep on it.
+        _ = pump.DisposeAsync().AsTask();
+    }
+
     private async Task BroadcastFaultAsync(string gameId)
     {
         try
@@ -109,6 +183,11 @@ public sealed class GameExecutor : IGameExecutor, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        await _sweepCts.CancelAsync();
+        try { await _sweepTask; }
+        catch (OperationCanceledException) { /* expected on shutdown */ }
+        _sweepCts.Dispose();
+
         foreach (var pump in _pumps.Values)
             await pump.DisposeAsync();
         _pumps.Clear();
@@ -132,6 +211,18 @@ internal sealed class GamePump : IAsyncDisposable
     private readonly Task _pumpTask;
     private readonly Action<string, GamePump> _onFault;
 
+    // Liveness for the executor's idle sweeper. _lastActivityTicks bumps on enqueue and after
+    // each work item completes (idle time = now − this when not busy). _workStartedTicks marks
+    // when the current item began (wedge time = now − this while busy). _busy is true while a
+    // work item is in flight, including while it's parked awaiting a prompt.
+    private long _lastActivityTicks = DateTime.UtcNow.Ticks;
+    private long _workStartedTicks;
+    private volatile bool _busy;
+
+    public bool IsBusy => _busy;
+    public DateTime LastActivityUtc => new(Volatile.Read(ref _lastActivityTicks), DateTimeKind.Utc);
+    public DateTime WorkStartedUtc => new(Volatile.Read(ref _workStartedTicks), DateTimeKind.Utc);
+
     public GamePump(string gameId, IServiceScopeFactory scopeFactory, ILogger logger,
         Action<string, GamePump> onFault)
     {
@@ -142,7 +233,12 @@ internal sealed class GamePump : IAsyncDisposable
         _pumpTask = Task.Run(() => PumpAsync(_cts.Token));
     }
 
-    public bool TryEnqueue(GameWorkItem work) => _channel.Writer.TryWrite(work);
+    public bool TryEnqueue(GameWorkItem work)
+    {
+        var written = _channel.Writer.TryWrite(work);
+        if (written) Volatile.Write(ref _lastActivityTicks, DateTime.UtcNow.Ticks);
+        return written;
+    }
 
     private async Task PumpAsync(CancellationToken ct)
     {
@@ -152,6 +248,8 @@ internal sealed class GamePump : IAsyncDisposable
             {
                 try
                 {
+                    _workStartedTicks = DateTime.UtcNow.Ticks;
+                    _busy = true;
                     await RunAsync(work, ct);
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -170,6 +268,11 @@ internal sealed class GamePump : IAsyncDisposable
                     _channel.Writer.TryComplete();
                     _onFault(_gameId, this);
                     break;
+                }
+                finally
+                {
+                    _busy = false;
+                    Volatile.Write(ref _lastActivityTicks, DateTime.UtcNow.Ticks);
                 }
             }
         }

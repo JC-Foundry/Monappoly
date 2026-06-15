@@ -154,6 +154,8 @@
         }
     });
 
-    // Keep the open drawer's profile current with the live state.
-    GamePlayHub.on('StateChanged', function () { if (isOpen && currentUserId) loadContent(currentUserId); });
+    // Keep the open drawer's profile current with the live state, including on reconnect / wake.
+    function refreshOpenDrawer() { if (isOpen && currentUserId) loadContent(currentUserId); }
+    GamePlayHub.on('StateChanged', refreshOpenDrawer);
+    GamePlayHub.onResync(refreshOpenDrawer);
 })();

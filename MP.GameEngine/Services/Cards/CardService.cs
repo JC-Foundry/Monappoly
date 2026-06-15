@@ -21,6 +21,13 @@ public class CardService
     private readonly ICardActionService<MoneyAction> _moneyActionService;
     private readonly ICardActionService<MovementAction> _movementActionService;
     private readonly ICardActionService<JailAction> _jailActionService;
+    private readonly ICardActionService<TurnsAction> _turnsActionService;
+    private readonly ICardActionService<DirectionAction> _directionActionService;
+    private readonly ICardActionService<LoansAction> _loansActionService;
+    private readonly ICardActionService<BuildingAction> _buildingActionService;
+    private readonly ICardActionService<PropertyAction> _propertyActionService;
+    private readonly ICardActionService<GlobalEventAction> _globalEventActionService;
+    private readonly ICardActionService<DeckDrawAction> _deckDrawActionService;
 
     /// <summary>
     /// Creates the card interpreter over the per-action handlers it dispatches to
@@ -28,11 +35,25 @@ public class CardService
     /// </summary>
     public CardService(ICardActionService<MoneyAction> moneyActionService,
         ICardActionService<MovementAction> movementActionService,
-        ICardActionService<JailAction> jailActionService)
+        ICardActionService<JailAction> jailActionService,
+        ICardActionService<TurnsAction> turnsActionService,
+        ICardActionService<DirectionAction> directionActionService,
+        ICardActionService<LoansAction> loansActionService,
+        ICardActionService<BuildingAction> buildingActionService,
+        ICardActionService<PropertyAction> propertyActionService,
+        ICardActionService<GlobalEventAction> globalEventActionService,
+        ICardActionService<DeckDrawAction> deckDrawActionService)
     {
         _moneyActionService = moneyActionService;
         _movementActionService = movementActionService;
         _jailActionService = jailActionService;
+        _turnsActionService = turnsActionService;
+        _directionActionService = directionActionService;
+        _loansActionService = loansActionService;
+        _buildingActionService = buildingActionService;
+        _propertyActionService = propertyActionService;
+        _globalEventActionService = globalEventActionService;
+        _deckDrawActionService = deckDrawActionService;
     }
 
 
@@ -160,9 +181,16 @@ public class CardService
     private Task ApplyAction(Framework.GameEngine engine, PlayerModel player, CardAction action, CancellationToken ct)
         => action switch
         {
-            MoneyAction m    => _moneyActionService.ResolveActionAsync(engine, player, m, ct),
-            MovementAction v => _movementActionService.ResolveActionAsync(engine, player, v, ct),
-            JailAction j     => _jailActionService.ResolveActionAsync(engine, player, j, ct),
+            MoneyAction m     => _moneyActionService.ResolveActionAsync(engine, player, m, ct),
+            MovementAction v  => _movementActionService.ResolveActionAsync(engine, player, v, ct),
+            JailAction j      => _jailActionService.ResolveActionAsync(engine, player, j, ct),
+            TurnsAction t     => _turnsActionService.ResolveActionAsync(engine, player, t, ct),
+            DirectionAction d => _directionActionService.ResolveActionAsync(engine, player, d, ct),
+            LoansAction l     => _loansActionService.ResolveActionAsync(engine, player, l, ct),
+            BuildingAction b  => _buildingActionService.ResolveActionAsync(engine, player, b, ct),
+            PropertyAction p  => _propertyActionService.ResolveActionAsync(engine, player, p, ct),
+            GlobalEventAction g => _globalEventActionService.ResolveActionAsync(engine, player, g, ct),
+            DeckDrawAction dd => _deckDrawActionService.ResolveActionAsync(engine, player, dd, ct),
             _ => throw new ArgumentOutOfRangeException(nameof(action), action, "Unhandled card action type.")
         };
     

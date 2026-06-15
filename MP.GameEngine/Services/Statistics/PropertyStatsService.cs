@@ -23,9 +23,6 @@ public class PropertyStatsService : IStatsService
         ComputeProfitStats(record, playerId, snapshot, completedSets);
         ComputePropertyCounts(record, playerId, snapshot);
 
-        // TODO: PropertiesPurged — awaits the purge service/receipt being wired (§13.4).
-        record.PropertiesPurged = 0;
-
         return record;
     }
 
@@ -45,7 +42,8 @@ public class PropertyStatsService : IStatsService
         var everCompleted = new HashSet<PropertySet>();
         ushort maxCompleteSets = 0;
         uint maxCompleteSetsTurn = 1;   // turn 1 by default — the peak is 0 sets at the start
-
+        ushort purgedCount = 0;
+        
         foreach (var turn in snapshot.Turns)
         {
             var owned = turn.Game.GetOwnedProperties(playerId, includeReserved: false);
@@ -57,10 +55,16 @@ public class PropertyStatsService : IStatsService
 
             maxCompleteSets = (ushort)complete.Count;
             maxCompleteSetsTurn = turn.Game.Metadata.TurnNumber;
+            
+            var purgedEvents = turn.Events.OfType<PropertyPurgedReceipt>()
+                .Where(pe => pe.PlayerId == playerId)
+                .ToList();
+            purgedCount += (ushort)purgedEvents.Count;
         }
 
         record.MaxCompleteSets = maxCompleteSets;
         record.MaxCompleteSetsTurnNumber = maxCompleteSetsTurn;
+        record.PropertiesPurged = purgedCount;
         return everCompleted;
     }
 

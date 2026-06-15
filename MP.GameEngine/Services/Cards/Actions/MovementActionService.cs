@@ -49,7 +49,7 @@ public class MovementActionService : ICardActionService<MovementAction>
         }
 
         var targets = await CardActionHelper.ResolveTargets(engine, player, action.Target, ct);
-        foreach (var target in targets)
+        foreach (var target in targets.Where(t => MatchesJailFilter(t, action.JailFilter)))
         {
             switch (action.Kind)
             {
@@ -62,7 +62,7 @@ public class MovementActionService : ICardActionService<MovementAction>
                     await _movementService.AdvancePlayer(engine, target, index, MovementDirection(action), ct);
                     break;
                 case MovementKind.AdvanceToNearest:
-                    await _movementService.AdvancePlayer(engine, target, FindNearest(target, action.Nearest), MovementDirection(action), ct);
+                    await _movementService.AdvancePlayer(engine, target, FindNearest(engine, target, action), MovementDirection(action), ct);
                     break;
                 case MovementKind.GoToJustVisiting:
                     await _movementService.AdvancePlayer(engine, target, IndexHelper.JustVisitingSpace,
@@ -114,13 +114,14 @@ public class MovementActionService : ICardActionService<MovementAction>
             : PlayerMovementDirection.CounterDirectionOfTravel;
 
     /// <summary>
-    /// Scans forward in the player's facing direction for the nearest space of
-    /// <paramref name="kind"/> (station / utility / buildable property), returning its board index.
-    /// Falls back to the player's current index if none is found (a board always holds the kind).
+    /// Scans forward in the player's facing direction for the nearest space of the action's
+    /// <see cref="MovementAction.Nearest"/> kind (station / utility / buildable property), returning
+    /// its board index. When <see cref="MovementAction.NearestOwnedByOther"/> is set, only a space
+    /// owned by another player qualifies. Falls back to the player's current index if none is found.
     /// </summary>
-    private static ushort FindNearest(PlayerModel player, NearestKind kind)
+    private static ushort FindNearest(Framework.GameEngine engine, PlayerModel player, MovementAction action)
     {
-        var targets = kind switch
+        var targets = action.Nearest switch
         {
             NearestKind.Station => PropertySetHelper.StationIndexes,
             NearestKind.Utility => PropertySetHelper.UtilityIndexes,
@@ -131,9 +132,28 @@ public class MovementActionService : ICardActionService<MovementAction>
         for (var step = 0; step < IndexHelper.PhysicalBoardSize; step++)
         {
             (index, _) = IndexHelper.MoveIndex(index, 1, player.Direction);
-            if (targets.Contains(index))
-                return index;
+            if (!targets.Contains(index))
+                continue;
+            if (action.NearestOwnedByOther && !OwnedByOther(engine, player, index))
+                continue;
+            return index;
         }
         return player.BoardIndex;   // fallback — a board always holds the target kind
     }
+
+    /// <summary>True when the property at <paramref name="index"/> is owned by a player other than the mover.</summary>
+    private static bool OwnedByOther(Framework.GameEngine engine, PlayerModel player, ushort index)
+    {
+        var property = engine.Cache.Game.GetPropertySpace(index);
+        return property?.OwnerPlayerId is not null && property.OwnerPlayerId != player.PlayerId;
+    }
+
+    /// <summary>Whether a target passes the action's jail filter (only-jailed / only-not-jailed / no filter).</summary>
+    private static bool MatchesJailFilter(PlayerModel player, MovementJailFilter filter)
+        => filter switch
+        {
+            MovementJailFilter.OnlyJailed => player.IsInJail,
+            MovementJailFilter.OnlyNotJailed => !player.IsInJail,
+            _ => true
+        };
 }

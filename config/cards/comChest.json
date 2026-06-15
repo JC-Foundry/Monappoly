@@ -1,0 +1,140 @@
+[
+{
+"RawText": "Advance to "GO"",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 0 } ] }
+]
+},
+{
+"RawText": "Annuity Matures. Collect {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 100, "Direction": 1, "Counterparty": 0 } ] }
+]
+},
+{
+"RawText": "Bank error in your favour. Collect {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 200, "Direction": 1, "Counterparty": 0 } ] }
+]
+},
+{
+"RawText": "Doctors fee pay {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 50, "Direction": 0, "Counterparty": 1 } ] }
+]
+},
+{
+"RawText": "From sale of stock you get {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 50, "Direction": 1, "Counterparty": 0 } ] }
+]
+},
+{
+"RawText": "Get out of jail free. Keep until needed",
+"CardType": "ComChest",
+"ConditionType": "ChoiceCardholderTurn",
+"Conditions": [ { "Trigger": 512 } ],
+"Groups": [
+{ "Actions": [ { "$type": "Jail", "Kind": 1 } ] }
+]
+},
+{
+"RawText": "Go back 3 spaces",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Movement", "Kind": 0, "Spaces": -3 } ] }
+]
+},
+{
+"RawText": "Go back to Old Kent Road",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 1 } ] }
+]
+},
+{
+"RawText": "Go to jail. Move directly to jail. Do NOT pass "GO". Do NOT collect £200",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 100 } ] }
+]
+},
+{
+"RawText": "Income tax refund. Collect {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 50, "Direction": 1, "Counterparty": 0 } ] }
+]
+},
+{
+"RawText": "It is your birthday. Collect {G0__0} from every player",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 10, "Direction": 1, "Counterparty": 2 } ] }
+]
+},
+{
+"RawText": "Pay a {G0__0} fine or take a Chance",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "GroupText": "Pay {0} into Free Parking", "Actions": [ { "$type": "Money", "Amount": 10, "Direction": 0, "Counterparty": 1 } ] },
+{ "GroupText": "Take a Chance card", "Actions": [ { "$type": "DeckDraw", "Deck": 0 } ] }
+]
+},
+{
+"RawText": "Pay hospital {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 100, "Direction": 0, "Counterparty": 1 } ] }
+]
+},
+{
+"RawText": "Pay your insurance premium {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 50, "Direction": 0, "Counterparty": 1 } ] }
+]
+},
+{
+"RawText": "You have won second prize in a beauty contest. Collect {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 10, "Direction": 1, "Counterparty": 0 } ] }
+]
+},
+{
+"RawText": "You inherit {G0__0}",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Money", "Amount": 100, "Direction": 1, "Counterparty": 0 } ] }
+]
+},
+{
+"RawText": "Advance to the nearest station",
+"CardType": "ComChest",
+"ConditionType": "None",
+"Groups": [
+{ "Actions": [ { "$type": "Movement", "Kind": 2, "Nearest": 0 } ] }
+]
+}
+]

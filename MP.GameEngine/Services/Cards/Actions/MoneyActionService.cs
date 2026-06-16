@@ -4,6 +4,7 @@ using MP.GameEngine.Enums.Cards;
 using MP.GameEngine.Helpers;
 using MP.GameEngine.Helpers.Cards;
 using MP.GameEngine.Helpers.RuleSet;
+using MP.GameEngine.Models.Cards;
 using MP.GameEngine.Models.Cards.Actions;
 using MP.GameEngine.Models.Snapshot;
 using MP.GameEngine.Services.SubSystems;
@@ -14,8 +15,8 @@ namespace MP.GameEngine.Services.Cards.Actions;
 /// Resolves a card <see cref="MoneyAction"/> — a money movement realised from the holder's
 /// per-unit count, an optional <see cref="DiceMultiplier"/> (a fresh holder roll), and the
 /// percentage-card %cap, then routed to its counterparty: the Bank / Free Parking, every other
-/// active player (<see cref="MoneyCounterparty.EachPlayer"/>), or the winner of a one-die dice-off
-/// (<see cref="MoneyCounterparty.HighestRoller"/> / <see cref="MoneyCounterparty.LowestRoller"/>).
+/// active player (<see cref="MoneyCounterparty.EachPlayer"/>), or a dice-off winner
+/// (<see cref="MoneyCounterparty.DiceOffPlayer"/>, configured by the action's <see cref="MoneyAction.DiceOff"/>).
 /// Every player-to-player movement runs from the <b>payer's</b> POV, so each payer's affordability
 /// (and any shortfall) is its own — never the receiver's (transactions.md §4). See cards-design.md §3.
 /// </summary>
@@ -39,38 +40,42 @@ public class MoneyActionService : ICardActionService<MoneyAction>
     /// <param name="player">The card holder paying or receiving.</param>
     /// <param name="action">The money action to resolve.</param>
     /// <param name="ct">Cancellation token.</param>
-    public async Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, MoneyAction action, CancellationToken ct)
+    public async Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, MoneyAction action, CancellationToken ct, CardActionContext? context = null)
     {
         // Swap-all-cash short-circuits the amount entirely.
         if (action.SwapCash)
         {
             await SwapCash(engine, player, action, ct);
-            return;
+            return true;
         }
-
-        // A dice multiplier is a fresh roll by the holder, folded into the realised amount.
-        var diceMultiplier = await RollDiceMultiplier(engine, player, action.DiceMultiplier, ct);
 
         // Self (default): the holder is the subject, with the counterparty driving where it flows.
         if (action.Target == PlayerTarget.Self)
         {
-            var amount = RealiseAmount(engine, player, action, diceMultiplier);
+            // A dice multiplier is a fresh roll by the holder, folded into the realised amount.
+            var diceMultiplier = await RollDiceMultiplier(engine, player, action.DiceMultiplier, ct);
+            var amount = RealiseAmount(engine, player, action, diceMultiplier, context);
             if (amount == 0)
-                return;
+                return true;
             await ApplyByCounterparty(engine, player, action, amount, ct);
-            return;
+            return true;
         }
 
-        // Multi-target: each targeted player is the subject of a Bank / Free Parking move (a grant
-        // or a charge) — e.g. "each player receives £1000 from the bank". The amount is realised per
-        // subject (so per-unit / %cap follow the affected player), sharing the one holder dice roll.
+        // Multi-target: each targeted player is the subject of a Bank / Free Parking move (a grant or
+        // a charge) — e.g. "each other player receives £200 × the two dice they roll". The amount is
+        // realised per subject (so per-unit / %cap follow the affected player) and, crucially, the
+        // dice multiplier is a fresh roll by THAT subject — the prompt and the figure both belong to
+        // the player actually receiving/paying, never the card holder. (No multiplier → no prompt.)
         foreach (var subject in await CardActionHelper.ResolveTargets(engine, player, action.Target, ct))
         {
-            var amount = RealiseAmount(engine, subject, action, diceMultiplier);
+            var diceMultiplier = await RollDiceMultiplier(engine, subject, action.DiceMultiplier, ct);
+            var amount = RealiseAmount(engine, subject, action, diceMultiplier, context);
             if (amount == 0)
                 continue;
             await ApplyToBankOrFreeParking(engine, subject, action.Direction, action.Counterparty, amount, ct);
         }
+
+        return true;
     }
 
     /// <summary>Applies a realised amount for the holder per the action's counterparty (the original Self-path routing).</summary>
@@ -78,9 +83,7 @@ public class MoneyActionService : ICardActionService<MoneyAction>
         => action.Counterparty switch
         {
             MoneyCounterparty.EachPlayer => ApplyToEachPlayer(engine, holder, action.Direction, amount, ct),
-            MoneyCounterparty.HighestRoller or MoneyCounterparty.LowestRoller => ApplyToDiceOffWinner(engine, holder,
-                action.Direction, highest: action.Counterparty == MoneyCounterparty.HighestRoller,
-                includeHolder: action.IncludeHolderInRoll, amount, ct),
+            MoneyCounterparty.DiceOffPlayer => ApplyToDiceOffWinner(engine, holder, action.Direction, action.DiceOff, amount, ct),
             _ => ApplyToBankOrFreeParking(engine, holder, action.Direction, action.Counterparty, amount, ct)
         };
 
@@ -91,12 +94,11 @@ public class MoneyActionService : ICardActionService<MoneyAction>
     private async Task SwapCash(Framework.GameEngine engine, PlayerModel holder, MoneyAction action, CancellationToken ct)
     {
         PlayerModel? target;
-        if (action.Counterparty is MoneyCounterparty.HighestRoller or MoneyCounterparty.LowestRoller)
+        if (action.Counterparty == MoneyCounterparty.DiceOffPlayer)
         {
-            var candidates = engine.Cache.Game.GetPlayers(holder.PlayerId, excludePovPlayer: !action.IncludeHolderInRoll);
-            if (candidates.Count == 0)
-                return;
-            target = await RollDiceOff(engine, candidates, action.Counterparty == MoneyCounterparty.HighestRoller, ct);
+            target = action.DiceOff is null
+                ? null
+                : await _diceService.ResolveDiceOffTarget(engine, holder, action.DiceOff, ct);
         }
         else
         {
@@ -145,19 +147,17 @@ public class MoneyActionService : ICardActionService<MoneyAction>
 
 
     /// <summary>
-    /// The highest/lowest roller of a one-die dice-off is the single counterparty; the holder then
-    /// pays them (or receives from them, payer-POV). The other active players always roll; the holder
-    /// joins (and can win) when <paramref name="includeHolder"/> is set. No-op when there are no
-    /// candidates, or when the holder wins their own dice-off (the movement would be with themselves).
+    /// The dice-off winner (per the action's <see cref="DiceOff"/>) is the single counterparty; the
+    /// holder then pays them (or receives from them, payer-POV). No-op when the dice-off has no winner,
+    /// or the holder wins their own dice-off (the movement would be with themselves).
     /// </summary>
     private async Task ApplyToDiceOffWinner(Framework.GameEngine engine, PlayerModel holder,
-        MoneyDirection direction, bool highest, bool includeHolder, uint amount, CancellationToken ct)
+        MoneyDirection direction, DiceOff? diceOff, uint amount, CancellationToken ct)
     {
-        var candidates = engine.Cache.Game.GetPlayers(holder.PlayerId, excludePovPlayer: !includeHolder);
-        if (candidates.Count == 0)
+        if (diceOff is null)
             return;
 
-        var winner = await RollDiceOff(engine, candidates, highest, ct);
+        var winner = await _diceService.ResolveDiceOffTarget(engine, holder, diceOff, ct);
         if (winner is null || winner.PlayerId == holder.PlayerId)
             return;
 
@@ -165,33 +165,6 @@ public class MoneyActionService : ICardActionService<MoneyAction>
             await _transactionService.PayCardCharge(engine, holder, amount, TransactionCounterparty.Player, winner, ct);
         else
             await _transactionService.PayCardCharge(engine, winner, amount, TransactionCounterparty.Player, holder, ct);
-    }
-
-
-    /// <summary>
-    /// Each candidate rolls one die; the highest (or lowest) roller wins. Ties resolve to the first
-    /// roller in clockwise order (strict comparison keeps the earlier winner).
-    /// </summary>
-    private async Task<PlayerModel?> RollDiceOff(Framework.GameEngine engine, List<PlayerModel> candidates,
-        bool highest, CancellationToken ct)
-    {
-        PlayerModel? winner = null;
-        var best = highest ? int.MinValue : int.MaxValue;
-
-        foreach (var candidate in candidates)
-        {
-            var roll = await _diceService.RollCardDice(engine, candidate, 1,
-                "Dice-off", "Roll one die for the card dice-off.", ct);
-            int value = roll.Die1;
-
-            if (highest ? value > best : value < best)
-            {
-                best = value;
-                winner = candidate;
-            }
-        }
-
-        return winner;
     }
 
 
@@ -214,19 +187,27 @@ public class MoneyActionService : ICardActionService<MoneyAction>
     /// Base amount scaled by the per-unit count (houses/hotels/properties owned), the
     /// <paramref name="diceMultiplier"/> (a pre-rolled holder total), and — for percentage cards —
     /// the player's %cap (100/50/10), in that order. Returns 0 for a genuinely-zero realised amount.
+    /// <paramref name="context"/> carries the trigger amount the <see cref="AmountSource.TriggerAmount"/>
+    /// base reads.
     /// </summary>
-    private static uint RealiseAmount(Framework.GameEngine engine, PlayerModel player, MoneyAction action, uint diceMultiplier)
+    private static uint RealiseAmount(Framework.GameEngine engine, PlayerModel player, MoneyAction action, uint diceMultiplier, CardActionContext? context)
     {
-        // The base figure: a fixed amount, a fraction of cash / the FP pot, the triple bonus, or the
-        // snake-eyes bonus. For the percentage bases, Amount is the percent.
-        long amount = action.Basis switch
-        {
-            MoneyAmountBasis.PercentOfOwnCash => (long)player.Money * action.Amount / 100,
-            MoneyAmountBasis.PercentOfFreeParkingPot => (long)engine.Cache.Game.FreeParkingAmount * action.Amount / 100,
-            MoneyAmountBasis.TripleBonus => player.TripleBonus,
-            MoneyAmountBasis.SnakeEyesBonus => RuleDictionary.SnakeEyesBonus,
-            _ => action.Amount
-        };
+        // The base figure. AmountSource.TriggerAmount overrides Basis: the base is the figure the firing
+        // trigger supplied (the tax just assessed, the FP take, …) and Amount is reused as the factor
+        // (×2 "double", ×1 "exactly that"). No context — a resolve-on-draw play, or a play with no
+        // trigger amount — floors to 0, a silent no-op. Otherwise it's a fixed amount, a fraction of
+        // cash / the FP pot, the triple bonus, or the snake-eyes bonus (Amount is the percent for the
+        // percentage bases).
+        long amount = action.AmountSource == AmountSource.TriggerAmount
+            ? (context?.TriggerAmount ?? 0) * action.Amount
+            : action.Basis switch
+            {
+                MoneyAmountBasis.PercentOfOwnCash => (long)player.Money * action.Amount / 100,
+                MoneyAmountBasis.PercentOfFreeParkingPot => (long)engine.Cache.Game.FreeParkingAmount * action.Amount / 100,
+                MoneyAmountBasis.TripleBonus => player.TripleBonus,
+                MoneyAmountBasis.SnakeEyesBonus => RuleDictionary.SnakeEyesBonus,
+                _ => action.Amount
+            };
 
         var (houses, hotels) = engine.Cache.Game.GetHousesAndHotelsTaken(player.PlayerId);
         amount *= action.PerUnit switch

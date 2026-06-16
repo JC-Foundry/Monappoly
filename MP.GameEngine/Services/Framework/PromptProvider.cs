@@ -1,4 +1,5 @@
 using MP.GameEngine.Abstractions;
+using MP.GameEngine.Enums.Cards;
 using MP.GameEngine.Models;
 using MP.GameEngine.Models.Prompts;
 using MP.GameEngine.Models.Prompts.PromptTypes;
@@ -60,7 +61,8 @@ public sealed class PromptProvider : IPromptProvider
         }
     }
 
-    public async Task<AcknowledgeResponse> Acknowledge(string playerId, string title, string body, TimeSpan? timeout = null, CancellationToken ct = default)
+    public async Task<AcknowledgeResponse> Acknowledge(string playerId, string title, string body, TimeSpan? timeout = null,
+        CardType? cardType = null, CancellationToken ct = default)
     {
         var promptId = Guid.NewGuid().ToString();
         timeout ??= TimeSpan.FromSeconds(30);
@@ -71,6 +73,7 @@ public sealed class PromptProvider : IPromptProvider
             Title = title,
             Body = body,
             Timeout = timeout,
+            CardType = cardType,
             DefaultResponse = new AcknowledgeResponse { PromptId = promptId }
         }, ct);
     }

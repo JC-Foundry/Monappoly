@@ -69,7 +69,11 @@ public class BoardService
                     await engine.CardService.DrawCard(engine, player, CardType.Chance, ct);
                     if (player.Direction == PlayerDirection.Backward)
                     {
+                        engine.CiteRule(RuleCode.Percentage_Card);
+                        engine.CiteRule(RuleCode.Percentage_Card_Cap);
                         await engine.CardService.DrawCard(engine, player, CardType.PercentageChance, ct);
+                        
+                        engine.CiteRule(RuleCode.Third_Card_AntiClockwise);
                         await engine.CardService.DrawCard(engine, player, CardType.Third, ct);
                     }
                     break;
@@ -77,7 +81,11 @@ public class BoardService
                     await engine.CardService.DrawCard(engine, player, CardType.CommunityChest, ct);
                     if (player.Direction == PlayerDirection.Backward)
                     {
+                        engine.CiteRule(RuleCode.Percentage_Card);
+                        engine.CiteRule(RuleCode.Percentage_Card_Cap);
                         await engine.CardService.DrawCard(engine, player, CardType.PercentageComChest, ct);
+                        
+                        engine.CiteRule(RuleCode.Third_Card_AntiClockwise);
                         await engine.CardService.DrawCard(engine, player, CardType.Third, ct);
                     }
                     break;

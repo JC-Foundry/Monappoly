@@ -214,8 +214,10 @@ public class TransactionService
             counterparty: TransactionCounterparty.Bank,
             ct: ct);
 
-    public Task ReceiveTripleBonus(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
-        => Move(engine, player, player.TripleBonus, FinancialReason.TripleBonus,
+    /// <summary>Triple-bonus payout — Bank → <paramref name="player"/>. The <paramref name="amount"/> is the
+    /// (possibly modified / redirected) payout computed by <c>PlayerService.ApplyTripleBonus</c>.</summary>
+    public Task ReceiveTripleBonus(Framework.GameEngine engine, PlayerModel player, uint amount, CancellationToken ct)
+        => Move(engine, player, amount, FinancialReason.TripleBonus,
             counterparty: TransactionCounterparty.Bank,
             ct: ct);
     
@@ -352,7 +354,8 @@ public class TransactionService
 
         ApplyBalances(engine, player, amount, counterparty, counterpartyPlayer);
         EmitReceipts(engine, player, amount, reason, counterparty, counterpartyPlayer, counterpartyPropertyIndex);
-        
+        NotifyMovement(engine, player, amount, reason, counterparty, counterpartyPlayer, counterpartyPropertyIndex);
+
         //This has been kept for reference that save changes should NEVER be called inside services
         //Save changes will detatch objects (like players) from the GameModel (since _working is promoted to _game)
         //Save changes should only EVERY be called at turn state boundaries (turn state provider), where we have no detatched objects
@@ -415,4 +418,77 @@ public class TransactionService
             CounterpartyPropertyIndex = counterpartyPropertyIndex
         });
     }
+
+    /// <summary>
+    /// Fires a lightweight, non-pausing notification toast for a just-applied money movement — one to
+    /// the subject (their phone / the host drawer), and for a player-to-player move a mirrored one to
+    /// the counterparty player (whose balance <see cref="ApplyBalances"/> moved too, with no Move of
+    /// its own). Best-effort narration carrying as much detail as the move has: direction, amount,
+    /// reason, the other side (the bank / Free Parking / another player), and the property name when
+    /// one is involved. The engine holds no display names, so a player counterparty is generic.
+    /// </summary>
+    private static void NotifyMovement(
+        Framework.GameEngine engine, PlayerModel player, long amount, FinancialReason reason,
+        TransactionCounterparty counterparty, PlayerModel? counterpartyPlayer, ushort? counterpartyPropertyIndex)
+    {
+        var propertyName = counterpartyPropertyIndex is { } index
+            ? engine.Cache.Board.GetBoardSpace(index)?.Name
+            : null;
+
+        var absolute = (uint)Math.Abs(amount);
+
+        // Subject perspective: amount > 0 = received, < 0 = paid.
+        engine.Notifier.Notify(engine.Cache.GameId, player.PlayerId,
+            BuildMovementMessage(amount > 0, absolute, reason, counterparty, propertyName));
+
+        // The counterparty player sees the mirror — their counterparty is the subject (another player).
+        if (counterpartyPlayer is not null)
+            engine.Notifier.Notify(engine.Cache.GameId, counterpartyPlayer.PlayerId,
+                BuildMovementMessage(amount < 0, absolute, reason, TransactionCounterparty.Player, propertyName));
+    }
+
+    /// <summary>Builds a "{Paid|Received} £X {to|from} {who}[ for {property}] ({reason})." narration line.</summary>
+    private static string BuildMovementMessage(bool received, uint amount, FinancialReason reason,
+        TransactionCounterparty counterparty, string? propertyName)
+    {
+        var verb = received ? "Received" : "Paid";
+        var preposition = received ? "from" : "to";
+        var who = counterparty switch
+        {
+            TransactionCounterparty.Player => "another player",
+            TransactionCounterparty.FreeParking => "Free Parking",
+            _ => "the bank"
+        };
+        var forProperty = string.IsNullOrWhiteSpace(propertyName) ? "" : $" for {propertyName}";
+        return $"{verb} {RuleDictionary.Currency}{amount} {preposition} {who}{forProperty} ({ReasonText(reason)}).";
+    }
+
+    /// <summary>A short, player-facing phrase for each <see cref="FinancialReason"/> (the "why").</summary>
+    private static string ReasonText(FinancialReason reason) => reason switch
+    {
+        FinancialReason.Rent => "rent",
+        FinancialReason.Tax => "tax",
+        FinancialReason.GoBonus => "GO bonus",
+        FinancialReason.DiceNumBonus => "dice-number bonus",
+        FinancialReason.SneakEyes => "snake eyes bonus",
+        FinancialReason.TripleBonus => "triple bonus",
+        FinancialReason.JailFee => "jail fee",
+        FinancialReason.FreeParkingPay => "fee",
+        FinancialReason.FreeParkingTake => "winnings",
+        FinancialReason.LoanTake => "loan",
+        FinancialReason.LoanRepay => "loan repayment",
+        FinancialReason.Purchase => "property purchase",
+        FinancialReason.UnReserve => "un-reserve",
+        FinancialReason.Auction => "auction",
+        FinancialReason.Build => "building",
+        FinancialReason.Sell => "building sale",
+        FinancialReason.Mortgage => "mortgage",
+        FinancialReason.MortgageFee => "mortgage fee",
+        FinancialReason.Unmortgage => "unmortgage",
+        FinancialReason.CardPayout => "card",
+        FinancialReason.CardCharge => "card",
+        FinancialReason.Deal => "deal",
+        FinancialReason.BankruptedPlayer => "bankrupt player",
+        _ => reason.ToString()
+    };
 }

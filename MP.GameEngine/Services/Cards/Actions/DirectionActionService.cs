@@ -13,10 +13,12 @@ namespace MP.GameEngine.Services.Cards.Actions;
 public class DirectionActionService : ICardActionService<DirectionAction>
 {
     /// <summary>Flips the direction of each targeted player.</summary>
-    public async Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, DirectionAction action, CancellationToken ct)
+    public async Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, DirectionAction action, CancellationToken ct, CardActionContext? context = null)
     {
         var targets = await CardActionHelper.ResolveTargets(engine, player, action.Target, ct);
         foreach (var target in targets)
             target.FlipDirection(engine);
+
+        return true;
     }
 }

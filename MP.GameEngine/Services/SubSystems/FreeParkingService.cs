@@ -43,6 +43,14 @@ public class FreeParkingService
     
     public async Task ProcessFreeParking(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
     {
+        //Free parking event:
+        if (engine.Cache.Game.GlobalEventInfo.RealFreeParking)
+        {
+            //Free parking is disabled during this event
+            engine.CiteRule(RuleCode.Event_FreeParking);
+            return;
+        }
+        
         var suppressDefault = await engine.CardService.DrawCard(engine, player, CardType.FreeParking, ct);
         if(suppressDefault) return;
 

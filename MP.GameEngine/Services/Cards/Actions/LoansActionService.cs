@@ -30,12 +30,12 @@ public class LoansActionService : ICardActionService<LoansAction>
     }
 
     /// <summary>Wipes / repays loans, or runs the wipe-and-reward compound.</summary>
-    public async Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, LoansAction action, CancellationToken ct)
+    public async Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, LoansAction action, CancellationToken ct, CardActionContext? context = null)
     {
         if (action.Kind == LoanCardKind.WipeAllAndRewardClear)
         {
             await WipeAllAndRewardClear(engine, ct);
-            return;
+            return true;
         }
 
         foreach (var target in await CardActionHelper.ResolveTargets(engine, player, action.Target, ct))
@@ -53,6 +53,8 @@ public class LoansActionService : ICardActionService<LoansAction>
                     await _transactionService.RepayLoan(engine, target, outstanding, ct);
             }
         }
+        
+        return true;
     }
 
     /// <summary>

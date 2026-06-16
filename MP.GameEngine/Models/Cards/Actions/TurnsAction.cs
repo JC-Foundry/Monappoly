@@ -15,4 +15,10 @@ public sealed class TurnsAction : CardAction
 
     /// <summary>Who it acts on.</summary>
     public PlayerTarget Target { get; set; } = PlayerTarget.Self;
+
+    /// <summary>
+    /// When set, the turns are applied to a dice-off winner instead of <see cref="Target"/> — e.g.
+    /// "make the player rolling the lowest miss 3 turns" (<c>DiceOff{ Highest=false, IncludeHolder=false }</c>).
+    /// </summary>
+    public DiceOff? DiceOff { get; set; }
 }

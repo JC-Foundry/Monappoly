@@ -1,16 +1,16 @@
 # Rules/Game Features Left to Implement
 
 ## High Level
-- [ ] Free Parking
+- [x] Free Parking
 - [ ] Cards
-- [ ] Go to / Leave Jail
-- [ ] Taxes
+- [x] Go to / Leave Jail
+- [x] Taxes
 - [x] Loans
 - [x] Deals
 - [x] Portfolio Commands
 
 ## Free Parking
-- [ ] Get a FP card
+- [x] Get a FP card
 - [x] Resolve a  FP scenarios
 - [x] Update player(s) and free parking pot
 - [x] Purging properties
@@ -20,9 +20,9 @@
 - (TODO/PLAN)
 
 ## Go to / Leave Jail
-- [ ] Get go to jail card
+- [x] Get go to jail card
 - [x] Send player to jail (unless card says otherwise)
-- [ ] Handle get out of jail free card
+- [x] Handle get out of jail free card
 - [x] Handle paying to leave jail (partly done)
 - (TODO/PLAN)
 

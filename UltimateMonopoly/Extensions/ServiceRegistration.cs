@@ -4,6 +4,7 @@ using JC.Core.Extensions;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MP.GameEngine.Abstractions;
 using MP.GameEngine.Extensions;
+using UltimateMonopoly.Models.DataModels;
 using UltimateMonopoly.Models.DataModels.Boards;
 using UltimateMonopoly.Models.DataModels.Games;
 using UltimateMonopoly.Models.DataModels.Social;
@@ -35,7 +36,8 @@ public static class ServiceRegistration
             typeof(GameTurn),
             typeof(GameSnapshot),
             typeof(GameTurnEvents),
-            typeof(PlayerGameStat));
+            typeof(PlayerGameStat),
+            typeof(PersistedCardIds));
 
         services.TryAddSingleton<FilePathProvider>();
         services.TryAddScoped<UserService>();
@@ -67,6 +69,10 @@ public static class ServiceRegistration
         services.TryAddScoped<GameService>();
         services.TryAddScoped<PlayerProfileService>();
         services.TryAddScoped<GameCacheService>();
+        
+        // Cards
+        services.TryAddScoped<CardCacheService>();
+        services.TryAddScoped<CardImportService>();
         
         // Game Engine
         services.TryAddScoped<IGameCompletionService, GameCompletionService>();

@@ -1,143 +1,315 @@
 [
-{
-"RawText": "Advance 8 spaces",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 0, "Spaces": 8 } ] }
-]
-},
-{
-"RawText": "Advance to Bond Street",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 34 } ] }
-]
-},
-{
-"RawText": "Advance to Euston Road",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 8 } ] }
-]
-},
-{
-"RawText": "Advance to "GO". Collect £200, then roll two dice and collect {G0__1} times the total",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [
-{ "$type": "Movement", "Kind": 1, "TargetIndex": 0 },
-{ "$type": "Money", "Amount": 100, "Direction": 1, "Counterparty": 0, "DiceMultiplier": 2, "PercentageApplies": true }
-] }
-]
-},
-{
-"RawText": "Get out of jail free. Keep until needed",
-"CardType": "PercentageChance",
-"ConditionType": "ChoiceCardholderTurn",
-"Conditions": [ { "Trigger": 512 } ],
-"Groups": [
-{ "Actions": [ { "$type": "Jail", "Kind": 1 } ] }
-]
-},
-{
-"RawText": "Go back to Bow Street",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 16 } ] }
-]
-},
-{
-"RawText": "Make general repairs on all your houses. For each house pay {G0__0}. For each hotel pay {G0__1}",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [
-{ "$type": "Money", "Amount": 100, "Direction": 0, "Counterparty": 1, "PerUnit": 1, "PercentageApplies": true },
-{ "$type": "Money", "Amount": 400, "Direction": 0, "Counterparty": 1, "PerUnit": 2, "PercentageApplies": true }
-] }
-]
-},
-{
-"RawText": "Pay each player {G0__0} and go to jail",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [
-{ "$type": "Money", "Amount": 100, "Direction": 0, "Counterparty": 2, "PercentageApplies": true },
-{ "$type": "Movement", "Kind": 1, "TargetIndex": 100 }
-] }
-]
-},
-{
-"RawText": "Pay university fees of {G0__0}",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 1000, "Direction": 0, "Counterparty": 1, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "Speeding fine. Pay {G0__0}",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 300, "Direction": 0, "Counterparty": 1, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "You are assessed for street repairs. {G0__0} per house. {G0__1} per hotel",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [
-{ "$type": "Money", "Amount": 160, "Direction": 0, "Counterparty": 1, "PerUnit": 1, "PercentageApplies": true },
-{ "$type": "Money", "Amount": 460, "Direction": 0, "Counterparty": 1, "PerUnit": 2, "PercentageApplies": true }
-] }
-]
-},
-{
-"RawText": "You fail a breathalyser test. Pay {G0__0}",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 500, "Direction": 0, "Counterparty": 1, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "You have been robbed. Pay {G0__0} to the player who rolls the highest on one die",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 1000, "Direction": 0, "Counterparty": 3, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "You have sold your car. Collect {G0__0}",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 2000, "Direction": 1, "Counterparty": 0, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "You win the lottery. Collect {G0__0}",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 3000, "Direction": 1, "Counterparty": 0, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "Your book sales earn you {G0__0}",
-"CardType": "PercentageChance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 1500, "Direction": 1, "Counterparty": 0, "PercentageApplies": true } ] }
-]
-}
+    {
+        "RawText": "Advance 8 spaces",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 0,
+                        "Spaces": 8
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Advance to Bond Street",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 34
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Advance to Euston Road",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 8
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Advance to 'GO'. Collect £200, then roll two dice and collect {G0__1} times the total",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 0
+                    },
+                    {
+                        "$type": "Money",
+                        "Amount": 100,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "DiceMultiplier": 2,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Get out of jail free. Keep until needed",
+        "CardType": "PercentageChance",
+        "ConditionType": "ChoiceCardholderTurn",
+        "Conditions": [
+            {
+                "Trigger": 512
+            }
+        ],
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Jail",
+                        "Kind": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Go back to Bow Street",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 16,
+                        "CollectGoBonus": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Make general repairs on all your houses. For each house pay {G0__0}. For each hotel pay {G0__1}",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 100,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 1,
+                        "PercentageApplies": true
+                    },
+                    {
+                        "$type": "Money",
+                        "Amount": 400,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 2,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Pay each player {G0__0} and go to jail",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 100,
+                        "Direction": 0,
+                        "Counterparty": 2,
+                        "PercentageApplies": true
+                    },
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 100
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Pay university fees of {G0__0}",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 1000,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Speeding fine. Pay {G0__0}",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 300,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You are assessed for street repairs. {G0__0} per house. {G0__1} per hotel",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 160,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 1,
+                        "PercentageApplies": true
+                    },
+                    {
+                        "$type": "Money",
+                        "Amount": 460,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 2,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You fail a breathalyser test. Pay {G0__0}",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 500,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You have been robbed. Pay {G0__0} to the player who rolls the highest on one die",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 1000,
+                        "Direction": 0,
+                        "Counterparty": 3,
+                        "DiceOff": { "Highest": true },
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You have sold your car. Collect {G0__0}",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 2000,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You win the lottery. Collect {G0__0}",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 3000,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Your book sales earn you {G0__0}",
+        "CardType": "PercentageChance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 1500,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    }
 ]

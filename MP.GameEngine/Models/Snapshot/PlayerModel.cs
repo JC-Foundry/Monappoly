@@ -44,6 +44,11 @@ public class PlayerModel
     public bool IsInJail => BoardIndex == IndexHelper.JailSpace;
     public ushort JailTurnCounter { get; set; }
     public ushort? MaxJailTurnsOverride { get; set; }
+    public ushort? MinJailTurns { get; set; }
+    public bool CollectRentInJail { get; set; }
+
+    [JsonIgnore]
+    public bool CanLeaveJail => !IsInJail || (IsInJail && (MinJailTurns == null || JailTurnCounter >= MinJailTurns));
     
     public bool IsBankrupt { get; set; }
 
@@ -87,6 +92,8 @@ public class PlayerModel
         ExtraTurns = model.ExtraTurns;
         JailTurnCounter = model.JailTurnCounter;
         MaxJailTurnsOverride = model.MaxJailTurnsOverride;
+        MinJailTurns = model.MinJailTurns;
+        CollectRentInJail = model.CollectRentInJail;
         
         IsBankrupt = model.IsBankrupt;
         

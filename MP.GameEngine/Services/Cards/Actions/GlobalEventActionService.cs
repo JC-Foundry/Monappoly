@@ -23,7 +23,7 @@ public class GlobalEventActionService : ICardActionService<GlobalEventAction>
     }
 
     /// <summary>Starts the action's global event.</summary>
-    public Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, GlobalEventAction action, CancellationToken ct)
+    public Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, GlobalEventAction action, CancellationToken ct, CardActionContext? context = null)
     {
         switch (action.Event)
         {
@@ -44,6 +44,6 @@ public class GlobalEventActionService : ICardActionService<GlobalEventAction>
                 break;
         }
 
-        return Task.CompletedTask;
+        return Task.FromResult(true);
     }
 }

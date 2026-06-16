@@ -90,7 +90,9 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
     /// </summary>
     public bool CanDeal(string playerId, string submittingUserId) =>
         IsAuthorisedActor(playerId, submittingUserId)
-        && IsAtTurnBoundary() && IsEngineIdle();
+        && IsCurrentPlayer(playerId)
+        && IsAtTurnBoundary()
+        && IsEngineIdle();
 
     /// <summary>
     /// Jail exit (pay fee / play card / attempt double): only at StartOfTurn,
@@ -101,6 +103,7 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
         && cache.TurnState == TurnState.StartOfTurn
         && IsCurrentPlayer(playerId)
         && IsJailed(playerId)
+        && (cache.Game.GetPlayer(playerId)?.CanLeaveJail ?? false)
         && IsEngineIdle();
 
     /// <summary>End turn: current player only, at EndOfTurn, engine idle.</summary>
@@ -158,7 +161,7 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
         if (cache.TurnState is not (TurnState.PlayerRollMovement or TurnState.ThirdDieMovement))
             throw new InvalidOperationException(
                 $"TransitionToEndOfTurn requires PlayerRollMovement or ThirdDieMovement, got {cache.TurnState}.");
-
+        
         cache.SetTurnState(TurnState.EndOfTurn);
     }
 
@@ -184,6 +187,7 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
     public async Task TransitionToExtraTurn(bool isTriple)
     {
         Expect(TurnState.EndOfTurn);
+        cache.Game.ModifiedDiceRollType = null;
 
         var player = cache.Game.CurrentPlayer();
         if (player == null) throw new InvalidOperationException("Current player not found in game players list.");
@@ -228,6 +232,7 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
     public async Task TransitionToNextPlayer()
     {
         Expect(TurnState.EndOfTurn);
+        cache.Game.ModifiedDiceRollType = null;
 
         ClearBuiltOnTurnFlags();
         AdvancePlayer();
@@ -248,6 +253,7 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
     public async Task TransitionToFinalTurn()
     {
         ClearBuiltOnTurnFlags();
+        cache.Game.ModifiedDiceRollType = null;
         
         var lastPlayer = cache.Game.GetPlayers(excludePovPlayer: false)
             .FirstOrDefault();

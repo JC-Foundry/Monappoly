@@ -28,6 +28,7 @@ public class CardService
     private readonly ICardActionService<PropertyAction> _propertyActionService;
     private readonly ICardActionService<GlobalEventAction> _globalEventActionService;
     private readonly ICardActionService<DeckDrawAction> _deckDrawActionService;
+    private readonly ICardActionService<DiceAction> _diceActionService;
 
     /// <summary>
     /// Creates the card interpreter over the per-action handlers it dispatches to
@@ -42,7 +43,8 @@ public class CardService
         ICardActionService<BuildingAction> buildingActionService,
         ICardActionService<PropertyAction> propertyActionService,
         ICardActionService<GlobalEventAction> globalEventActionService,
-        ICardActionService<DeckDrawAction> deckDrawActionService)
+        ICardActionService<DeckDrawAction> deckDrawActionService,
+        ICardActionService<DiceAction> diceActionService)
     {
         _moneyActionService = moneyActionService;
         _movementActionService = movementActionService;
@@ -54,6 +56,7 @@ public class CardService
         _propertyActionService = propertyActionService;
         _globalEventActionService = globalEventActionService;
         _deckDrawActionService = deckDrawActionService;
+        _diceActionService = diceActionService;
     }
 
 
@@ -70,14 +73,16 @@ public class CardService
             //Empty deck — nothing to draw.
             return false;
 
-        //Always show card picked up:
+        //Always show card picked up — carry the CardType so the front end can flavour the
+        //acknowledge by deck (every other acknowledge passes null → default secondary styling).
         _ = await engine.PromptProvider.Acknowledge(player.PlayerId, $"{card.CardType.ToDisplayName()} Card",
-            card.GetDisplayText(engine.Cache, player.PlayerId), timeout: TimeSpan.FromSeconds(30), ct: ct);
+            card.GetDisplayText(engine.Cache, player.PlayerId), timeout: TimeSpan.FromSeconds(30), cardType: card.CardType, ct: ct);
         
         if (!card.IsKeepUntilNeeded)
         {
-            //Resolve-on-draw (override-on-draw, §4b): apply now, then return to the deck.
-            await ResolveCard(engine, player, card, ct);
+            //Resolve-on-draw (override-on-draw, §4b): apply now, then return to the deck. A
+            //resolve-on-draw card always cycles back regardless of the apply result.
+            _ = await ResolveCard(engine, player, card, ct);
             ReturnToDeck(engine, card);
             return card.SuppressDefault;
         }
@@ -96,14 +101,26 @@ public class CardService
     /// hand-played card funnels through — the forced jail exit, the turn-start "use card" command,
     /// and (later) the trigger-fired held-card hook and the NOPE/immunity counter window.
     /// <paramref name="card"/> is the instance held in <see cref="PlayerModel.Cards"/> (matched by reference).
+    /// <paramref name="context"/> is the optional trigger context (e.g. the amount that fired the card) —
+    /// the trigger layer supplies it; the manual jail-exit / use-card plays pass <c>null</c>.
     /// </summary>
-    public async Task PlayCard(Framework.GameEngine engine, PlayerModel player, CardModel card, CancellationToken ct)
+    public async Task PlayCard(Framework.GameEngine engine, PlayerModel player, CardModel card, CancellationToken ct, CardActionContext? context = null)
     {
-        await ResolveCard(engine, player, card, ct);
+        var applied = await ResolveCard(engine, player, card, ct, context);
         var chosenGroup = card.Groups.FirstOrDefault(g => g.IsChosenGroup);
+
+        if (!applied)
+        {
+            //The play didn't take effect (e.g. a jail release blocked by a card lock) — keep the card
+            //in the player's hand, untouched, so they can try again. Undo the chosen-group mark.
+            if (chosenGroup is not null)
+                chosenGroup.IsChosenGroup = false;
+            return;
+        }
+
         if(chosenGroup is null)
             throw new InvalidOperationException("Played a card that doesn't have a chosen group.");
-        
+
         if(chosenGroup.TurnsRemaining is > 0)
             //Still can be played/activated again later
             return;
@@ -126,11 +143,11 @@ public class CardService
     /// group's actions in order (ANDed). Emits a <see cref="CardPlayedReceipt"/> — a resolve-on-draw
     /// card still counts as played even though it never reaches the hand.
     /// </summary>
-    private async Task ResolveCard(Framework.GameEngine engine, PlayerModel player, CardModel card, CancellationToken ct)
+    private async Task<bool> ResolveCard(Framework.GameEngine engine, PlayerModel player, CardModel card, CancellationToken ct, CardActionContext? context = null)
     {
         if (card.Groups.Count == 0)
             //Nothing to apply.
-            return;
+            return true;
         
         CardGroup group;
         if (card.Groups.Count == 1)
@@ -156,12 +173,19 @@ public class CardService
         }
 
         group.IsChosenGroup = true;
-        
-        //Actions within the chosen group are ANDed — applied in order.
-        foreach (var action in group.Actions)
-            await ApplyAction(engine, player, action, ct);
 
-        engine.EventEmitter.Emit(new CardPlayedReceipt { PlayerId = player.PlayerId, CardType = card.CardType });
+        //Actions within the chosen group are ANDed — every one runs (non-short-circuit &), and the
+        //result is whether the play took effect. False (only a blocked jail release today) tells
+        //PlayCard to retain the card in hand rather than consume it.
+        var applied = true;
+        foreach (var action in group.Actions)
+            applied &= await ApplyAction(engine, player, action, ct, context);
+
+        //A play that didn't take effect isn't "played" — no receipt, and PlayCard keeps the card.
+        if (applied)
+            engine.EventEmitter.Emit(new CardPlayedReceipt { PlayerId = player.PlayerId, CardType = card.CardType });
+
+        return applied;
     }
     
 
@@ -178,19 +202,20 @@ public class CardService
     /// nearest-finder, the swap, …). A new action type adds a <see cref="CardAction"/> subclass,
     /// a handler service, and one arm here.
     /// </summary>
-    private Task ApplyAction(Framework.GameEngine engine, PlayerModel player, CardAction action, CancellationToken ct)
+    private Task<bool> ApplyAction(Framework.GameEngine engine, PlayerModel player, CardAction action, CancellationToken ct, CardActionContext? context = null)
         => action switch
         {
-            MoneyAction m     => _moneyActionService.ResolveActionAsync(engine, player, m, ct),
-            MovementAction v  => _movementActionService.ResolveActionAsync(engine, player, v, ct),
-            JailAction j      => _jailActionService.ResolveActionAsync(engine, player, j, ct),
-            TurnsAction t     => _turnsActionService.ResolveActionAsync(engine, player, t, ct),
-            DirectionAction d => _directionActionService.ResolveActionAsync(engine, player, d, ct),
-            LoansAction l     => _loansActionService.ResolveActionAsync(engine, player, l, ct),
-            BuildingAction b  => _buildingActionService.ResolveActionAsync(engine, player, b, ct),
-            PropertyAction p  => _propertyActionService.ResolveActionAsync(engine, player, p, ct),
-            GlobalEventAction g => _globalEventActionService.ResolveActionAsync(engine, player, g, ct),
-            DeckDrawAction dd => _deckDrawActionService.ResolveActionAsync(engine, player, dd, ct),
+            MoneyAction m     => _moneyActionService.ResolveActionAsync(engine, player, m, ct, context),
+            MovementAction v  => _movementActionService.ResolveActionAsync(engine, player, v, ct, context),
+            JailAction j      => _jailActionService.ResolveActionAsync(engine, player, j, ct, context),
+            TurnsAction t     => _turnsActionService.ResolveActionAsync(engine, player, t, ct, context),
+            DirectionAction d => _directionActionService.ResolveActionAsync(engine, player, d, ct, context),
+            LoansAction l     => _loansActionService.ResolveActionAsync(engine, player, l, ct, context),
+            BuildingAction b  => _buildingActionService.ResolveActionAsync(engine, player, b, ct, context),
+            PropertyAction p  => _propertyActionService.ResolveActionAsync(engine, player, p, ct, context),
+            GlobalEventAction g => _globalEventActionService.ResolveActionAsync(engine, player, g, ct, context),
+            DeckDrawAction dd => _deckDrawActionService.ResolveActionAsync(engine, player, dd, ct, context),
+            DiceAction di => _diceActionService.ResolveActionAsync(engine, player, di, ct, context),
             _ => throw new ArgumentOutOfRangeException(nameof(action), action, "Unhandled card action type.")
         };
     

@@ -20,6 +20,9 @@ public class CardModel
 {
     /// <summary>Stable identity (GUID), shared with the persisted card definition on re-import.</summary>
     public string CardId { get; set; }
+    /// <summary>Raw card text with any unique tags to prevent duplicate text entries</summary>
+    public string UniqueText { get; set; }
+    
     /// <summary>Player-facing card text.</summary>
     public string CardText { get; set; }
 

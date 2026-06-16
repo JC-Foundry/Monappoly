@@ -266,19 +266,37 @@ public class PropertyService
             engine.CiteRule(RuleCode.Utility_RentIsDiceTimesMultiplier);
             engine.CiteRule(RuleCode.Utility_DiceDependsOnArrival);
             engine.CiteRule(RuleCode.Utility_PairMultiplier);
+
+            if (engine.Cache.Game.GlobalEventInfo.UtilityEvent)
+            {
+                //Utility event multiplier applies to all utilities
+                rent *= engine.Cache.Game.GlobalEventInfo.UtilityRentMultiplier ?? 1;
+                if(rent == null) throw new InvalidOperationException("Utility rent multiplier cannot be null");
+                engine.CiteRule(RuleCode.Event_Utility);
+            }
+        }
+        else if(space.PropertySet == PropertySet.Station && engine.Cache.Game.GlobalEventInfo.StationEvent)
+        {
+            //Station event rent multiplier applies to all stations
+            rent *= engine.Cache.Game.GlobalEventInfo.StationRentMultiplier ?? 1;
+            if(rent == null) throw new InvalidOperationException("Station rent multiplier cannot be null");
+            engine.CiteRule(RuleCode.Event_Station);
         }
 
         if (property.State != PropertyState.FreeParking && property.OwnerPlayerId != null)
         {
             var owner = engine.Cache.Game.GetPlayer(property.OwnerPlayerId);
-            if (owner == null)
-                throw new InvalidOperationException("Owner player cannot be null");
-
-            if (owner.IsInJail)
+            switch (owner)
             {
-                engine.CiteRule(RuleCode.Default_NoRentWhileOwnerJailed);
-                return 0;
-            }
+                case null:
+                    throw new InvalidOperationException("Owner player cannot be null");
+                case { IsInJail: true, CollectRentInJail: true }:
+                    engine.CiteRule(RuleCode.Jail_CollectRentInJail);
+                    break;
+                case { IsInJail: true }:
+                    engine.CiteRule(RuleCode.Default_NoRentWhileOwnerJailed);
+                    return 0;
+            } 
         }
         
         var cost = MoneyHelper.NormaliseAmount((uint)rent, engine.Cache.RoundingRule, FinancialReason.Rent);

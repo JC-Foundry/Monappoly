@@ -4,6 +4,8 @@ namespace MP.GameEngine.Models.Snapshot;
 
 public class EventInfo
 {
+    public bool EventsActive => StationEvent || UtilityEvent || TaxEvent || RealFreeParking || JailFull;
+    
     /// <summary>
     /// Station rent multiplier. When 0, station rent becomes no-op.
     /// </summary>
@@ -49,6 +51,11 @@ public class EventInfo
     }
 
     public EventInfo(GlobalEvent eventType, ushort? multiplier = null)
+    {
+        StartEvent(eventType, multiplier);
+    }
+
+    public void StartEvent(GlobalEvent eventType, ushort? multiplier = null)
     {
         switch (eventType)
         {

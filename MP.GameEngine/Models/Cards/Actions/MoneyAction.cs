@@ -28,6 +28,15 @@ public sealed class MoneyAction : CardAction
     public MoneyAmountBasis Basis { get; set; } = MoneyAmountBasis.Fixed;
 
     /// <summary>
+    /// Whether the base figure comes from the action (<see cref="AmountSource.Fixed"/>, the default —
+    /// uses <see cref="Amount"/> / <see cref="Basis"/>) or from the firing trigger
+    /// (<see cref="AmountSource.TriggerAmount"/> — the <c>CardActionContext.TriggerAmount</c>, with
+    /// <see cref="Amount"/> reused as the factor). Overrides <see cref="Basis"/> when set to
+    /// <see cref="AmountSource.TriggerAmount"/>. See card-triggers.md §6.
+    /// </summary>
+    public AmountSource AmountSource { get; set; } = AmountSource.Fixed;
+
+    /// <summary>
     /// When true, swaps the holder's entire cash balance with the counterparty — a chosen player,
     /// or the highest/lowest dice-off roller (per <see cref="Counterparty"/>). Ignores the amount.
     /// </summary>
@@ -43,10 +52,10 @@ public sealed class MoneyAction : CardAction
     public bool PercentageApplies { get; set; }
 
     /// <summary>
-    /// For a <see cref="MoneyCounterparty.HighestRoller"/> / <see cref="MoneyCounterparty.LowestRoller"/>
-    /// dice-off, whether the card holder also rolls (and can win). When the holder wins their own
-    /// dice-off the movement is with themselves — i.e. a no-op. Default false: only the other players
-    /// roll. Ignored for every other counterparty.
+    /// The dice-off that picks the player when <see cref="Counterparty"/> is
+    /// <see cref="MoneyCounterparty.DiceOffPlayer"/>, or the swap partner when <see cref="SwapCash"/> is
+    /// set without a chosen player. Carries the dice count, highest/lowest, and whether the holder
+    /// joins the roll. When the holder wins their own dice-off the movement is with themselves — a no-op.
     /// </summary>
-    public bool IncludeHolderInRoll { get; set; }
+    public DiceOff? DiceOff { get; set; }
 }

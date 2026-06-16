@@ -111,4 +111,19 @@ public enum RuleCode
     // Deferred — these subsystems add their own codes when built (the "collect a
     // <type> card" lines, percentage tiers, NOPE, deal offer/settle, card-driven
     // purges/swaps). rules.json carries their text now, coded "<NONE>" until wired.
+    Percentage_Card,                     // Get a % card when travelling anti-clockwise
+    Percentage_Card_Cap,                 // The fixed amounts displayed on % cards are capped at player's %cap. All payouts/charges are capped at player's %cap.
+    Third_Card_AntiClockwise,            // Get a third card when travelling anti-clockwise
+    Third_Card_Number,                   // Get a third card when your number is rolled
+    
+    Event_Utility,                       // Utility event is active
+    Event_Station,                       // Station event is active
+    Event_Tax,                           // Tax event is active
+    Event_Jail,                          // Jail event is active
+    Event_FreeParking,                   // Free Parking event is active
+    Event_DowngradedToDouble,            // Downgraded dice roll (triple->double) does not clear global events
+    Event_ConvertedToTriple,             // Converted dice roll (double->triple) does still clear global events
+    
+    Jail_CantLeaveDueToCard,             // Cant leave jail due to a card effect forcing them to remain in jail
+    Jail_CollectRentInJail,              // Property owner is in jail and can collect rent due to card
 }

@@ -258,7 +258,7 @@ public class BuildingService
         var streetEffect = engine.Cache.Game.HasStreetEffect((PropertySet)space.PropertySet);
         var value = PropertySetHelper.GetSellValue(boardIndex, engine.Cache.Board, streetEffect);
         uint? doubleHotelValue = null;
-        if (property.RentLevel == RentLevel.HOTEL)
+        if (property.RentLevel == RentLevel.DOUBLE_HOTEL)
         {
             //Property has a double hotel, and we have passed decreased rent level check
             //Therefore, we must be selling a double hotel (build cost * 5)/2

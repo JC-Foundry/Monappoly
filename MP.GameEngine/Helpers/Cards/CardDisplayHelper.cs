@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+using JC.Core.Extensions;
 using MP.GameEngine.Enums;
 using MP.GameEngine.Enums.Cards;
 using MP.GameEngine.Enums.Games;
@@ -13,6 +15,9 @@ public static class CardDisplayHelper
     private const string GroupKeySeparator = "__";
     private const char CostTagOpen = '{';
     private const char CostTagClose = '}';
+    
+    public const string UniqueTagOpen = "[[";
+    public const string UniqueTagClose = "]]";
 
     /// <summary>
     /// Replaces a specific cost tag in the card text with the specified cost, formatted with the game's currency symbol.
@@ -24,7 +29,7 @@ public static class CardDisplayHelper
     /// <returns>The card text with the specified cost tag replaced by the formatted cost value.</returns>
     private static string ReplaceCostTag(this string cardText, string groupKey, int costIndex, uint cost)
         => cardText.Replace($"{CostTagOpen}{groupKey}{GroupKeySeparator}{costIndex}{CostTagClose}",
-            $"{RuleDictionary.Currency}{cost:n}");
+            $"{RuleDictionary.Currency}{cost:N0}");
 
     /// <summary>
     /// Replaces a cost tag in the group text with the specified cost, formatted
@@ -36,7 +41,7 @@ public static class CardDisplayHelper
     /// <returns>A string with the cost tag replaced by the cost value formatted with the currency symbol.</returns>
     private static string ReplaceCostTag(this string cardText, int costIndex, uint cost)
         => cardText.Replace($"{CostTagOpen}{costIndex}{CostTagClose}",
-            $"{RuleDictionary.Currency}{cost:n}");
+            $"{RuleDictionary.Currency}{cost:N0}");
 
 
     public static string FormatCardText(this string text, CardGroup g, ushort playerCap, 
@@ -67,4 +72,22 @@ public static class CardDisplayHelper
 
         return text;
     }
+
+    public static string CardColourDisplay(CardType type)
+        => "card-" + type switch
+        {
+            CardType.Chance => "chance",
+            CardType.ComChest => "com-chest",
+            CardType.PercentageChance => "percent-chance",
+            CardType.PercentageComChest => "percent-com-chest",
+            CardType.Third => "third",
+            CardType.Double => "double",
+            CardType.Triple => "triple",
+            CardType.Tax => "tax",
+            CardType.Go => "go",
+            CardType.JustVisiting => "jv",
+            CardType.FreeParking => "fp",
+            CardType.GoToJail => "jail",
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
 }

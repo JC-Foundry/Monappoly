@@ -22,6 +22,7 @@ namespace MP.GameEngine.Models.Cards;
 [JsonDerivedType(typeof(PropertyAction), "Property")]
 [JsonDerivedType(typeof(GlobalEventAction), "GlobalEvent")]
 [JsonDerivedType(typeof(DeckDrawAction), "DeckDraw")]
+[JsonDerivedType(typeof(DiceAction), "Dice")]
 public abstract class CardAction
 {
     /// <summary>Stable identity (GUID), shared with the persisted card definition on re-import.</summary>

@@ -90,6 +90,8 @@
         players = readPlayers();
         index = players.findIndex(p => p.userId === userId);
         currentUserId = userId;
+        // Publish the open player so other modules (engine notifications) can target this drawer.
+        drawer.dataset.openUserId = userId;
         if (titleEl) titleEl.textContent = nameFor(userId);
         loadContent(userId);
         drawer.classList.add('open');
@@ -104,12 +106,14 @@
         drawer.setAttribute('aria-hidden', 'true');
         isOpen = false;
         currentUserId = null;
+        delete drawer.dataset.openUserId;
     }
 
     function step(delta) {
         if (!players.length || index === -1) return;
         index = (index + delta + players.length) % players.length;
         currentUserId = players[index].userId;
+        drawer.dataset.openUserId = currentUserId;
         if (titleEl) titleEl.textContent = nameFor(currentUserId);
         loadContent(currentUserId);
     }

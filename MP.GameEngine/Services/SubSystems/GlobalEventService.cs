@@ -37,7 +37,12 @@ public class GlobalEventService
     
     private void StartEvent(Framework.GameEngine engine, GlobalEvent eventType, ushort? multiplier)
     {
-        var eventInfo = new EventInfo(eventType, multiplier);
+        var eventInfo = engine.Cache.Game.GlobalEventInfo;
+        if(eventInfo.EventsActive)
+            eventInfo.StartEvent(eventType, multiplier);
+        else
+            eventInfo = new EventInfo(eventType, multiplier);
+        
         engine.Cache.Game.GlobalEventInfo = eventInfo;
     }
 }

@@ -32,7 +32,7 @@ public class JailActionService : ICardActionService<JailAction>
     /// <param name="player">The card holder (and default target).</param>
     /// <param name="action">The jail action to resolve.</param>
     /// <param name="ct">Cancellation token.</param>
-    public async Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, JailAction action, CancellationToken ct)
+    public async Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, JailAction action, CancellationToken ct, CardActionContext? context = null)
     {
         var targets = await CardActionHelper.ResolveTargets(engine, player, action.Target, ct);
         foreach (var target in targets)
@@ -40,13 +40,18 @@ public class JailActionService : ICardActionService<JailAction>
             switch (action.Kind)
             {
                 case JailKind.SendToJail:
-                    if (action.TurnsOverride is { } turns)
-                        target.MaxJailTurnsOverride = turns;
-                    await _jailService.SendPlayerToJail(engine, target, ct);
+                    // Apply the jail-term config only if the player actually went to jail — under the
+                    // JailFull event SendPlayerToJail charges the fee and returns false (not jailed),
+                    // so a stale lock/rent flag must not be left on a player who's free.
+                    if (await _jailService.SendPlayerToJail(engine, target, ct))
+                    {
+                        target.MaxJailTurnsOverride = action.TurnsOverride;
+                        target.MinJailTurns = action.MinJailTurns;
+                        target.CollectRentInJail = action.CollectRentInJail;
+                    }
                     break;
                 case JailKind.Release when target.IsInJail:
-                    await _jailService.LeaveJailByCard(engine, target, ct);
-                    break;
+                    return await _jailService.LeaveJailByCard(engine, target, ct);
                 case JailKind.ModifyLeaveFee:
                     if (action.LeaveFeeSetTo is { } fee)
                         target.JailCost = fee;
@@ -55,5 +60,7 @@ public class JailActionService : ICardActionService<JailAction>
                     break;
             }
         }
+        
+        return true;
     }
 }

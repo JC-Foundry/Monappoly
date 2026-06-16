@@ -35,6 +35,19 @@ public interface IEngineNotifier
     void StateChanged(GameCacheModel cache);
 
     /// <summary>
+    /// A lightweight, non-pausing notification for a single player — surfaced as a transient,
+    /// auto-dismissing toast on that player's profile (their in-game phone profile, and the host's
+    /// player drawer while it is open on them). Unlike a <see cref="Prompt"/> it never pauses the
+    /// engine and carries no response; it is pure narration the engine fires as money moves (a GO
+    /// collection, a card charge, …). Fire-and-forget like the rest of this seam — a dropped or slow
+    /// broadcast must never affect turn execution.
+    /// </summary>
+    /// <param name="gameId">The game whose in-play group the notification is broadcast to.</param>
+    /// <param name="targetPlayerId">The player the notification concerns; only their profile surfaces render it.</param>
+    /// <param name="message">The player-facing text to show (server-authored, already formatted).</param>
+    void Notify(string gameId, string targetPlayerId, string message);
+
+    /// <summary>
     /// The game has finished (a winner or a draw). Implementations announce it to
     /// the game's connected clients so they can move on (the in-game pages redirect
     /// to the finished-game results). Called once the conclusion is persisted.

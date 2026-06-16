@@ -17,7 +17,7 @@ public class DiceRoll
     
     public bool IsTurnRoll { get; }
 
-    public bool IsDoubleFive => Die1 == 5 && Die2 == 5 && ThirdDie != 5;
+    public bool IsDoubleFive => Die1 == 5 && Die2 == 5 && RollType == DiceRollType.Double;
     
     public DiceRoll(ushort die1, ushort die2, ushort thirdDie, bool isTurnRoll = true)
     {
@@ -33,6 +33,16 @@ public class DiceRoll
                     ? DiceRollType.Double
                     : DiceRollType.Normal
             : DiceRollType.Normal;
+    }
+
+    public DiceRoll(DiceRoll roll, DiceRollType modifiedRollType)
+    {
+        Die1 = roll.Die1;
+        Die2 = roll.Die2;
+
+        ThirdDie = modifiedRollType == DiceRollType.Triple ? Die1 : roll.Die1;
+        RollType = modifiedRollType;
+        IsTurnRoll = true;
     }
 
     public DiceRoll(ushort die1, ushort? die2 = null)

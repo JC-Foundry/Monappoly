@@ -66,6 +66,10 @@ public class TransactionService_Tests
         public void PromptOpened(string gameId, Prompt prompt, string concurrencyStamp) { }
         public void PromptClosed(string gameId, string promptId, string concurrencyStamp) { }
         public void StateChanged(GameCacheModel cache) { }
+        public void Notify(string gameId, string targetPlayerId, string message)
+        {
+        }
+
         public void GameCompleted(string gameId)
         {
         }

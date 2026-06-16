@@ -41,9 +41,23 @@ public class MovementService
         });
     }
 
-    public async Task AdvancePlayer(Framework.GameEngine engine, PlayerModel player, ushort boardIndex, PlayerMovementDirection direction, 
+    public async Task AdvancePlayer(Framework.GameEngine engine, PlayerModel player, ushort boardIndex, PlayerMovementDirection direction,
         CancellationToken ct)
     {
+        switch (player.IsInJail)
+        {
+            // A jailed player cannot be advanced out of jail. The only advance that legitimately moves
+            // them is the release to Just Visiting (rolling a double, paying/playing out, or a
+            // mass-breakout card) — every other advance (a card "advance to X"/"go back to X", "go to
+            // jail" while already jailed, etc.) no-ops and leaves them in jail. Mirrors the IsInJail
+            // guard in MovePlayer. Send-to-jail is unaffected: the player isn't jailed yet at that point.
+            case true when boardIndex != IndexHelper.JustVisitingSpace:
+                return;
+            case true:
+                engine.Notifier.Notify(engine.Cache.GameId, player.PlayerId, "You have been released from jail");
+                break;
+        }
+
         var (newIndex, passGo) = IndexHelper.AdvanceIndex(player.BoardIndex, boardIndex, player.Direction);
         var initial = player.BoardIndex;
         player.BoardIndex = newIndex;

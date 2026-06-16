@@ -50,16 +50,17 @@ public class PropertyStatsService : IStatsService
             var complete = PropertySetHelper.GetOwnedSets(playerId, owned, onlyBuildable: false);
             everCompleted.UnionWith(complete);
 
+            // Purges are tallied every turn — they're independent of the complete-set peak.
+            // (Previously this sat inside the peak-only branch below, so a purge was counted only
+            // on the rare turn the player also hit a new max complete-set count → near-always 0.)
+            purgedCount += (ushort)turn.Events.OfType<PropertyPurgedReceipt>()
+                .Count(pe => pe.PlayerId == playerId);
+
             if (complete.Count <= maxCompleteSets)
                 continue;
 
             maxCompleteSets = (ushort)complete.Count;
             maxCompleteSetsTurn = turn.Game.Metadata.TurnNumber;
-            
-            var purgedEvents = turn.Events.OfType<PropertyPurgedReceipt>()
-                .Where(pe => pe.PlayerId == playerId)
-                .ToList();
-            purgedCount += (ushort)purgedEvents.Count;
         }
 
         record.MaxCompleteSets = maxCompleteSets;

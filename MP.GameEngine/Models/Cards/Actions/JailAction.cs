@@ -21,6 +21,18 @@ public sealed class JailAction : CardAction
     public ushort? TurnsOverride { get; set; }
 
     /// <summary>
+    /// For <see cref="JailKind.SendToJail"/>: the minimum turns the player must stay before they can
+    /// leave ("…cannot leave jail" → <c>PlayerModel.MinJailTurns</c>). Null = no minimum (leave normally).
+    /// </summary>
+    public ushort? MinJailTurns { get; set; }
+
+    /// <summary>
+    /// For <see cref="JailKind.SendToJail"/>: the player keeps collecting rent while jailed
+    /// ("…can collect all rent due" → <c>PlayerModel.CollectRentInJail</c>), overriding game-rules Default rule 2.
+    /// </summary>
+    public bool CollectRentInJail { get; set; }
+
+    /// <summary>
     /// For <see cref="JailKind.ModifyLeaveFee"/>: set the player's jail-leave cost
     /// (<c>PlayerModel.JailCost</c>) to this exact amount (e.g. "reset to £50").
     /// </summary>

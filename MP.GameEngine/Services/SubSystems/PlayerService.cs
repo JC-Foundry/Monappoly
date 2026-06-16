@@ -77,21 +77,53 @@ public class PlayerService
     }
 
 
-    public async Task ResolveTripleBonus(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
-    {
-        var bonus = player.TripleBonus;
-        bonus = MoneyHelper.NormaliseAmountToPositive(bonus, engine.Cache.RoundingRule, FinancialReason.TripleBonus);
+    /// <summary>
+    /// The default triple-bonus resolution — the holder receives their full bonus (factor ×1) and the
+    /// accumulator increments. The orchestrator's triple branch calls this when no Dice card has taken
+    /// over the bonus.
+    /// </summary>
+    public Task ResolveTripleBonus(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
+        => ApplyTripleBonus(engine, player, factor: 1, recipient: null, ct);
 
-        var newBonus = bonus + RuleDictionary.TripleBonusIncrease;
-        newBonus = MoneyHelper.NormaliseAmountToPositive(newBonus, engine.Cache.RoundingRule, FinancialReason.TripleBonus);
-        
+    /// <summary>
+    /// Resolves a triple bonus with a modifiable payout (a Dice <c>ModifyTripleBonus</c> card supplies
+    /// a non-default <paramref name="factor"/> / <paramref name="recipient"/>; the default path passes
+    /// ×1 to the holder). The payout (<c>base × factor</c>) is credited to <paramref name="recipient"/>
+    /// (or the holder when null), and the holder's accumulator <b>always</b> increments by £500 —
+    /// even when the payout is suppressed (factor 0) or redirected. See cards-dev-changes.md §2.13.
+    /// </summary>
+    /// <param name="engine">The game engine bundle the bonus mutates.</param>
+    /// <param name="holder">The player who rolled the triple (always accrues the +£500 accumulator).</param>
+    /// <param name="factor">Payout multiplier: 0 suppresses it, 1 is the full bonus, 2 doubles it, a die value for ×die.</param>
+    /// <param name="recipient">Who receives the payout. Null = the <paramref name="holder"/>; otherwise the bonus is redirected (the holder still accrues the accumulator).</param>
+    /// <param name="ct">Cancellation token.</param>
+    public async Task ApplyTripleBonus(Framework.GameEngine engine, PlayerModel holder, ushort factor,
+        PlayerModel? recipient, CancellationToken ct)
+    {
+        var rule = engine.Cache.RoundingRule;
+
+        var basePayout = MoneyHelper.NormaliseAmountToPositive(holder.TripleBonus, rule, FinancialReason.TripleBonus);
+        var payout = MoneyHelper.NormaliseAmountToPositive((long)basePayout * factor, rule, FinancialReason.TripleBonus);
+
+        // Accumulator: always +£500 to the holder, whatever the payout modifier did.
+        var newBonus = MoneyHelper.NormaliseAmountToPositive(basePayout + RuleDictionary.TripleBonusIncrease, rule, FinancialReason.TripleBonus);
+
         //Cite triple bonus rule
         engine.CiteRule(RuleCode.Triple_Bonus);
-        
-        _ = await engine.PromptProvider.Acknowledge(player.PlayerId, "TRIPLE BONUS!",
-            $"You will receive {RuleDictionary.Currency}{bonus} for rolling a triple! Your next bonus will be {RuleDictionary.Currency}{newBonus}.", ct: ct);
-        
-        await _transactionService.ReceiveTripleBonus(engine, player, ct);
-        player.TripleBonus = newBonus;
+
+        recipient ??= holder;
+        var redirected = recipient.PlayerId != holder.PlayerId;
+
+        var body = payout == 0
+            ? $"You do not receive a triple bonus this time. Your next bonus will be {RuleDictionary.Currency}{newBonus}."
+            : redirected
+                ? $"Your triple bonus of {RuleDictionary.Currency}{payout} goes to another player. Your next bonus will be {RuleDictionary.Currency}{newBonus}."
+                : $"You will receive {RuleDictionary.Currency}{payout} for rolling a triple! Your next bonus will be {RuleDictionary.Currency}{newBonus}.";
+        _ = await engine.PromptProvider.Acknowledge(holder.PlayerId, "TRIPLE BONUS!", body, ct: ct);
+
+        if (payout > 0)
+            await _transactionService.ReceiveTripleBonus(engine, recipient, payout, ct);
+
+        holder.TripleBonus = newBonus;
     }
 }

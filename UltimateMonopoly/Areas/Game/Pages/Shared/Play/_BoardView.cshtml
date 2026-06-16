@@ -189,7 +189,7 @@
 
             <div class="fp-centre">
                 <div class="fp-label">Free Parking</div>
-                <div class="fp-pot">@c@Model.FreeParkingAmount</div>
+                <div class="fp-pot">@c@($"{Model.FreeParkingAmount:N0}")</div>
 
                 @if (fpProp is not null)
                 {

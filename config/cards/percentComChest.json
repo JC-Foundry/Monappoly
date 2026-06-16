@@ -1,138 +1,309 @@
 [
-{
-"RawText": "Advance to "GO". Collect £200. Each player (not including you) collects {G0__1} times the two dice rolled",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [
-{ "$type": "Movement", "Kind": 1, "TargetIndex": 0 },
-{ "$type": "Money", "Amount": 100, "Direction": 1, "Counterparty": 0, "Target": 2, "DiceMultiplier": 2, "PercentageApplies": true }
-] }
-]
-},
-{
-"RawText": "Advance to the nearest station owned by someone else",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 2, "Nearest": 0, "NearestOwnedByOther": true } ] }
-]
-},
-{
-"RawText": "Bank interest. Receive {G0__0}",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 500, "Direction": 1, "Counterparty": 0, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "Burst tyre. Pay {G0__0}",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 200, "Direction": 0, "Counterparty": 1, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "From the sale of shares you receive {G0__0}",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 1000, "Direction": 1, "Counterparty": 0, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "Get out of jail free. Keep until needed",
-"CardType": "PercentageComChest",
-"ConditionType": "ChoiceCardholderTurn",
-"Conditions": [ { "Trigger": 512 } ],
-"Groups": [
-{ "Actions": [ { "$type": "Jail", "Kind": 1 } ] }
-]
-},
-{
-"RawText": "Go back 11 spaces",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 0, "Spaces": -11 } ] }
-]
-},
-{
-"RawText": "Go back to income tax",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 4 } ] }
-]
-},
-{
-"RawText": "Happy New Year! Collect {G0__0} from each player",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 300, "Direction": 1, "Counterparty": 2, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "Insurance claim successful. Collect {G0__0}",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 300, "Direction": 1, "Counterparty": 0, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "Mass breakout from prison. All prisoners escape to just visiting",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 4, "Target": 3, "JailFilter": 1 } ] }
-]
-},
-{
-"RawText": "Pay a {G0__0} fine or take a Percentage Chance",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "GroupText": "Pay {0} into Free Parking", "Actions": [ { "$type": "Money", "Amount": 400, "Direction": 0, "Counterparty": 1, "PercentageApplies": true } ] },
-{ "GroupText": "Take a Percentage Chance card", "Actions": [ { "$type": "DeckDraw", "Deck": 2 } ] }
-]
-},
-{
-"RawText": "Swap places with any player of your choice",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 3, "Target": 1 } ] }
-]
-},
-{
-"RawText": "You inherit {G0__0}",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 1000, "Direction": 1, "Counterparty": 0, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "You make a donation to charity. Pay {G0__0} for each property you own",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 200, "Direction": 0, "Counterparty": 1, "PerUnit": 3, "PercentageApplies": true } ] }
-]
-},
-{
-"RawText": "You steal {G0__0} from each player but go to jail",
-"CardType": "PercentageComChest",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [
-{ "$type": "Money", "Amount": 200, "Direction": 1, "Counterparty": 2, "PercentageApplies": true },
-{ "$type": "Movement", "Kind": 1, "TargetIndex": 100 }
-] }
-]
-}
+    {
+        "RawText": "Advance to 'GO'. Collect £200. Each player (not including you) collects {G0__1} times the two dice rolled",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 0
+                    },
+                    {
+                        "$type": "Money",
+                        "Amount": 100,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "Target": 2,
+                        "DiceMultiplier": 2,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Advance to the nearest station owned by someone else",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 2,
+                        "Nearest": 0,
+                        "NearestOwnedByOther": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Bank interest. Receive {G0__0}",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 500,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Burst tyre. Pay {G0__0}",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 200,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "From the sale of shares you receive {G0__0}",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 1000,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Get out of jail free. Keep until needed",
+        "CardType": "PercentageComChest",
+        "ConditionType": "ChoiceCardholderTurn",
+        "Conditions": [
+            {
+                "Trigger": 512
+            }
+        ],
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Jail",
+                        "Kind": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Go back 11 spaces",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 0,
+                        "Spaces": -11,
+                        "CollectGoBonus": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Go back to income tax",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 4,
+                        "CollectGoBonus": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Happy New Year! Collect {G0__0} from each player",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 300,
+                        "Direction": 1,
+                        "Counterparty": 2,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Insurance claim successful. Collect {G0__0}",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 300,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Mass breakout from prison. All prisoners escape to just visiting",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 4,
+                        "Target": 3,
+                        "JailFilter": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Pay a {G0__0} fine or take a Percentage Chance",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "GroupText": "Pay {0} into Free Parking",
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 400,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PercentageApplies": true
+                    }
+                ]
+            },
+            {
+                "GroupText": "Take a Percentage Chance card",
+                "Actions": [
+                    {
+                        "$type": "DeckDraw",
+                        "Deck": 2
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Swap places with any player of your choice",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 3,
+                        "Target": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You inherit {G0__0}",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 1000,
+                        "Direction": 1,
+                        "Counterparty": 0,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You make a donation to charity. Pay {G0__0} for each property you own",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 200,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 3,
+                        "PercentageApplies": true
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You steal {G0__0} from each player but go to jail",
+        "CardType": "PercentageComChest",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 200,
+                        "Direction": 1,
+                        "Counterparty": 2,
+                        "PercentageApplies": true
+                    },
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 100
+                    }
+                ]
+            }
+        ]
+    }
 ]

@@ -47,10 +47,11 @@ public class CardImportService
     public async Task<List<CardModel>> ImportCards()
     {
         var cardList = new List<CardModel>();
+        var index = 0;
         foreach (var fileName in _cardFileNames)
         {
             var path = _filePathProvider.GetFilePath(FilePathProvider.FileCategory.Card);
-            path = Path.Combine(path, fileName);
+            path = Path.Combine(path, $"{fileName}.json");
             if(!File.Exists(path))
                 continue;
 
@@ -61,6 +62,7 @@ public class CardImportService
 
             cardList.AddRange(cards.Select(import => new CardModel
             {
+                UniqueText = $"{import.RawText} {CardDisplayHelper.UniqueTagOpen}{index++}{CardDisplayHelper.UniqueTagClose}",
                 CardText = import.RawText,
                 CardType = EnumExtensions.TryParse<CardType>(import.CardType),
                 Groups = import.Groups.AsReadOnly(),
@@ -94,13 +96,13 @@ public class CardImportService
         var add = false;
         var persistedIds = await _repos.GetRepository<PersistedCardIds>()
             .AsQueryable().FilterDeleted(DeletedQueryType.OnlyActive)
-            .FirstOrDefaultAsync(p => p.CardText.ToLower() == card.CardText.ToLower());
+            .FirstOrDefaultAsync(p => p.CardText.ToLower() == card.UniqueText.ToLower());
         if (persistedIds == null)
         {
             var groupIdInput = card.Groups
                 .Select(g => new CardGroupIdInput((ushort)g.Actions.Count));
             var conditionsCount = card.Conditions.Count;
-            persistedIds = new PersistedCardIds(card.CardText, groupIdInput, (ushort)conditionsCount);
+            persistedIds = new PersistedCardIds(card.UniqueText, groupIdInput, (ushort)conditionsCount);
             add = true;
         }
 

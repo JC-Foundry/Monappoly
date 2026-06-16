@@ -1,137 +1,287 @@
 [
-{
-"RawText": ""Drunk in charge" fine {G0__0}",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 20, "Direction": 0, "Counterparty": 1 } ] }
-]
-},
-{
-"RawText": "Advance to "GO"",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 0 } ] }
-]
-},
-{
-"RawText": "Advance to Mayfair",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 39 } ] }
-]
-},
-{
-"RawText": "Advance to Pall Mall",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 11 } ] }
-]
-},
-{
-"RawText": "Advance to Trafalgar Square",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 24 } ] }
-]
-},
-{
-"RawText": "Bank pays you dividend of {G0__0}",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 50, "Direction": 1, "Counterparty": 0 } ] }
-]
-},
-{
-"RawText": "Get out of jail free. Keep until needed",
-"CardType": "Chance",
-"ConditionType": "ChoiceCardholderTurn",
-"Conditions": [ { "Trigger": 512 } ],
-"Groups": [
-{ "Actions": [ { "$type": "Jail", "Kind": 1 } ] }
-]
-},
-{
-"RawText": "Go back three spaces",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 0, "Spaces": -3 } ] }
-]
-},
-{
-"RawText": "Go to jail. Move directly to jail. Do NOT pass "GO". Do NOT collect £200",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 100 } ] }
-]
-},
-{
-"RawText": "Make general repairs on all of your buildings. For each house pay {G0__0}. For each hotel pay {G0__1}.",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [
-{ "$type": "Money", "Amount": 25, "Direction": 0, "Counterparty": 1, "PerUnit": 1 },
-{ "$type": "Money", "Amount": 100, "Direction": 0, "Counterparty": 1, "PerUnit": 2 }
-] }
-]
-},
-{
-"RawText": "Pay school fees of {G0__0}",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 150, "Direction": 0, "Counterparty": 1 } ] }
-]
-},
-{
-"RawText": "Speeding fine {G0__0}",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 15, "Direction": 0, "Counterparty": 1 } ] }
-]
-},
-{
-"RawText": "Take a trip to Marylebone Station.",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Movement", "Kind": 1, "TargetIndex": 15 } ] }
-]
-},
-{
-"RawText": "You are assessed for street repairs. {G0__0} per house. {G0__1} per hotel.",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [
-{ "$type": "Money", "Amount": 40, "Direction": 0, "Counterparty": 1, "PerUnit": 1 },
-{ "$type": "Money", "Amount": 115, "Direction": 0, "Counterparty": 1, "PerUnit": 2 }
-] }
-]
-},
-{
-"RawText": "Your building loan matures. Receive {G0__0}",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 150, "Direction": 1, "Counterparty": 0 } ] }
-]
-},
-{
-"RawText": "You have won a crossword competition. Collect {G0__0}",
-"CardType": "Chance",
-"ConditionType": "None",
-"Groups": [
-{ "Actions": [ { "$type": "Money", "Amount": 100, "Direction": 1, "Counterparty": 0 } ] }
-]
-}
+    {
+        "RawText": "'Drunk in charge' fine {G0__0}",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 20,
+                        "Direction": 0,
+                        "Counterparty": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Advance to 'GO'",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Advance to Mayfair",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 39
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Advance to Pall Mall",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 11
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Advance to Trafalgar Square",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 24
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Bank pays you dividend of {G0__0}",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 50,
+                        "Direction": 1,
+                        "Counterparty": 0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Get out of jail free. Keep until needed",
+        "CardType": "Chance",
+        "ConditionType": "ChoiceCardholderTurn",
+        "Conditions": [
+            {
+                "Trigger": 512
+            }
+        ],
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Jail",
+                        "Kind": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Go back three spaces",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 0,
+                        "Spaces": -3,
+                        "CollectGoBonus": false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Go to jail. Move directly to jail. Do NOT pass 'GO'. Do NOT collect £200",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 100
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Make general repairs on all of your buildings. For each house pay {G0__0}. For each hotel pay {G0__1}.",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 25,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 1
+                    },
+                    {
+                        "$type": "Money",
+                        "Amount": 100,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 2
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Pay school fees of {G0__0}",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 150,
+                        "Direction": 0,
+                        "Counterparty": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Speeding fine {G0__0}",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 15,
+                        "Direction": 0,
+                        "Counterparty": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Take a trip to Marylebone Station.",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Movement",
+                        "Kind": 1,
+                        "TargetIndex": 15
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You are assessed for street repairs. {G0__0} per house. {G0__1} per hotel.",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 40,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 1
+                    },
+                    {
+                        "$type": "Money",
+                        "Amount": 115,
+                        "Direction": 0,
+                        "Counterparty": 1,
+                        "PerUnit": 2
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "Your building loan matures. Receive {G0__0}",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 150,
+                        "Direction": 1,
+                        "Counterparty": 0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "RawText": "You have won a crossword competition. Collect {G0__0}",
+        "CardType": "Chance",
+        "ConditionType": "None",
+        "Groups": [
+            {
+                "Actions": [
+                    {
+                        "$type": "Money",
+                        "Amount": 100,
+                        "Direction": 1,
+                        "Counterparty": 0
+                    }
+                ]
+            }
+        ]
+    }
 ]

@@ -13,8 +13,9 @@ namespace MP.GameEngine.Services.Cards.Actions;
 public class DeckDrawActionService : ICardActionService<DeckDrawAction>
 {
     /// <summary>Draws and resolves a card from the action's deck; the returned suppress flag is irrelevant for a card-driven draw.</summary>
-    public async Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, DeckDrawAction action, CancellationToken ct)
+    public async Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, DeckDrawAction action, CancellationToken ct, CardActionContext? context = null)
     {
         _ = await engine.CardService.DrawCard(engine, player, action.Deck, ct);
+        return true;
     }
 }

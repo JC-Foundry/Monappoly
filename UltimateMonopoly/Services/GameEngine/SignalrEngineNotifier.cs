@@ -38,6 +38,9 @@ public sealed class SignalrEngineNotifier : IEngineNotifier
         // exactly the constrained mobile links that struggle. ConcurrencyStamp is the version.
         => Send(cache.GameId, "StateChanged", new StateChangedMessage(cache.GameId, cache.ConcurrencyStamp));
 
+    public void Notify(string gameId, string targetPlayerId, string message)
+        => Send(gameId, "Notification", new NotificationMessage(gameId, targetPlayerId, message));
+
     public void GameCompleted(string gameId)
         => Send(gameId, "GameCompleted", new GameCompletedMessage(gameId));
 
@@ -83,6 +86,14 @@ public sealed record PromptClosedMessage(string PromptId, string ConcurrencyStam
 /// deliberately carries no game state: just the game id and the version stamp.
 /// </summary>
 public sealed record StateChangedMessage(string GameId, string ConcurrencyStamp);
+
+/// <summary>
+/// Wire payload for <c>Notification</c> — a lightweight, targeted, non-pausing toast. The client
+/// shows it only on the target player's profile surface (their phone, or the host drawer when open
+/// on them) and auto-dismisses it. <see cref="TargetPlayerId"/> is the engine's <c>PlayerId</c>,
+/// which is the AppUser id the client surfaces key on.
+/// </summary>
+public sealed record NotificationMessage(string GameId, string TargetPlayerId, string Message);
 
 /// <summary>Wire payload for <c>GameCompleted</c> — the in-game pages redirect to the finished-game page.</summary>
 public sealed record GameCompletedMessage(string GameId);

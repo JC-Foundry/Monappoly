@@ -21,13 +21,16 @@ public class MovementActionService : ICardActionService<MovementAction>
 {
     private readonly MovementService _movementService;
     private readonly BoardService _boardService;
+    private readonly JailService _jailService;
 
-    /// <summary>Creates the movement-action handler over the movement and board-resolution seams.</summary>
+    /// <summary>Creates the movement-action handler over the movement, board-resolution and jail seams.</summary>
     public MovementActionService(MovementService movementService,
-        BoardService boardService)
+        BoardService boardService,
+        JailService jailService)
     {
         _movementService = movementService;
         _boardService = boardService;
+        _jailService = jailService;
     }
 
     /// <summary>
@@ -40,12 +43,12 @@ public class MovementActionService : ICardActionService<MovementAction>
     /// <param name="player">The card holder (and default target) being moved.</param>
     /// <param name="action">The movement action to resolve.</param>
     /// <param name="ct">Cancellation token.</param>
-    public async Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, MovementAction action, CancellationToken ct)
+    public async Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, MovementAction action, CancellationToken ct, CardActionContext? context = null)
     {
         if (action.Kind == MovementKind.Swap)
         {
             await ApplySwap(engine, player, action, ct);
-            return;
+            return true;
         }
 
         var targets = await CardActionHelper.ResolveTargets(engine, player, action.Target, ct);
@@ -58,6 +61,12 @@ public class MovementActionService : ICardActionService<MovementAction>
                     // "do not pass Go" card. (Advance/AdvanceToNearest carry it via MovementDirection.)
                     await _movementService.MovePlayer(engine, target, action.Spaces, ct, action.CollectGoBonus);
                     break;
+                case MovementKind.AdvanceToIndex when action.TargetIndex == IndexHelper.JailSpace:
+                    // "Go to jail" — route through JailService so the full jail entry happens
+                    // (counters reset, JailTurnCounter zeroed, PlayerEnteredJailReceipt + the
+                    // "sent to jail" notification), not a bare teleport to index 100.
+                    await _jailService.SendPlayerToJail(engine, target, ct);
+                    continue;   // jail performs no landed-space action
                 case MovementKind.AdvanceToIndex when action.TargetIndex is { } index:
                     await _movementService.AdvancePlayer(engine, target, index, MovementDirection(action), ct);
                     break;
@@ -76,6 +85,8 @@ public class MovementActionService : ICardActionService<MovementAction>
             if (action.ResolveLandedSpace)
                 await _boardService.ResolveBoardSpaceForPlayer(engine, target, ct);
         }
+
+        return true;
     }
     
     

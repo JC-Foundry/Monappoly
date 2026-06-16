@@ -27,7 +27,7 @@ public class BuildingActionService : ICardActionService<BuildingAction>
     }
 
     /// <summary>Applies the building action.</summary>
-    public async Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, BuildingAction action, CancellationToken ct)
+    public async Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, BuildingAction action, CancellationToken ct, CardActionContext? context = null)
     {
         switch (action.Kind)
         {
@@ -42,6 +42,8 @@ public class BuildingActionService : ICardActionService<BuildingAction>
                 await GrantHotel(engine, player, ct);
                 break;
         }
+        
+        return true;
     }
 
     /// <summary>

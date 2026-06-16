@@ -7,8 +7,6 @@ public enum MoneyCounterparty
     FreeParking,
     /// <summary>Every other (non-bankrupt) player pays/receives the amount.</summary>
     EachPlayer,
-    /// <summary>The player who rolls highest on a single die (resolved by a dice-off).</summary>
-    HighestRoller,
-    /// <summary>The player who rolls lowest on a single die (resolved by a dice-off).</summary>
-    LowestRoller
+    /// <summary>A dice-off winner — configured by the action's <c>DiceOff</c> (highest/lowest, pool) — pays/receives the amount.</summary>
+    DiceOffPlayer
 }

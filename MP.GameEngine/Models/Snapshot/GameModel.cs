@@ -1,3 +1,4 @@
+using MP.GameEngine.Enums;
 using MP.GameEngine.Enums.Properties;
 using MP.GameEngine.Helpers;
 using MP.GameEngine.Helpers.RuleSet;
@@ -22,6 +23,12 @@ public class GameModel
     /// Global event info that impacts specific spaces/rules in the game
     /// </summary>
     public EventInfo GlobalEventInfo { get; set; } = new();
+    
+    /// <summary>
+    /// The modified dice roll type from convert/downgrade cards
+    /// </summary>
+    public DiceRollType? ModifiedDiceRollType { get; set; }
+    
     
     /// <summary>
     /// The array of players in the game

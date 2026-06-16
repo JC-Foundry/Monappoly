@@ -1,5 +1,6 @@
 using MP.GameEngine.Enums;
 using MP.GameEngine.Models;
+using MP.GameEngine.Models.Cards;
 using MP.GameEngine.Models.EventReceipts;
 using MP.GameEngine.Models.Prompts.PromptTypes;
 using MP.GameEngine.Models.Snapshot;
@@ -55,5 +56,58 @@ public class DiceService
 
         // The non-turn DiceRoll ctor (1 or 2 dice, no third die) — RollType is Normal, IsTurnRoll false.
         return diceCount >= 2 ? new DiceRoll(dice.Die1, dice.Die2) : new DiceRoll(dice.Die1);
+    }
+
+    /// <summary>
+    /// A generic dice-off among <paramref name="candidates"/>: each rolls <paramref name="diceCount"/>
+    /// dice (1 or 2), and the highest (<paramref name="highest"/> true) or lowest total wins. The
+    /// candidate list is caller-supplied and <b>may include the current player</b>. Ties resolve to the
+    /// earliest candidate in the list (strict comparison keeps the first). A single candidate wins
+    /// without rolling; an empty list returns null. The shared picker behind every card dice-off —
+    /// money counterparties, triple-bonus redirect, and the <c>LowestRoller</c>/<c>HighestRoller</c>
+    /// target modes.
+    /// </summary>
+    /// <param name="engine">The game engine bundle the rolls prompt against.</param>
+    /// <param name="candidates">The players rolling off (caller-built; may include the holder).</param>
+    /// <param name="diceCount">Dice each candidate rolls — 1 or 2.</param>
+    /// <param name="highest">True picks the highest total; false the lowest.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public async Task<PlayerModel?> RollDiceOff(Framework.GameEngine engine, IReadOnlyList<PlayerModel> candidates,
+        ushort diceCount, bool highest, CancellationToken ct)
+    {
+        // A single candidate wins by default — no point prompting a one-player dice-off.
+        if (candidates.Count == 1)
+            return candidates[0];
+
+        PlayerModel? winner = null;
+        var best = highest ? int.MinValue : int.MaxValue;
+
+        foreach (var candidate in candidates)
+        {
+            var roll = await RollCardDice(engine, candidate, diceCount, "Dice-off", "Roll for the card dice-off.", ct);
+            var value = roll.Die1 + (roll.Die2 ?? 0);
+
+            if (highest ? value > best : value < best)
+            {
+                best = value;
+                winner = candidate;
+            }
+        }
+
+        return winner;
+    }
+
+    /// <summary>
+    /// Resolves a card <see cref="DiceOff"/> to its winning player: builds the candidate pool from the
+    /// holder (including or excluding the holder per <see cref="DiceOff.IncludeHolder"/>) and rolls the
+    /// dice-off via <see cref="RollDiceOff"/>. Returns null when the pool is empty. The single seam every
+    /// card dice-off counterparty/target goes through.
+    /// </summary>
+    public Task<PlayerModel?> ResolveDiceOffTarget(Framework.GameEngine engine, PlayerModel holder, DiceOff diceOff, CancellationToken ct)
+    {
+        var candidates = engine.Cache.Game.GetPlayers(holder.PlayerId, excludePovPlayer: !diceOff.IncludeHolder);
+        return candidates.Count == 0
+            ? Task.FromResult<PlayerModel?>(null)
+            : RollDiceOff(engine, candidates, diceOff.DiceCount, diceOff.Highest, ct);
     }
 }

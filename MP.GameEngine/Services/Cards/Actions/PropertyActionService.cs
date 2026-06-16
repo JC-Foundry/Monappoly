@@ -27,7 +27,7 @@ public class PropertyActionService : ICardActionService<PropertyAction>
     }
 
     /// <summary>Dispatches by kind.</summary>
-    public async Task ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, PropertyAction action, CancellationToken ct)
+    public async Task<bool> ResolveActionAsync(Framework.GameEngine engine, PlayerModel player, PropertyAction action, CancellationToken ct, CardActionContext? context = null)
     {
         switch (action.Kind)
         {
@@ -49,6 +49,8 @@ public class PropertyActionService : ICardActionService<PropertyAction>
                 ClearFreeParkingToBank(engine);
                 break;
         }
+
+        return true;
     }
 
     /// <summary>

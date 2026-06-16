@@ -82,6 +82,34 @@ $prop-colours: (
   "utility":   $prop-utility,
 );
 
+$card-chance: #fa1924;
+$card-com-chest: #4076f5;
+$card-percent-chance: #e38b20;
+$card-percent-com-chest: #8953f5;
+$card-third: #30a644;
+$card-double: #3d9188;
+$card-triple: #e267f0;
+$card-tax: #79859c;
+$card-go: #ed5c5c;
+$card-jv: #825f3c;
+$card-fp: #3b5e3a;
+$card-jail: #5f5287;
+
+$card-colours:(
+  "chance": $card-chance,
+  "com-chest": $card-com-chest,
+  "percent-chance": $card-percent-chance,
+  "percent-com-chest": $card-percent-com-chest,
+  "third": $card-third,
+  "double": $card-double,
+  "triple": $card-triple,
+  "tax": $card-tax,
+  "go": $card-go,
+  "jv": $card-jv,
+  "fp": $card-fp,
+  "jail": $card-jail
+);
+
 // Dark mode body overrides
 $body-bg:                 #212121;
 $body-color:              #e0e0e0;
@@ -552,4 +580,63 @@ $hero-box-shadow-hover: 0 8px 24px rgba($black, 0.7), 0 2px 8px rgba($black, 0.5
     color:            color-contrast($value) !important;
     background-color: var(--prop-#{$name}) !important;
   }
+}
+
+// ------------------------------------------------------------------
+// Monopoly card colours
+// Exposes --card-{name} custom properties and .bg-/.text-/.border-card-{name}
+// utility classes for each CardType (deck) colour.
+// ------------------------------------------------------------------
+:root {
+  @each $name, $value in $card-colours {
+    --card-#{$name}: #{$value};
+  }
+}
+
+@each $name, $value in $card-colours {
+  .bg-card-#{$name}     { background-color: var(--card-#{$name}) !important; }
+  .text-card-#{$name}   { color:            var(--card-#{$name}) !important; }
+  .border-card-#{$name} { border-color:     var(--card-#{$name}) !important; }
+
+  // Background + contrasting text (mirrors Bootstrap's .text-bg-*) so a filled
+  // card-coloured surface — e.g. a card-draw prompt — stays legible across the
+  // light and dark deck colours alike.
+  .text-bg-card-#{$name} {
+    color:            color-contrast($value) !important;
+    background-color: var(--card-#{$name}) !important;
+  }
+}
+
+// ------------------------------------------------------------------
+// Engine notifications — lightweight, non-pausing toasts (IEngineNotifier.Notify).
+// game-notifications.js mounts a stack on the target player's profile surface and
+// auto-dismisses each toast after 5s. Two mounts: a fixed top bar on the phone
+// profile, and a sticky top strip inside the host's open drawer. Both float full
+// width at the top; an empty stack collapses so it never reserves space.
+// ------------------------------------------------------------------
+.engine-noti-stack {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .75rem;
+  pointer-events: none;          // taps fall through the gaps; the alerts re-enable below
+}
+
+.engine-noti-stack:empty { display: none; }
+
+.engine-noti-stack-fixed {       // phone profile — fixed to the top of the viewport
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 1080;
+}
+
+.engine-noti-stack-drawer {      // host drawer — sticks to the top of the scrolling profile body
+  position: sticky;
+  top: 0;
+  z-index: 1030;                 // under the drawer header (1032) and prompt overlay (1031)
+}
+
+.engine-noti {
+  margin-bottom: 0;              // spacing handled by the stack's gap
+  pointer-events: auto;          // the alert (and its dismiss button) stays interactive
 }

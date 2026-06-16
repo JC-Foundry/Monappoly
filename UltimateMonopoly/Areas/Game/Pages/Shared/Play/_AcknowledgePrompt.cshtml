@@ -1,16 +1,23 @@
+@using MP.GameEngine.Helpers.Cards
 @model MP.GameEngine.Models.Prompts.PromptTypes.AcknowledgePrompt
 @*
     ACKNOWLEDGE PROMPT — server-rendered fragment, shown inside _PlayerProfileView's
     .pp-prompt overlay when this prompt is pending for the player. Single "Okay" that
     submits an empty AcknowledgeResponse via ingame-prompts.js (delegated off
-    [data-prompt-submit]). Secondary card styling.
+    [data-prompt-submit]). Card-draw acknowledges carry a CardType and are coloured by
+    deck; every other acknowledge has a null CardType and falls back to secondary styling.
 *@
-<div class="pp-prompt-card border border-secondary border-2">
-    <div class="pp-prompt-head text-bg-secondary">@Model.Title</div>
+@{
+    // CardColourDisplay returns the colour token (e.g. "card-chance"); compose the Bootstrap
+    // utility prefixes off it. Null CardType → secondary, as before.
+    var colour = Model.CardType is { } type ? CardDisplayHelper.CardColourDisplay(type) : "secondary";
+}
+<div class="pp-prompt-card border border-2 border-@colour">
+    <div class="pp-prompt-head text-bg-@colour">@Model.Title</div>
     <div class="pp-prompt-body">
         <p class="mb-0">@Model.Body</p>
     </div>
     <div class="pp-prompt-foot">
-        <button type="button" class="btn btn-secondary w-100" data-prompt-submit>Okay</button>
+        <button type="button" class="btn text-bg-@colour w-100" data-prompt-submit>Okay</button>
     </div>
 </div>

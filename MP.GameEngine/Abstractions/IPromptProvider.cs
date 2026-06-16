@@ -1,3 +1,4 @@
+using MP.GameEngine.Enums.Cards;
 using MP.GameEngine.Models.Prompts;
 using MP.GameEngine.Models.Prompts.PromptTypes.Responses;
 
@@ -43,6 +44,11 @@ public interface IPromptProvider
     /// The optional time duration after which the acknowledgment prompt will expire
     /// if the player does not acknowledge it.
     /// </param>
+    /// <param name="cardType">
+    /// The deck a drawn card came from when this acknowledge announces a card pick-up — drives
+    /// card-type-flavoured styling on the front end. <c>null</c> (the default) for every other
+    /// acknowledge, which renders in the default secondary styling.
+    /// </param>
     /// <param name="ct">
     /// A cancellation token that allows the operation to be canceled before completion,
     /// typically used for handling game-level cancellation scenarios.
@@ -56,6 +62,7 @@ public interface IPromptProvider
         string title,
         string body,
         TimeSpan? timeout = null,
+        CardType? cardType = null,
         CancellationToken ct = default);
 
     /// <summary>

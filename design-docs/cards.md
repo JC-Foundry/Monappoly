@@ -1,7 +1,8 @@
 # All Cards in the Game
 All the cards in the game grouped by their type. Each card carries its **action metadata** (the
 `MoneyAction` / `MovementAction` / `JailAction` model fields + card-level `ConditionType`/`Trigger`)
-and a **build** line — ✅ buildable now · 🟡 primitive exists, flag missing · ⬜ needs a new
+and a **build** line — ✅ buildable now · 🟢 functionally complete (action/effect built; only the
+held-card trigger / play-card layer pending) · 🟡 primitive exists, flag missing · ⬜ needs a new
 action/flag. The build deltas are catalogued in `cards-dev-changes.md` (the `§` refs).
 
 ## Chance
@@ -110,9 +111,6 @@ You get a community chest card from landing on a community chest space. These ar
 - You inherit £100
   - `MoneyAction{Receive, 100, Bank}`.
   - ✅ Buildable now.
-- Advance to the nearest station
-  - `MovementAction{Kind=AdvanceToNearest, Nearest=Station}`.
-  - ✅ Buildable now.
 
 
 ## % Chance
@@ -157,8 +155,8 @@ The values on these cards are 10/50/100% depending on the player's %cap. "Collec
   - `MoneyAction{Pay, 500, FreeParking, PercentageApplies=true}`.
   - ✅ Buildable now.
 - You have been robbed. Pay £1000 to the player who rolls the highest on one die
-  - `MoneyAction{Pay, 1000, Counterparty=HighestRoller, PercentageApplies=true, IncludeHolderInRoll=false}`.
-  - ✅ Buildable now (dice-off via `HighestRoller`).
+  - `MoneyAction{Pay, 1000, Counterparty=DiceOffPlayer, DiceOff={Highest=true}, PercentageApplies=true}`.
+  - ✅ Built — dice-off via the generic `DiceOffPlayer` counterparty + `DiceOff` config (highest one-die roller; pool excludes the holder); resolved through `DiceService.ResolveDiceOffTarget`/`RollDiceOff`.
 - You have sold your car. Collect £2000
   - `MoneyAction{Receive, 2000, Bank, PercentageApplies=true}`.
   - ✅ Buildable now.
@@ -256,14 +254,14 @@ You also get a third card from you or anyone else rolling your dice number.
   - `JailAction{Kind=SendToJail, Target=Everyone}`. `ConditionType=None`.
   - ✅ Buildable now (`Target=Everyone` added this increment; jail self + all others).
 - Cancel a players triple bonus. Keep until needed
-  - **Dice** action: cancel the payout of the chosen player's triple (they receive 0 for *that* triple), `Target=ChosenPlayer`. `ConditionType=ChoiceAnyPlayerTurn`, `Trigger=OnOtherRollsTriple`.
-  - ⬜ **DEFERRED — Dice/triple-bonus family.** The triple *payout* is modifiable (cancel / ×factor / ×die / redirect) but the `TripleBonus` **accumulator still increments by £500 on every triple** (only skipped when a triple is *downgraded to a double*). So this needs `PlayerService.ResolveTripleBonus` **split** into payout-vs-accumulator, driven by a transient `TripleBonus` payout-override on `PlayerModel` (factor + recipient) that the Dice action sets and the resolve consumes. One mechanism covers this card + the Triple-deck bonus cards. The action here = set the chosen player's payout factor to 0; the held/reactive firing on *their* triple is the trigger layer. Build alongside the other Dice cards.
+  - `DiceAction{Kind=ModifyTripleBonus, PayoutFactor=0, Target=ChosenPlayer}`. `ConditionType=ChoiceAnyPlayerTurn`, `Trigger=OnOtherRollsTriple`.
+  - 🟢 Functionally complete — `DiceActionService` zeroes the target's triple-bonus *payout* via `PlayerService.ApplyTripleBonus(target, factor:0)`, while the accumulator still increments +£500 (the payout-vs-accumulator split). Remaining: the held/reactive firing on another player's triple (`OnOtherRollsTriple`) and suppressing that player's default bonus — the trigger layer.
 - Change direction. Keep until needed
   - **Direction** action: `PlayerModel.FlipDirection()` (self). `ConditionType=ChoiceCardholderTurn`, `Trigger=None`.
   - ✅ Built — `DirectionActionService` (action done; held-play funnels through the `PlayCard` seam).
 - Convert a double into a triple. Keep until needed
-  - **Dice** action: convert the holder's double → triple. `ConditionType=ChoiceCardholderTurn`, `Trigger=OnRollDouble`.
-  - ⬜ NEW: **Dice** action (§1); must apply **before** the `Doubles/TriplesInRow` counters update (§4); §2.13.
+  - `DiceAction{Kind=ConvertDoubleToTriple}`. `ConditionType=ChoiceCardholderTurn`, `Trigger=OnRollDouble`.
+  - 🟢 Functionally complete — `DiceActionService` sets `GameModel.ModifiedDiceRollType=Triple`; the orchestrator re-routes the roll as a triple (triple bonus, combined-total move, no third die) *before* the `Doubles/TriplesInRow` counters update (§4). Remaining: the held firing on the holder's double (`OnRollDouble`) — the trigger layer.
 - Each player changes direction, including any in jail
   - **Direction** action: `FlipDirection()` for all players (incl. self), **not** excluding jailed. `ConditionType=None`.
   - ✅ Built — `DirectionActionService` with `Target=Everyone` (jailed are included by default — no extra flag needed).
@@ -277,8 +275,8 @@ You also get a third card from you or anyone else rolling your dice number.
   - `MovementAction{Kind=AdvanceToIndex, TargetIndex=FreeParking}`. `ConditionType=None`.
   - ✅ Buildable now.
 - Go to jail for 10 turns. You can roll the dice but cannot leave jail. You can collect all rent due. Keep until needed
-  - `JailAction{Kind=SendToJail, Target=Self, TurnsOverride=10}` + a can't-leave lock + collect-rent-while-locked. `ConditionType=ChoiceCardholderTurn`, `Trigger=None` (the strategic self-play).
-  - 🟡 `TurnsOverride`/`MaxJailTurnsOverride` exist; ⬜ NEW: "can't leave" + "collect rent while locked" flags (§2.1).
+  - `JailAction{Kind=SendToJail, Target=Self, TurnsOverride=10, MinJailTurns=10, CollectRentInJail=true}`. `ConditionType=ChoiceCardholderTurn`, `Trigger=None` (the strategic self-play).
+  - 🟢 Functionally complete — `JailActionService` applies `MaxJailTurnsOverride`/`MinJailTurns`/`CollectRentInJail` on a successful jailing; `PlayerModel.CanLeaveJail` (the `MinJailTurns` lock) blocks every exit — double, fee, card, and the `TurnStateProvider.CanLeaveJail` command gate — until turn 10, then `ForcePlayerToLeaveJail` releases; `PropertyService` collects rent while jailed; the flags reset on every exit. Remaining: the anytime-own-turn play-from-hand (the play-card layer).
 - Hand in any property into free parking. This does not get recorded and can be from a set you have handed in before
   - **Property** action: hand-in to FP (self's chosen property), `not-recorded` (don't append to `PlayerModel.FPHandedInSets`), silent no-op if no valid property. `ConditionType=None`.
   - ✅ Built — `PropertyActionService` (`Kind=HandInToFreeParking`); eligible = `TradableProperties`, silent no-op if none. `PropertyTransferService.HandIntoFreeParking` doesn't touch `FPHandedInSets`, so it's already "not recorded".
@@ -289,20 +287,20 @@ You also get a third card from you or anyone else rolling your dice number.
   - **Turns** action: `PlayerModel.TurnsToMiss += 3` (self). `ConditionType=None`.
   - ✅ Built — `TurnsActionService` (`Kind=MissTurns, Turns=3`).
 - Have an extra 3 turns or make the player rolling the lowest on one die miss 3 turns
-  - 2 groups (OR): [`Turns` `ExtraTurns += 3`, self] OR [dice-off lowest → that player `TurnsToMiss += 3`]. `CardOptionPrompt`. `ConditionType=None`.
-  - ⬜ NEW: **Turns** action (§1); dice-off as the picker for a non-money consequence (§3.7).
+  - 2 groups (OR): [`TurnsAction{Kind=ExtraTurns, Turns=3, Target=Self}`] OR [`TurnsAction{Kind=MissTurns, Turns=3, DiceOff={Highest=false, IncludeHolder=false}}`]. `CardOptionPrompt`. `ConditionType=None`.
+  - ✅ Built — `TurnsActionService` applies the self group's `ExtraTurns += 3`, and routes the `DiceOff` group through the generic `DiceService.ResolveDiceOffTarget`/`RollDiceOff` picker (pool = other players, lowest one-die roller) → that player's `TurnsToMiss += 3`. The dice-off is now a generic non-money consequence picker shared with the money counterparties and triple-bonus redirect.
 - Hidden treasure. Collect £1000 from the bank, or £350 from each player
   - 2 groups (OR): [`MoneyAction{Receive, £1000, Bank}`] OR [`MoneyAction{Receive, £350, EachPlayer}`]. `CardOptionPrompt`. `ConditionType=None`.
   - ✅ Buildable now.
 - Your next tax payment is tripled
-  - Held `MoneyAction{Direction=Pay, Counterparty=FreeParking, AmountSource=TriggerAmount, factor ×3}`. `ConditionType=MetCardholderTurn`, `Trigger=OnTaxLanded`, duration once.
-  - ⬜ NEW: **`AmountSource`** on `MoneyAction` (§3.2); **a Tax trigger** — the `CardTrigger` enum currently has **no `OnTaxLanded`** flag (it stops at `OnRentDue`/`OnNextRoll`/…); duration "next" (§3.6).
+  - Held `MoneyAction{Direction=Pay, Counterparty=FreeParking, AmountSource=TriggerAmount, Amount=3}` (Amount reused as the ×3 factor). `ConditionType=MetCardholderTurn`, `Trigger=OnTaxLanded`, duration once.
+  - 🟢 Functionally complete (action) — `AmountSource{Fixed, TriggerAmount}` on `MoneyAction` + an optional `CardActionContext` threaded through `CardService.PlayCard → ResolveCard → ApplyAction →` the handlers; `MoneyActionService.RealiseAmount` resolves `TriggerAmount` as `context.TriggerAmount × Amount` (no context → 0, a silent no-op). The seam is shared by every `AmountSource=TriggerAmount` card (steal-FP, next-payment-doubled, GO-bonus, the Tax deck). Remaining (trigger layer): an `OnTaxLanded` `CardTrigger` flag (the enum stops at `OnRentDue`/`OnNextRoll`/…), the held firing that supplies the assessed tax as the context, and duration "next" (§3.6).
 - Pay each player £200
   - `MoneyAction{Direction=Pay, Amount=200, Counterparty=EachPlayer}`. `ConditionType=None`.
   - ✅ Buildable now.
 - Pay each player £300 the next time you land on GO
   - Held `MoneyAction{Pay, £300, EachPlayer}`. `ConditionType=MetCardholderTurn`, `Trigger=OnLandGo`, duration once (`TurnsRemaining=1`).
-  - 🟡 `OnLandGo` exists; ⬜ duration "next time" (§3.6).
+  - 🟢 Functionally complete — `MoneyAction{Direction=Pay, Amount=300, Counterparty=EachPlayer}` is fully built (each other player paid from the holder, payer-POV). Remaining (trigger layer): the held firing on `OnLandGo` and duration "next time" (once, `TurnsRemaining=1`, §3.6).
 - Pay the money you receive for snake eyes to the player who rolls the lowest number
   - Held: redirect the snake-eyes (double-1) £500 bonus → `MoneyAction{Pay, Counterparty=LowestRoller, AmountSource=TriggerAmount}`. `ConditionType=MetCardholderTurn`, `Trigger=OnRollDouble` (refined to snake eyes).
   - ✅ Action built — `MoneyAction{Pay, Counterparty=LowestRoller, Basis=SnakeEyesBonus}`. (Held; fires on snake-eyes via the trigger layer.)
@@ -316,8 +314,8 @@ You also get a third card from you or anyone else rolling your dice number.
   - **Property** action: title → bank, self's chosen property (TargetProperty). `ConditionType=None`.
   - ✅ Built — `PropertyActionService` (`Kind=ReturnToBank`).
 - Receive the money from free parking that another player would have received. Keep until needed
-  - Held `MoneyAction{Receive, Counterparty=FreeParking, AmountSource=TriggerAmount}` (the FP-take amount). `ConditionType=ChoiceAnyPlayerTurn`, `Trigger=OnOtherTakesFreeParking`; result suppresses the other player's money-take only.
-  - 🟡 `OnOtherTakesFreeParking` exists; ⬜ `AmountSource` (§3.2); granular suppress (§3.3).
+  - Held `MoneyAction{Receive, Counterparty=FreeParking, AmountSource=TriggerAmount, Amount=1}` (Amount=1 → exactly the FP-take amount). `ConditionType=ChoiceAnyPlayerTurn`, `Trigger=OnOtherTakesFreeParking`; result suppresses the other player's money-take only.
+  - 🟢 Functionally complete — the receive action is built via the `AmountSource=TriggerAmount` seam (the FP take is realised from `CardActionContext.TriggerAmount` when the trigger fires). Remaining (trigger layer): the `ChoiceAnyPlayerTurn` firing on `OnOtherTakesFreeParking` and the granular suppress of just the other player's money-take (§3.3, the trigger result — §11).
 - Send any player of your choice to jail
   - `JailAction{Kind=SendToJail, Target=ChosenPlayer}`. `ConditionType=None`.
   - ✅ Buildable now.
@@ -335,7 +333,7 @@ You also get a third card from you or anyone else rolling your dice number.
   - 🟡 `OnPayPlayer` exists; ⬜ `AmountSource` (§3.2) + duration once (§3.6).
 - Your next triple is downgraded to a double
   - Held **Dice** action: downgrade the holder's triple → double. `ConditionType=MetCardholderTurn`, `Trigger=OnRollTriple`.
-  - ⬜ NEW: **Dice** action (§1); applies before the row counters (§4); §2.13.
+  - 🟢 Functionally complete — `DiceActionService` (`DiceKind.DowngradeTripleToDouble`) sets `GameModel.ModifiedDiceRollType=Double`; `PlayerTurnOrchestrator.TripleRoll` re-routes the roll through `HandleDoubleRoll` (two-dice move, direction flip) *before* the `Doubles/TriplesInRow` counters update (§4). Remaining: the held firing on the holder's triple (`OnRollTriple`) — the trigger layer.
 - Your money for landing on GO is doubled for the next 5 occasions
   - Held: modify the GO bonus `×2`. `ConditionType=MetCardholderTurn`, `Trigger=OnLandGo`, duration 5 (`TurnsActive=5`/`TurnsRemaining`).
   - 🟡 `OnLandGo` + `TurnsActive`/`TurnsRemaining` exist; ⬜ GO-bonus modifier via `AmountSource` (§3.2); duration 5 (§3.6).
@@ -351,12 +349,6 @@ You get a double card for rolling a double (or a triple downgraded to a double)
 - Collect £500 and do not turn around
   - `MoneyAction{Receive, 500, Bank}` + suppress the default double direction-change (`FlipDirection`).
   - ⬜ NEW: "do not turn around" direction-suppress (§2.7). Money part ✅.
-- Energy Crisis! Rent on utilities is multiplied by 10 until another double is rolled [GLOBAL EVENT]
-  - Set `EventInfo.UtilityRentMultiplier = 10`.
-  - ✅ Built — `GlobalEventActionService` (`Event=UtilityRent, Multiplier=10` → `StartUtilityRentEvent`). Clear-on-double already built.
-- Rail Strike! There is no rent on any stations until another double is rolled [GLOBAL EVENT]
-  - Set `EventInfo.StationRentMultiplier = 0`.
-  - ✅ Built — `GlobalEventActionService` (maps the named event via `GlobalEventService`); clear-on-double built.
 - Tax Rise! All taxes are doubled until another double is rolled [GLOBAL EVENT]
   - Set `EventInfo.TaxMultiplier = 2`.
   - ✅ Built — `GlobalEventActionService` (maps the named event via `GlobalEventService`); clear-on-double built.
@@ -375,6 +367,12 @@ You get a double card for rolling a double (or a triple downgraded to a double)
 - Your double is converted into a triple
   - **Dice** action: convert the rolled double → triple. `ConditionType=None`.
   - ⬜ NEW: **Dice** action (§1); applies before the `Doubles/TriplesInRow` counters (§4, §2.13).
+- Swap a set with another player. Both sets get purged
+  - **Property** set-swap with a `ChosenPlayer` + **Building** purge of both swapped sets.
+  - ⬜ NEW: set-level swap (§2.12) + set-purge (§1 Building).
+- Your credit rating plummets! Repay all your loans in full
+  - **Loans** action: repay all the holder's outstanding loans in full (`GetOutstandingLoans`).
+  - ✅ Built — `LoansActionService` (`Kind=RepayAll`; shortfall allowed via `TransactionService.RepayLoan`).
 
 
 ## Triple
@@ -399,18 +397,18 @@ You get a triple card for rolling a triple (or a double upgraded to a triple)
 - Your cost to leave jail is reset to £50
   - **Jail** leave-fee set: `PlayerModel.JailCost = 50`.
   - 🟡 `JailCost` exists; ⬜ NEW: leave-fee **set** modifier (§2.5).
-- Your credit rating plummets! Repay all your loans in full
-  - **Loans** action: repay all the holder's outstanding loans in full (`GetOutstandingLoans`).
-  - ✅ Built — `LoansActionService` (`Kind=RepayAll`; shortfall allowed via `TransactionService.RepayLoan`).
 - Your triple bonus is doubled
   - Scale the holder's `TripleBonus` ×2.
   - ⬜ NEW: **Dice** triple-bonus ×2 (§2.13).
-- Swap a set with another player. Both sets get purged
-  - **Property** set-swap with a `ChosenPlayer` + **Building** purge of both swapped sets.
-  - ⬜ NEW: set-level swap (§2.12) + set-purge (§1 Building).
 - Return a set to the bank or pay £250 times the number of properties you own
   - 2 groups (OR): [**Property** return a whole set to the bank] OR [`MoneyAction{Pay, 250, FreeParking, PerUnit=PerProperty}`]. `CardOptionPrompt`.
   - ✅ Built — `PropertyAction{Kind=ReturnToBank, Set=true}` OR `MoneyAction{Pay, 250, FreeParking, PerUnit=PerProperty}`.
+- Energy Crisis! Rent on utilities is multiplied by 10 until another double is rolled [GLOBAL EVENT]
+  - Set `EventInfo.UtilityRentMultiplier = 10`.
+  - ✅ Built — `GlobalEventActionService` (`Event=UtilityRent, Multiplier=10` → `StartUtilityRentEvent`). Clear-on-double already built.
+- Rail Strike! There is no rent on any stations until another double is rolled [GLOBAL EVENT]
+  - Set `EventInfo.StationRentMultiplier = 0`.
+  - ✅ Built — `GlobalEventActionService` (maps the named event via `GlobalEventService`); clear-on-double built.
 
 
 ## Tax
@@ -540,8 +538,8 @@ You get a Free Parking card from landing on Free Parking space.
 - Immunity from triple bonus being cancelled, or a triple being downgraded. Keep until needed
   - **Immunity** card, keyed to two action types (triple-bonus-cancel + triple-downgrade).
   - ⬜ Deferred — Immunity/NOPE substrate (§6).
-- Pass any retained card you have to the player rolling the lowest number on one die. Each player tied gets a card
-  - **Card** action: pass the holder's held card(s) to the dice-off lowest roller; each tied player gets one.
+- Pass any retained card you have to the player rolling the lowest number on one die.
+  - **Card** action: pass the holder's held card(s) to the dice-off lowest roller.
   - ⬜ NEW: **Card** pass action + dice-off picker + ties (§1, §3.7).
 - Steal any card from any player
   - **Card** action: steal a card from a `ChosenPlayer`.

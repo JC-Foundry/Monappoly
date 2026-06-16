@@ -28,9 +28,16 @@ public class TaxService
         
         var suppressDefault = await engine.CardService.DrawCard(engine, player, CardType.Tax, ct);
         if(suppressDefault) return;
-        
-        //Default outcome (normal tax payment):
+
+        //Default outcome (normal tax payment), normalised first so the event multiplier scales the
+        //grid-rounded figure (and a ×0 "no tax" event floors to 0 → Move's zero short-circuit skips it).
         var tax = MoneyHelper.NormaliseAmountToPositive((long)space.Tax, engine.Cache.RoundingRule, FinancialReason.Tax);
+        if (engine.Cache.Game.GlobalEventInfo.TaxEvent)
+        {
+            //Tax event multiplier (e.g. Tax Rise ×2)
+            tax *= engine.Cache.Game.GlobalEventInfo.TaxMultiplier ?? 1;
+            engine.CiteRule(RuleCode.Event_Tax);
+        }
         _ = await engine.PromptProvider.Acknowledge(player.PlayerId, space.Name, 
             $"You will pay {RuleDictionary.Currency}{tax} in tax.", ct: ct);
         

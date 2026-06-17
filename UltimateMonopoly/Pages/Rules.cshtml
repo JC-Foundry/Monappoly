@@ -1,0 +1,146 @@
+@page
+@using MP.GameEngine.Helpers.RuleSet
+@using UltimateMonopoly.Helpers
+@using UltimateMonopoly.Models.ViewModels
+@model UltimateMonopoly.Pages.RulesModel
+@{
+    ViewData["Title"] = "Rules";
+
+    // Sidebar sections come from the helper (single source of section order/numbering); only show
+    // sections that actually have rules in the catalogue.
+    var sections = PageRulesHelper.GetSections();
+    var bySection = Model.Rules
+        .GroupBy(r => r.Section)
+        .ToDictionary(g => g.Key, g => g.ToList());
+    var shownSections = sections.Where(s => bySection.ContainsKey(s.SectionNumber)).ToList();
+
+    // Display coordinate (e.g. "7.2.a") and the anchor id for a rule — its RuleCode when citable,
+    // else a stable coordinate-based id so every rule is still linkable.
+    string Coord(GameRule r) => $"{r.Section}.{r.Rule}" + (r.Point is { } p ? $".{p}" : "");
+    string RuleId(GameRule r) => r.RuleIdLink ?? $"rule-{r.Section}-{r.Rule}-{(r.Point?.ToString() ?? "0")}";
+}
+
+<style>
+    /* Offset anchored headings so they don't tuck under the top of the viewport on jump. */
+    .rules-section { scroll-margin-top: 1rem; }
+    html { scroll-behavior: smooth; }
+    .rules-sidebar { top: 1rem; }
+    .rules-toc { max-height: calc(100vh - 8rem); overflow-y: auto; }
+    .rule-coord { min-width: 3.25rem; }
+</style>
+
+<div class="container-lg py-4">
+
+    @* ── Page header ─────────────────────────────────────────────────────── *@
+    <div class="mb-4">
+        <h1 class="display-6 fw-bold mb-2">
+            <i class="bi bi-journal-text text-primary me-2"></i>Rules
+        </h1>
+        <p class="lead text-body-secondary mb-0">
+            The complete rulebook for @RuleDictionary.GameName — every rule, grouped by section.
+            Use the contents on the left to jump to a section. Rules marked
+            <i class="bi bi-broadcast text-info"></i> are the ones the game cites live on the host's
+            <em>Rules&nbsp;This&nbsp;Turn</em> panel as they happen.
+        </p>
+    </div>
+
+    @* ── Game overview ───────────────────────────────────────────────────── *@
+    <div class="card border-0 shadow-sm mb-4 bg-body-tertiary">
+        <div class="card-body">
+            <h2 class="h4 card-title">
+                <i class="bi bi-dice-5 text-primary me-2"></i>About the game
+            </h2>
+            <p class="mb-2">
+                <strong>@RuleDictionary.GameName</strong> is a heavily-extended take on Monopoly for
+                <strong>@RuleDictionary.MinimumPlayers–@RuleDictionary.MaximumPlayers players</strong>.
+                Everyone starts with <strong>@RuleDictionary.Currency@RuleDictionary.StartingMoney.ToString("N0")</strong>
+                and moves around the board buying property, charging rent, and trying to be the last
+                player still solvent. The familiar Monopoly bones are all here — but almost every system
+                has been deepened.
+            </p>
+            <p class="mb-2">
+                The biggest change is the dice: every roll uses <strong>three dice</strong> — two main
+                dice plus a <strong>third die</strong> that, after you move, sends every other player
+                around the board too, so the table is never standing still. Each player also has a
+                personal <strong>dice number</strong>: roll it (or have it rolled) and money and a card
+                change hands. <strong>Doubles</strong> and <strong>triples</strong> each trigger their
+                own effects — from snake-eyes paying @RuleDictionary.Currency@RuleDictionary.SnakeEyesBonus.ToString("N0"),
+                to a triple awarding a growing bonus — and chaining them can keep your turn going.
+            </p>
+            <p class="mb-2">
+                On top of that sit a large <strong>card system</strong> (including percentage cards
+                scaled by your buildings, and table-wide <strong>global events</strong>),
+                <strong>reserved properties</strong> that level the early game, bank
+                <strong>loans</strong> (up to @RuleDictionary.MaxLoans at once) and
+                <strong>mortgaging</strong> to dig out of trouble, dice-based
+                <strong>utility rent</strong>, scaling <strong>station</strong> prices, and a
+                <strong>Free Parking</strong> space that hoards both money and property.
+            </p>
+            <p class="mb-0">
+                There is no fixed end: play continues until only one player remains —
+                <strong>the last player who hasn't gone bankrupt wins</strong>.
+            </p>
+        </div>
+    </div>
+
+    @* ── Contents + rules ────────────────────────────────────────────────── *@
+    <div class="row g-4">
+
+        @* Left: sticky table of contents *@
+        <div class="col-12 col-lg-3">
+            <div class="card border-0 shadow-sm sticky-lg-top rules-sidebar">
+                <div class="card-header bg-transparent fw-semibold">
+                    <i class="bi bi-list-ul me-2"></i>Contents
+                </div>
+                <div class="list-group list-group-flush rules-toc">
+                    @foreach (var s in shownSections)
+                    {
+                        <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+                           href="#section-@s.SectionNumber">
+                            <span class="badge text-bg-primary rounded-pill">@s.SectionNumber</span>
+                            <span>@s.Section</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* Right: the rules, grouped by section *@
+        <div class="col-12 col-lg-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    @foreach (var s in shownSections)
+                    {
+                        <section id="section-@s.SectionNumber" class="rules-section mb-4">
+                            <h2 class="h4 d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
+                                <span class="badge text-bg-primary rounded-pill">@s.SectionNumber</span>
+                                @s.Section
+                            </h2>
+
+                            @foreach (var rule in bySection[s.SectionNumber])
+                            {
+                                var cited = rule.RuleCode is not null;
+                                <div id="@RuleId(rule)" class="d-flex gap-3 py-2 rule-item">
+                                    <span class="rule-coord badge text-bg-secondary font-monospace align-self-start">
+                                        @Coord(rule)
+                                    </span>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="fw-semibold d-flex align-items-center gap-2">
+                                            <span>@rule.Title</span>
+                                            @if (cited)
+                                            {
+                                                <i class="bi bi-broadcast text-info"
+                                                   title="Cited live during play"></i>
+                                            }
+                                        </div>
+                                        <div class="text-body-secondary">@rule.RuleDescription</div>
+                                    </div>
+                                </div>
+                            }
+                        </section>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

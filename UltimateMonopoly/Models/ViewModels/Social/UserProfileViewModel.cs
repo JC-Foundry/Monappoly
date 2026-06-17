@@ -17,6 +17,20 @@ public class UserProfileViewModel
     public uint NumberOfDraws { get; }
     public uint NumberOfGamesPlayed => NumberOfWins + NumberOfLosses + NumberOfDraws;
 
+    public UserProfileViewModel(uint numberOfWins, uint numberOfLosses, uint numberOfDraws, bool hideStats = false)
+    {
+        UserId = string.Empty;
+        Username = "Unknown";
+        DisplayName = "Unknown";
+        Initial = "U";
+        
+        if (hideStats) return;
+        
+        NumberOfWins = numberOfWins;
+        NumberOfLosses = numberOfLosses;
+        NumberOfDraws = numberOfDraws;
+    }
+    
     public UserProfileViewModel(string userId, string? username, string? displayName,
         string? avatarColour, string? avatarImageUrl)
     {

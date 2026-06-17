@@ -246,6 +246,32 @@ roll.
 
 ---
 
+## Global Events
+
+A *global event* is a table-wide effect started by a card — every event card is a
+**Double** card (see Cards). Unlike most card effects it is not tied to one player:
+while active it changes a rule for the whole table.
+
+1. **Only one event at a time.** At most one global event is active at any moment.
+   Because every event card is a Double card, and rolling a double clears the
+   currently-active event (rule 3), a new event is always started on the very roll
+   that cleared the previous one — two events can never run at once.
+
+2. **The events.** A global-event card starts one of the following:
+
+   - **Utility rent** — the rent charged on utilities is changed (e.g. multiplied).
+   - **Station rent** — the rent charged on stations is changed (e.g. removed).
+   - **Tax** — the amount paid on tax spaces is changed (e.g. doubled).
+   - **Jail** — players are no longer sent to jail; instead they pay the jail fee.
+   - **Free Parking** — the Free Parking space's normal money rules are suspended.
+
+3. **An event lasts until a double is rolled.** The active event is cleared as soon
+   as any player rolls a double. A double that a card *converts into a triple* still
+   counts as a double, so it clears the event; a triple that a card *downgrades into
+   a double* does **not** count, so the event stays active.
+
+---
+
 ## GO Space
 
 1. **Landing on GO grants a GO card.** A player who lands on GO collects a GO
@@ -335,22 +361,190 @@ properties.
 
 ---
 
-## Purging
+## Auctions
 
-*Purging* a property means removing all buildings (houses and hotels) from it.
+When a player does not take a property they land on, it is offered to the rest
+of the table by auction (see Default Monopoly Rules, rule 6).
 
-1. **Building is blocked until the set is level again.** After a property is
-   purged, no other property in that set may be built on until every purged
-   property in the set has been built back up to the same level as the rest of
-   the set. This preserves Monopoly's even-building rule — e.g. Mayfair cannot
-   take a hotel while Park Lane sits with no houses.
+1. **What triggers an auction.** A property is auctioned when a player who is
+   *eligible to buy it* lands on it and does not take it — they either decline
+   or cannot afford its purchase price. Two cases do **not** trigger an auction:
+   - A player who **has not passed GO** cannot buy (Default rule 1), so the
+     property is left with the bank — no auction.
+   - A property offered under the **Reserved Properties** rule: while the reserve
+     rule is active, landing on a set-completing property is a reserve-or-ignore
+     choice, and ignoring it simply ends the player's action on that space.
 
-2. **When purging happens.** A player purges when they land on Free Parking but
-   have no property eligible to hand in (see Free Parking). A card may also
-   force a player to purge.
+2. **The minimum bid.** Bidding does not start at zero. The minimum bid for any
+   auctioned property is **half its purchase price** — the same value as its
+   reserve price — rounded according to the game's rounding rule. The auction
+   opens at this floor.
 
-3. **Purging other players.** A card may give its holder the option to purge
-   1–2 of another player's properties, if the card states so.
+3. **Who may bid.** Every player may bid, including the player who declined the
+   property and any players currently in jail. Bids must be paid from money the
+   player genuinely has — a player cannot mortgage, sell buildings, or make a
+   deal to raise funds for a bid (see Default Monopoly Rules, rule 7). A player
+   who cannot afford even the minimum bid takes no part in the auction.
+
+4. **Bidding order and raising.** Bidding proceeds clockwise, starting with the
+   player who landed on the property — or, if they cannot afford the minimum
+   bid, the next eligible player clockwise. On their go a player either raises
+   the current bid or passes. A raise must exceed the current bid; the amounts a
+   player may raise by are tied to the game's rounding rule (with no rounding a
+   player may raise by £1, £5, £10, £20, £50 or £100; under round-to-50, only
+   £50 or £100).
+
+5. **Passing is final.** A player who passes drops out of the auction for the
+   rest of it and cannot re-enter. The auction continues among the players who
+   remain.
+
+6. **Winning.** The last player remaining wins the property and pays their
+   current bid. A player can win **without ever raising**: if every other player
+   passes, the last one remaining wins at the minimum bid. Because the player
+   who declined the property may still bid, they too can end up the last player
+   remaining and so be made to take it at the minimum bid. The winning bid is
+   the price paid — no other purchase-cost rule applies (the station
+   price-scaling, for example, applies only when buying a station outright, not
+   when winning one at auction).
+
+7. **Nobody can afford it.** If no player — not even the one who landed on it —
+   can afford the minimum bid, the auction does not take place and the property
+   simply remains with the bank. (Rare, but possible late in a game.)
+
+---
+
+## Reserved Properties
+
+A mechanic that governs the *first* colour set each player completes. Until
+every player is able to complete a set at roughly the same time, no player may
+actually hold one — a player who would complete a set instead *reserves* the
+final property. Once every player has their first set, the mechanic is spent
+(see rule 6).
+
+1. **Everyone gets a set together.** No player may take a complete colour set
+   until every player is able to take one within a turn or two of each other,
+   whether that set is achieved through a deal or through reserved properties.
+
+2. **Reserving the final property.** If a player lands on the last property
+   they need to complete a set — already owning every other property in that
+   set — they may reserve that property for 50% of its purchase price.
+
+3. **A reserved property is inert.** While a property is reserved, its owner
+   cannot collect rent on it, and no other player may buy it.
+
+4. **Unreserving.** A player may unreserve a property — adding it to their
+   owned properties to complete the set — only once every other player also has
+   a set, or has a reserved property they are able to unreserve. Unreserving
+   costs the full purchase price of the property.
+
+5. **A player short of funds does not block others.** If a player cannot afford
+   to unreserve their property, that does not prevent other players from
+   unreserving theirs or from completing sets through deals.
+
+6. **The mechanic ends once everyone has a set.** Reserved properties apply
+   only while no player holds a set. Once every player has received at least
+   one complete set, reserved properties are no longer part of the game.
+
+---
+
+## Building Rules
+
+1. **Double hotels.** Once a player has built a hotel on every property in a
+   set, they may build a *double hotel* on one of those properties. A double
+   hotel costs the price of 5 houses.
+
+2. **One double hotel per set.** A double hotel may be built on any colour set,
+   and a player may build them on as many of their sets as they like — but only
+   one property per set may hold a double hotel.
+
+3. **Half-price building on a full street.** A *street* is every set on one
+   side of the board. A player qualifies for half-price building by owning a
+   complete street before any of its sets has been built on — neither currently
+   nor at any earlier point during their ownership of it. Built-on history is
+   per-ownership: it resets when a property changes hands, so building done
+   under a previous owner does not disqualify a later one. Once qualified, the
+   player builds on every set in that street at half the normal building cost,
+   and keeps the discount for as long as they continue to own the whole street.
+   If they cease to own any set in the street, the discount is lost.
+
+---
+
+## Stations
+
+1. **Station price scales with stations owned.** The price of a station rises
+   with the number of stations the buyer already owns. On top of the £200 base
+   cost, the buyer pays a surcharge equal to the rent they would collect for
+   the *combined* number of stations — those already owned plus the one being
+   bought:
+
+   - **1st station** — £200 (base cost only; no surcharge).
+   - **2nd station** — £200 base + £50 rent = **£250**.
+   - **3rd station** — £200 base + £100 rent = **£300**.
+   - **4th station** — £200 base + £200 rent = **£400**.
+
+2. **Only currently owned stations count — including mortgaged ones.** The
+   surcharge is based on the stations the buyer owns at the time of purchase —
+   not any they owned previously and have since lost. A **mortgaged** station
+   still counts: the player still controls it, so it still pushes up the price
+   of the next station. This is deliberately the opposite of how mortgaging
+   affects *rent* (see Mortgaging, rule 4, where a mortgaged property is
+   ignored): counting it for the purchase price closes a loophole — otherwise a
+   player could buy a station, mortgage it, buy the next at the base price
+   again, and so on, undercutting the escalating cost (£800 for all four instead
+   of the intended £200 + £250 + £300 + £400 = £1,150).
+
+3. **No surcharge for non-purchase acquisitions.** A player pays no surcharge
+   for a station gained through Free Parking, a card, or a deal — the scaling
+   price applies only to buying a station outright.
+
+---
+
+## Utilities
+
+The two utility spaces work as in standard Monopoly: they charge rent based on a
+dice roll rather than a fixed amount, and cannot be built on.
+
+1. **Rent is a dice value times a multiplier.** A player who lands on a utility
+   owned by another player pays rent equal to the utility's rent multiplier times
+   the dice value that moved them onto it — exactly as rent is paid on any
+   landed-on property (Movement rule 4), the dice value being the input rather
+   than a fixed rent figure.
+
+2. **Which dice count depends on how the player arrived.** When a player lands on
+   the utility on **their own roll**, the dice value is the **sum of the two main
+   dice**. When they are moved onto it by the **third die** (third-die movement),
+   the dice value is the **third die alone**.
+
+3. **Owning one utility vs both changes the multiplier.** Owning a single utility
+   applies the lower multiplier; owning both applies the higher one (the utility
+   pair's "set" multiplier) — the same single-vs-set step the colour and station
+   rents use. A mortgaged utility earns no rent and does not count toward the pair
+   (Mortgaging rule 4).
+
+---
+
+## Mortgaging
+
+1. **Repayment on passing GO.** Each time a player passes GO they must repay
+   20% of the purchase cost of every property they have mortgaged.
+
+2. **Applies to forced mortgages.** This repayment applies to every mortgaged
+   property, including any the player was forced to mortgage.
+
+3. **Only properties still mortgaged at GO count.** The 20% is charged only on
+   properties that are still mortgaged at the moment the player passes GO —
+   whether they pass GO during their own turn's movement or during their
+   third-die movement. A property that has been unmortgaged before GO is passed
+   is not charged.
+
+4. **A mortgaged property does not count toward its set.** A mortgaged property
+   earns no rent, and it is also ignored when working out the rent level of the
+   rest of its set. The other members of a colour set lose their double (set)
+   rent, and a station's combined-count rent drops, until the mortgaged property
+   is unmortgaged — so mortgaging one property suspends the set bonus for the
+   whole group, not just for the mortgaged property itself. (This is the
+   *opposite* of how mortgaged stations are treated for the **purchase**
+   surcharge — see Stations, rule 2.)
 
 ---
 
@@ -415,190 +609,22 @@ A player who runs short of money may borrow from the bank.
 
 ---
 
-## Mortgaging
+## Purging
 
-1. **Repayment on passing GO.** Each time a player passes GO they must repay
-   20% of the purchase cost of every property they have mortgaged.
+*Purging* a property means removing all buildings (houses and hotels) from it.
 
-2. **Applies to forced mortgages.** This repayment applies to every mortgaged
-   property, including any the player was forced to mortgage.
+1. **Building is blocked until the set is level again.** After a property is
+   purged, no other property in that set may be built on until every purged
+   property in the set has been built back up to the same level as the rest of
+   the set. This preserves Monopoly's even-building rule — e.g. Mayfair cannot
+   take a hotel while Park Lane sits with no houses.
 
-3. **Only properties still mortgaged at GO count.** The 20% is charged only on
-   properties that are still mortgaged at the moment the player passes GO —
-   whether they pass GO during their own turn's movement or during their
-   third-die movement. A property that has been unmortgaged before GO is passed
-   is not charged.
+2. **When purging happens.** A player purges when they land on Free Parking but
+   have no property eligible to hand in (see Free Parking). A card may also
+   force a player to purge.
 
-4. **A mortgaged property does not count toward its set.** A mortgaged property
-   earns no rent, and it is also ignored when working out the rent level of the
-   rest of its set. The other members of a colour set lose their double (set)
-   rent, and a station's combined-count rent drops, until the mortgaged property
-   is unmortgaged — so mortgaging one property suspends the set bonus for the
-   whole group, not just for the mortgaged property itself. (This is the
-   *opposite* of how mortgaged stations are treated for the **purchase**
-   surcharge — see Stations, rule 2.)
-
----
-
-## Reserved Properties
-
-A mechanic that governs the *first* colour set each player completes. Until
-every player is able to complete a set at roughly the same time, no player may
-actually hold one — a player who would complete a set instead *reserves* the
-final property. Once every player has their first set, the mechanic is spent
-(see rule 6).
-
-1. **Everyone gets a set together.** No player may take a complete colour set
-   until every player is able to take one within a turn or two of each other,
-   whether that set is achieved through a deal or through reserved properties.
-
-2. **Reserving the final property.** If a player lands on the last property
-   they need to complete a set — already owning every other property in that
-   set — they may reserve that property for 50% of its purchase price.
-
-3. **A reserved property is inert.** While a property is reserved, its owner
-   cannot collect rent on it, and no other player may buy it.
-
-4. **Unreserving.** A player may unreserve a property — adding it to their
-   owned properties to complete the set — only once every other player also has
-   a set, or has a reserved property they are able to unreserve. Unreserving
-   costs the full purchase price of the property.
-
-5. **A player short of funds does not block others.** If a player cannot afford
-   to unreserve their property, that does not prevent other players from
-   unreserving theirs or from completing sets through deals.
-
-6. **The mechanic ends once everyone has a set.** Reserved properties apply
-   only while no player holds a set. Once every player has received at least
-   one complete set, reserved properties are no longer part of the game.
-
----
-
-## Auctions
-
-When a player does not take a property they land on, it is offered to the rest
-of the table by auction (see Default Monopoly Rules, rule 6).
-
-1. **What triggers an auction.** A property is auctioned when a player who is
-   *eligible to buy it* lands on it and does not take it — they either decline
-   or cannot afford its purchase price. Two cases do **not** trigger an auction:
-   - A player who **has not passed GO** cannot buy (Default rule 1), so the
-     property is left with the bank — no auction.
-   - A property offered under the **Reserved Properties** rule: while the reserve
-     rule is active, landing on a set-completing property is a reserve-or-ignore
-     choice, and ignoring it simply ends the player's action on that space.
-
-2. **The minimum bid.** Bidding does not start at zero. The minimum bid for any
-   auctioned property is **half its purchase price** — the same value as its
-   reserve price — rounded according to the game's rounding rule. The auction
-   opens at this floor.
-
-3. **Who may bid.** Every player may bid, including the player who declined the
-   property and any players currently in jail. Bids must be paid from money the
-   player genuinely has — a player cannot mortgage, sell buildings, or make a
-   deal to raise funds for a bid (see Default Monopoly Rules, rule 7). A player
-   who cannot afford even the minimum bid takes no part in the auction.
-
-4. **Bidding order and raising.** Bidding proceeds clockwise, starting with the
-   player who landed on the property — or, if they cannot afford the minimum
-   bid, the next eligible player clockwise. On their go a player either raises
-   the current bid or passes. A raise must exceed the current bid; the amounts a
-   player may raise by are tied to the game's rounding rule (with no rounding a
-   player may raise by £1, £5, £10, £20, £50 or £100; under round-to-50, only
-   £50 or £100).
-
-5. **Passing is final.** A player who passes drops out of the auction for the
-   rest of it and cannot re-enter. The auction continues among the players who
-   remain.
-
-6. **Winning.** The last player remaining wins the property and pays their
-   current bid. A player can win **without ever raising**: if every other player
-   passes, the last one remaining wins at the minimum bid. Because the player
-   who declined the property may still bid, they too can end up the last player
-   remaining and so be made to take it at the minimum bid. The winning bid is
-   the price paid — no other purchase-cost rule applies (the station
-   price-scaling, for example, applies only when buying a station outright, not
-   when winning one at auction).
-
-7. **Nobody can afford it.** If no player — not even the one who landed on it —
-   can afford the minimum bid, the auction does not take place and the property
-   simply remains with the bank. (Rare, but possible late in a game.)
-
----
-
-## Stations
-
-1. **Station price scales with stations owned.** The price of a station rises
-   with the number of stations the buyer already owns. On top of the £200 base
-   cost, the buyer pays a surcharge equal to the rent they would collect for
-   the *combined* number of stations — those already owned plus the one being
-   bought:
-
-   - **1st station** — £200 (base cost only; no surcharge).
-   - **2nd station** — £200 base + £50 rent = **£250**.
-   - **3rd station** — £200 base + £100 rent = **£300**.
-   - **4th station** — £200 base + £200 rent = **£400**.
-
-2. **Only currently owned stations count — including mortgaged ones.** The
-   surcharge is based on the stations the buyer owns at the time of purchase —
-   not any they owned previously and have since lost. A **mortgaged** station
-   still counts: the player still controls it, so it still pushes up the price
-   of the next station. This is deliberately the opposite of how mortgaging
-   affects *rent* (see Mortgaging, rule 4, where a mortgaged property is
-   ignored): counting it for the purchase price closes a loophole — otherwise a
-   player could buy a station, mortgage it, buy the next at the base price
-   again, and so on, undercutting the escalating cost (£800 for all four instead
-   of the intended £200 + £250 + £300 + £400 = £1,150).
-
-3. **No surcharge for non-purchase acquisitions.** A player pays no surcharge
-   for a station gained through Free Parking, a card, or a deal — the scaling
-   price applies only to buying a station outright.
-
----
-
-## Utilities
-
-The two utility spaces work as in standard Monopoly: they charge rent based on a
-dice roll rather than a fixed amount, and cannot be built on.
-
-1. **Rent is a dice value times a multiplier.** A player who lands on a utility
-   owned by another player pays rent equal to the utility's rent multiplier times
-   the dice value that moved them onto it — exactly as rent is paid on any
-   landed-on property (Movement rule 4), the dice value being the input rather
-   than a fixed rent figure.
-
-2. **Which dice count depends on how the player arrived.** When a player lands on
-   the utility on **their own roll**, the dice value is the **sum of the two main
-   dice**. When they are moved onto it by the **third die** (third-die movement),
-   the dice value is the **third die alone**.
-
-3. **Owning one utility vs both changes the multiplier.** Owning a single utility
-   applies the lower multiplier; owning both applies the higher one (the utility
-   pair's "set" multiplier) — the same single-vs-set step the colour and station
-   rents use. A mortgaged utility earns no rent and does not count toward the pair
-   (Mortgaging rule 4).
-
----
-
-## Building Rules
-
-1. **Double hotels.** Once a player has built a hotel on every property in a
-   set, they may build a *double hotel* on one of those properties. A double
-   hotel costs the price of 5 houses.
-
-2. **One double hotel per set.** A double hotel may be built on any colour set,
-   and a player may build them on as many of their sets as they like — but only
-   one property per set may hold a double hotel.
-
-3. **Half-price building on a full street.** A *street* is every set on one
-   side of the board. A player qualifies for half-price building by owning a
-   complete street before any of its sets has been built on — neither currently
-   nor at any earlier point during their ownership of it. Built-on history is
-   per-ownership: it resets when a property changes hands, so building done
-   under a previous owner does not disqualify a later one. Once qualified, the
-   player builds on every set in that street at half the normal building cost,
-   and keeps the discount for as long as they continue to own the whole street.
-   If they cease to own any set in the street, the discount is lost.
+3. **Purging other players.** A card may give its holder the option to purge
+   1–2 of another player's properties, if the card states so.
 
 ---
 

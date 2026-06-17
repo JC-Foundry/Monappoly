@@ -134,31 +134,32 @@ card/group, plus — for `Choice*` — a "don't play" option).
 
 ## 5. `CardTrigger` — the flag set
 
-The `[Flags]` enum already derived from the (stale) inventory (`cards-actions.md`). Each value
-names a moment the engine reaches; the bracketed services are where the trigger call goes.
+The `[Flags]` enum, **derived from the held cards in the finalised list (`cards.md`)** — the
+keep-until-needed cards that wait on a board/turn event (resolve-on-draw and "anytime on your own
+turn" cards carry no trigger). Each value names a moment the engine reaches; the bracketed service
+is where the trigger call goes. The "subject" is the player the event happens *to* (the one passed
+in); for the any-player triggers a bystander reacts to that subject.
 
-| Trigger | Subject | Engine point |
-|---|---|---|
-| `OnLandGo` | lander | `GoService.LandOnGo` |
-| `OnPassGo` *(param: direction)* | passer | `GoService.CollectGoMoney` |
-| `OnOtherPassGo` | bystander | `CollectGoMoney` on another player |
-| `OnLandFreeParking` | lander | `FreeParkingService.ProcessFreeParking` |
-| `OnOtherTakesFreeParking` | bystander | the FP money take |
-| `OnRollDouble` | roller | orchestrator double branch |
-| `OnRollTriple` | roller | orchestrator triple branch |
-| `OnOtherRollsTriple` | bystander | another player's triple |
-| `OnEnterJail` | the jailed | `JailService.SendPlayerToJail` |
-| `OnInJail` | the jailed | leave-jail path |
-| `OnPayPlayer` | payer | player→player transaction |
-| `OnRentDue` | rent-payer | `PropertyService.PayPropertyRent` |
-| `OnNextRoll` | roller | post-roll |
-| `OnNextMove` | mover | post-move (`MovementService`) |
-| `OnCompleteSet` | the completer | set completion |
+| Trigger | Subject | Engine point | Held cards (cards.md) |
+|---|---|---|---|
+| `OnLandGo` | lander | `GoService.LandOnGo` | GO money doubled ×5; UNLUCKY no GO money ×5; pay each player on GO |
+| `OnPassGo` *(param: anti-clockwise)* | passer | `GoService.CollectGoMoney` | receive £X passing GO anti-clockwise (valid N) |
+| `OnOtherPassGo` | passer (bystander reacts) | `CollectGoMoney` on another player | former prisoner steals others' GO bonus |
+| `OnLandFreeParking` | lander | `FreeParkingService.ProcessFreeParking` | no cash this FP visit; receive ALL the FP money |
+| `OnOtherTakesFreeParking` | taker (bystander reacts) | the FP money take | receive the FP money another would have taken |
+| `OnRollDouble` | roller | orchestrator double branch | convert double→triple; dodgy-judge double→triple in jail |
+| `OnRollTriple` | roller | orchestrator triple branch | downgrade triple→double |
+| `OnOtherRollsTriple` | roller (bystander reacts) | another player's triple | cancel a player's triple bonus |
+| `OnSnakeEyes` | roller | the £500 snake-eyes bonus | pay snake-eyes money to the lowest roller |
+| `OnInJail` | the jailed | leave-jail path | get-out-of-jail-free; befriend a guard (free next exit) |
+| `OnRentDue` | rent-payer | `PropertyService.PayRent` | your next payment to another player is doubled |
+| `OnNextMove` | mover | post-move (`MovementService`) | after your next move, forward 23 / back 17 |
+| `OnTaxLanded` | lander | `TaxService.PayTax` | your next tax payment is tripled |
 
-> The set, and which `CardConditionType` each card carries, are **provisional until the
-> finalised card list lands** (§17). The shape below is independent of that; the enum will gain
-> / lose / re-tag members against the real list, and the `Self/Other` re-reading of §4.1 has to
-> be applied during that sweep.
+> **Retired** against the finalised list (bit values kept stable so persisted JSON still
+> deserialises): `OnEnterJail` ("next time in jail receive rent" — cut), `OnPayPlayer` (folded into
+> `OnRentDue`), `OnNextRoll` (the real cards are `OnNextMove`), `OnCompleteSet` ("house per property
+> on a set" — cut), and `OnRentDue`'s old "50% of rents on a chosen set" meaning.
 
 ---
 
@@ -225,29 +226,42 @@ can reach it without a constructor cycle.
 
 ---
 
-## 9. The result hierarchy — granular suppression, not a bare bool
+## 9. What each trigger returns
 
-A single `bool suppressDefault` cannot express the real granularity (a "steal FP money" card
-suppresses the **money take only**, not the property sweep or the hand-in). So each trigger
-method returns a **`CardTriggerResult`** — an abstract base with one concrete subtype per
-trigger point, exactly the polymorphic shape `CardAction` / `Prompt` / `EventReceipt` already
-use. The call site reads the subtype for *its* point:
+Each public method returns a small result telling its call site how to alter (or skip) its
+default. The concrete shape is an implementation detail (a typed per-trigger result, deriving from
+a common base that carries the shared "did any card fire here?" signal for citations/receipts) —
+what matters is **the data the caller needs back**, derived from the held cards in `cards.md`:
 
-```csharp
-abstract class CardTriggerResult            // common: did anything fire? (citations / receipts)
+| Trigger | Caller | Data back |
+|---|---|---|
+| `OnLandGo` | `GoService.LandOnGo` | **Skip the £200 GO bonus?** A card *doubled* it (pays ×2 itself) or *cancelled* it (UNLUCKY). The additive "pay each player on GO" card does **not** suppress. |
+| `OnPassGo` | `GoService.CollectGoMoney` | **Nothing to skip** — the pass bonus always runs; the anti-clockwise "receive £X" cards pay extra themselves. (Just the "a card fired" signal.) |
+| `OnOtherPassGo` | `GoService.CollectGoMoney` (passer) | **Skip the passer's GO bonus?** A bystander's "former prisoner" stole it. |
+| `OnLandFreeParking` | `FreeParkingService.ProcessFreeParking` | **Which FP sub-steps to skip** — in practice the **money take** (no-cash-this-visit, or receive-ALL-the-money replacing the capped take). Fine / property-take / hand-in / purge are independently suppressible. |
+| `OnOtherTakesFreeParking` | `FreeParkingService` (the money take) | **Skip the taker's FP money take?** A bystander received it instead. |
+| `OnRollDouble` | `PlayerTurnOrchestrator` (double branch) | **The effective roll type** — unchanged double, or **upgraded to a triple** (re-route: combined move, triple bonus, no third die). |
+| `OnRollTriple` | `PlayerTurnOrchestrator` (triple branch) | **The effective roll type** — unchanged triple, or **downgraded to a double** (re-route: two-dice move, direction flip). |
+| `OnOtherRollsTriple` | `PlayerTurnOrchestrator` / triple-bonus payout | **Skip the roller's triple-bonus PAYOUT?** A bystander cancelled it — the +£500 accumulator still increments. |
+| `OnSnakeEyes` | snake-eyes £500 payment | **Nothing to skip** — the £500 still pays; the redirect card receives it then pays it onward itself. |
+| `OnTaxLanded` | `TaxService.PayTax` | **Skip the default tax payment?** A held "next tax tripled" card paid a modified amount to Free Parking instead. |
+| `OnRentDue` | `PropertyService.PayRent` | **Nothing to skip** — default rent runs; "next payment doubled" pays an equal extra to the same owner (which must be threaded **in** as context). |
+| `OnNextMove` | `MovementService` (post-move) | **Nothing to skip** — the card performs an extra board move itself, and that new landing resolves normally. |
+| `OnInJail` | `JailService` (leave-jail path) | **Did the holder play a release card (now out of jail)?** So the flow skips the fee and proceeds to move. |
 
-class TaxTriggerResult         : CardTriggerResult { bool SuppressPayment; }
-class GoTriggerResult          : CardTriggerResult { bool SuppressBonus; }
-class FreeParkingTriggerResult : CardTriggerResult { bool SuppressMoneyTake;
-                                                     bool SuppressPropertyTake;
-                                                     bool SuppressHandIn; }
-class BoardResolveTriggerResult: CardTriggerResult { /* … */ }
-```
+Three kinds of answer fall out: **suppress-a-default** (`OnLandGo`, `OnOtherPassGo`,
+`OnLandFreeParking`, `OnOtherTakesFreeParking`, `OnOtherRollsTriple`, `OnTaxLanded`, `OnInJail`); **a
+changed value** (`OnRollDouble` / `OnRollTriple` → the effective roll type); and **nothing
+actionable** (`OnPassGo`, `OnSnakeEyes`, `OnRentDue`, `OnNextMove` — the card does all its own work).
+Even the "nothing actionable" ones still carry the shared *did-a-card-fire* signal.
 
-Free Parking's three independently-suppressible sub-actions get three flags; Tax gets one. The
-granularity lives in the **type**, not in a sprawl of call-site booleans. Each public method
-returns its concrete subtype (deriving from the base); the call site reads the flags it cares
-about. The base carries the shared "any card fired here" signal for citation/receipt wiring.
+> **Suppress vs additive is a modelling decision** baked into the table — "rent doubled" and the
+> "snake-eyes redirect" are modelled *additive* (card pays the extra itself → no suppress), while
+> "GO money doubled" is modelled *replace* (card pays the doubled amount → suppress). Flip a card's
+> model and its row flips with it.
+
+Free Parking's sub-actions stay independently suppressible (§11); the rest collapse to a single
+flag or value. The granularity lives in the result type, not a sprawl of call-site booleans.
 
 ---
 

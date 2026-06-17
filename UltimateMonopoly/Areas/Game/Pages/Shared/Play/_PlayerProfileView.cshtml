@@ -41,7 +41,7 @@
     // the game's rounding rule (NormaliseAmountToPositive Math.Abs-es, so a
     // cost-context value always reads positive). Exact ledger amounts (a player's
     // Money, a loan's Amount/PaidBack) are shown raw.
-    string Cost(long raw, FinancialReason reason) => $"{cur}{MoneyHelper.NormaliseAmountToPositive(raw, rule, reason)}";
+    string Cost(long raw, FinancialReason reason) => $"{cur}{MoneyHelper.NormaliseAmountToPositive(raw, rule, reason):N0}";
 
     // Bootstrap-icon class for a card type — drives the held-card list on the Cards tab.
     string CardIcon(CardType t) => t switch
@@ -218,7 +218,7 @@
                         </div>
                         <div class="small text-body-secondary d-flex flex-wrap align-items-center gap-2">
                             <span>Dice <span class="badge text-bg-secondary">@player.Dice1 | @player.Dice2</span></span>
-                            <span class="fw-semibold text-body">@cur@player.Money</span>
+                            <span class="fw-semibold text-body">@cur@player.Money.ToString("N0")</span>
                         </div>
                     </div>
                 </div>
@@ -300,13 +300,13 @@
                         <div class="card-body">
                             <dl class="row mb-0">
                                 <dt class="col-7 text-body-secondary fw-normal"><i class="bi bi-wallet2 me-1"></i> Money</dt>
-                                <dd class="col-5 text-end fw-semibold mb-2">@cur@player.Money</dd>
+                                <dd class="col-5 text-end fw-semibold mb-2">@cur@player.Money.ToString("N0")</dd>
 
                                 <dt class="col-7 text-body-secondary fw-normal"><i class="bi bi-building-lock me-1"></i> Jail cost</dt>
-                                <dd class="col-5 text-end mb-2">@cur@(MoneyHelper.NormaliseAmountToPositive(player.JailCost, cache.RoundingRule, FinancialReason.JailFee))</dd>
+                                <dd class="col-5 text-end mb-2">@cur@(MoneyHelper.NormaliseAmountToPositive(player.JailCost, cache.RoundingRule, FinancialReason.JailFee).ToString("N0"))</dd>
 
                                 <dt class="col-7 text-body-secondary fw-normal"><i class="bi bi-dice-3 me-1"></i> Triple bonus</dt>
-                                <dd class="col-5 text-end mb-2">@cur@player.TripleBonus</dd>
+                                <dd class="col-5 text-end mb-2">@cur@player.TripleBonus.ToString("N0")</dd>
 
                                 <dt class="col-7 text-body-secondary fw-normal"><i class="bi bi-percent me-1"></i> Card %cap</dt>
                                 <dd class="col-5 text-end mb-0">
@@ -329,7 +329,7 @@
                                 ? $"{cur}0"
                                 : nowSpace.PropertySet == PropertySet.Utility
                                     ? $"{nowSpace.GetRent(nowProp.RentLevel) ?? 0}× dice"
-                                    : $"{cur}{MoneyHelper.NormaliseAmountToPositive(nowSpace.GetRent(nowProp.RentLevel) ?? 0, rule, FinancialReason.Rent)}";
+                                    : $"{cur}{MoneyHelper.NormaliseAmountToPositive(nowSpace.GetRent(nowProp.RentLevel) ?? 0, rule, FinancialReason.Rent):N0}";
                     }
                     <div class="pp-now mb-3">
                         <div class="pp-now-space">
@@ -529,7 +529,7 @@
                                                         ? $"{cur}0"
                                                         : space.PropertySet == PropertySet.Utility
                                                             ? $"{space.GetRent(prop.RentLevel) ?? 0}× dice"
-                                                            : $"{cur}{MoneyHelper.NormaliseAmountToPositive(space.GetRent(prop.RentLevel) ?? 0, rule, FinancialReason.Rent)}";
+                                                            : $"{cur}{MoneyHelper.NormaliseAmountToPositive(space.GetRent(prop.RentLevel) ?? 0, rule, FinancialReason.Rent):N0}";
 
                                                     <div class="pp-space border border-prop-@slug">
                                                         <div class="pp-space-head text-bg-prop-@slug">
@@ -563,13 +563,13 @@
                                                                 {
                                                                     @* Real un-mortgage cost = mortgage value + 10%, grid-rounded (MoneyHelper). *@
                                                                     <span class="text-body-secondary">Unmortgage:</span>
-                                                                    <span class="fw-semibold">@cur@MoneyHelper.UnMortgageCost(prop.BoardIndex, board, rule)</span>
+                                                                    <span class="fw-semibold">@cur@MoneyHelper.UnMortgageCost(prop.BoardIndex, board, rule).ToString("N0")</span>
                                                                 }
                                                                 else
                                                                 {
                                                                     @* Real mortgage payout = half purchase price, grid-rounded (MoneyHelper). *@
                                                                     <span class="text-body-secondary">Mortgage:</span>
-                                                                    <span class="fw-semibold">@cur@MoneyHelper.MortgageValue(prop.BoardIndex, board, rule)</span>
+                                                                    <span class="fw-semibold">@cur@MoneyHelper.MortgageValue(prop.BoardIndex, board, rule).ToString("N0")</span>
                                                                 }
                                                             </div>
                                                             <div class="d-flex flex-wrap gap-1">
@@ -658,7 +658,7 @@
                                 @if (outstandingLoans.Count > 0)
                                 {
                                     <dt class="col-7 text-body-secondary fw-normal">Total still owed</dt>
-                                    <dd class="col-5 text-end mb-2">@cur@loanRemaining</dd>
+                                    <dd class="col-5 text-end mb-2">@cur@loanRemaining.ToString("N0")</dd>
                                     <dt class="col-7 text-body-secondary fw-normal">Repayment at GO</dt>
                                     <dd class="col-5 text-end mb-0">@Cost(loanCostRaw, FinancialReason.LoanRepay)</dd>
                                 }
@@ -708,9 +708,9 @@
                                             var rem = (long)loan.Amount - loan.PaidBack;
                                             <tr class="@(loan.IsOutstanding ? null : "text-body-secondary")">
                                                 <td>@li</td>
-                                                <td class="text-end">@cur@loan.Amount</td>
-                                                <td class="text-end">@cur@loan.PaidBack</td>
-                                                <td class="text-end">@(loan.IsOutstanding ? $"{cur}{rem}" : "Paid")</td>
+                                                <td class="text-end">@cur@loan.Amount.ToString("N0")</td>
+                                                <td class="text-end">@cur@loan.PaidBack.ToString("N0")</td>
+                                                <td class="text-end">@(loan.IsOutstanding ? $"{cur}{rem:N0}" : "Paid")</td>
                                             </tr>
                                         }
                                     </tbody>
@@ -757,7 +757,7 @@
                                                 Dice <span class="badge text-bg-secondary">@cand.Dice1 | @cand.Dice2</span>
                                             </div>
                                         </div>
-                                        <span class="fw-semibold">@cur@cand.Money</span>
+                                        <span class="fw-semibold">@cur@cand.Money.ToString("N0")</span>
                                     </button>
                                 }
                             </div>

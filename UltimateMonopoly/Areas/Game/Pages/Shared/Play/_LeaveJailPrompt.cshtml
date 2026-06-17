@@ -23,7 +23,7 @@
         }
         <div class="d-grid gap-2">
             <button type="button" class="btn btn-warning" data-prompt-submit data-leavejail-action="0">
-                <i class="bi bi-cash-coin me-1"></i> Pay the fee — @cur@Model.Cost
+                <i class="bi bi-cash-coin me-1"></i> Pay the fee — @cur@Model.Cost.ToString("N0")
             </button>
             @if (Model.HasCard)
             {

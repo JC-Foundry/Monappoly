@@ -151,7 +151,7 @@
                                 <div class="small text-body-secondary d-flex flex-wrap align-items-center gap-2">
                                     <span>Seat @(p.OrderId + 1)</span>
                                     <span>Dice <span class="badge text-bg-secondary">@p.Dice1 | @p.Dice2</span></span>
-                                    <span class="fw-semibold text-body">@c@p.Money</span>
+                                    <span class="fw-semibold text-body">@c@p.Money.ToString("N0")</span>
                                 </div>
                             </div>
                         </div>
@@ -182,7 +182,7 @@
                                 <div class="small text-body-secondary d-flex flex-wrap align-items-center gap-2">
                                     <span>Seat @(p.OrderId + 1)</span>
                                     <span>Dice <span class="badge text-bg-secondary">@p.Dice1 | @p.Dice2</span></span>
-                                    <span class="fw-semibold text-body">@c@p.Money</span>
+                                    <span class="fw-semibold text-body">@c@p.Money.ToString("N0")</span>
                                 </div>
                             </div>
                         </div>
@@ -262,7 +262,7 @@
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#gi-fp">
                                 <span class="flex-grow-1">Free Parking</span>
-                                <span class="badge text-bg-secondary me-2">@c@game.FreeParkingAmount</span>
+                                <span class="badge text-bg-secondary me-2">@c@game.FreeParkingAmount.ToString("N0")</span>
                             </button>
                         </h2>
                         <div id="gi-fp" class="accordion-collapse collapse show" data-bs-parent="#gameInfoAccordion">

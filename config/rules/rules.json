@@ -17,11 +17,51 @@
   },
   {
     "Section": 1,
+    "Rule": 3,
+    "Point": null,
+    "Title": "One house level per property, per turn",
+    "RuleDescription": "A property may only be built up one level in a turn — you cannot go straight from 0 houses to 2, or from 0 houses to a hotel, in a single turn.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 1,
+    "Rule": 4,
+    "Point": null,
+    "Title": "Building requires a complete set",
+    "RuleDescription": "Houses can only be built on a property whose full colour set you own (all two, or all three, properties of that colour).",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 1,
     "Rule": 5,
     "Point": null,
     "Title": "Fines go to Free Parking",
     "RuleDescription": "Fines — including tax and the jail fee — are paid into the Free Parking pot, not to the bank.",
     "RawRuleCode": "Default_FinesToFreeParking"
+  },
+  {
+    "Section": 1,
+    "Rule": 6,
+    "Point": null,
+    "Title": "Declined or unaffordable purchases go to auction",
+    "RuleDescription": "If a player eligible to buy a property they land on cannot afford it — or chooses not to buy — it goes to auction, and every player may bid (including the decliner and anyone in jail). A player who has not yet passed GO is not eligible and triggers no auction.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 1,
+    "Rule": 7,
+    "Point": null,
+    "Title": "No raising funds to buy or bid",
+    "RuleDescription": "Buying a property and bidding in an auction must be paid from money you genuinely have. You cannot mortgage, sell buildings, or trade to raise funds for either — those mechanisms are only for settling a debt you already owe.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 1,
+    "Rule": 8,
+    "Point": null,
+    "Title": "Bankruptcy ends a player's game",
+    "RuleDescription": "A player who cannot pay what they owe and has nothing left to mortgage goes bankrupt and is out of the game.",
+    "RawRuleCode": "<NONE>"
   },
   {
     "Section": 2,
@@ -48,12 +88,44 @@
     "RawRuleCode": "Roll_DiceNumberBySelf"
   },
   {
+    "Section": 2,
+    "Rule": 4,
+    "Point": null,
+    "Title": "Doubles and triples have their own rules",
+    "RuleDescription": "Doubles and triples each carry their own additional rules — see the Double Dice Rolls and Triple Dice Rolls sections.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 3,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Starting direction",
+    "RuleDescription": "Every player begins the game travelling clockwise. Your direction changes only when a rule or card dictates — most commonly by rolling a double.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
     "Section": 3,
     "Rule": 2,
     "Point": null,
     "Title": "Direction is locked until you pass GO",
     "RuleDescription": "You can't change direction until you've passed GO at least once. The first move off GO at the start of the game doesn't count.",
     "RawRuleCode": "Move_DirectionLockedUntilGo"
+  },
+  {
+    "Section": 3,
+    "Rule": 3,
+    "Point": null,
+    "Title": "Direction of travel",
+    "RuleDescription": "You always move in the direction you are currently facing — for your own roll, third-die movement, and card effects alike — so different players may be travelling in opposite directions at the same time.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 3,
+    "Rule": 4,
+    "Point": null,
+    "Title": "Landing on a space performs its action",
+    "RuleDescription": "Any movement that brings you onto a space performs that space's action: your own roll, third-die movement, a double's forward/back moves, and card-driven movement. The only exception is a swap — a player moved onto a space by swapping places does not perform its action.",
+    "RawRuleCode": "<NONE>"
   },
   {
     "Section": 4,
@@ -107,17 +179,57 @@
     "Section": 4,
     "Rule": 2,
     "Point": null,
+    "Title": "Collect a double card",
+    "RuleDescription": "The first thing you do on rolling a double is collect a Double card.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 4,
+    "Rule": 3,
+    "Point": null,
     "Title": "Doubles change your direction",
     "RuleDescription": "After rolling a double you turn around and travel the other way — unless you haven't passed GO yet, in which case your direction stays locked.",
     "RawRuleCode": "Double_DirectionChange"
   },
   {
     "Section": 4,
-    "Rule": 3,
+    "Rule": 4,
+    "Point": null,
+    "Title": "Doubled fines",
+    "RuleDescription": "A fine from a card or a tax space is doubled if you arrived at that space as the result of a double roll.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 4,
+    "Rule": 5,
+    "Point": null,
+    "Title": "Third-die movement between rolls",
+    "RuleDescription": "Before your next roll, every other player moves according to the third die, in clockwise order.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 4,
+    "Rule": 6,
     "Point": null,
     "Title": "Three doubles in a row sends you to jail",
     "RuleDescription": "Rolling three doubles in a row sends you straight to jail and ends your turn. The other players still take their third-die move for that roll.",
     "RawRuleCode": "Double_ThreeInRowToJail"
+  },
+  {
+    "Section": 4,
+    "Rule": 7,
+    "Point": null,
+    "Title": "Rolling a double resets your triples count",
+    "RuleDescription": "Rolling a double resets your triples-in-a-row count — doubles and triples can be chained (see Triple Dice Rolls).",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 5,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Collect a triple card",
+    "RuleDescription": "Rolling a triple grants you a Triple card.",
+    "RawRuleCode": "<NONE>"
   },
   {
     "Section": 5,
@@ -152,7 +264,215 @@
     "RawRuleCode": "Triple_ThreeInRowToJail"
   },
   {
+    "Section": 5,
+    "Rule": 6,
+    "Point": null,
+    "Title": "Rolling a triple resets your doubles count",
+    "RuleDescription": "Rolling a triple resets your doubles-in-a-row count. Doubles and triples can therefore be chained so that neither count reaches three, in principle allowing an unending turn (in practice the probability rapidly becomes negligible).",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 1,
+    "Point": "a",
+    "Title": "Collecting a percentage card",
+    "RuleDescription": "You collect a Percentage Chance or Percentage Community Chest card when you land on the matching space while travelling anti-clockwise.",
+    "RawRuleCode": "Percentage_Card"
+  },
+  {
+    "Section": 6,
+    "Rule": 1,
+    "Point": "b",
+    "Title": "Percentage cards are capped by your buildings",
+    "RuleDescription": "A percentage card's amounts are scaled by your buildings: you realise 100% with at least one double hotel, 50% with any buildings, and 10% with none. Every payout and charge on the card is capped this way.",
+    "RawRuleCode": "Percentage_Card_Cap"
+  },
+  {
+    "Section": 6,
+    "Rule": 2,
+    "Point": "a",
+    "Title": "Collecting a third card on your dice number",
+    "RuleDescription": "You collect a Third card whenever your personal dice number is rolled — by you or by any other player.",
+    "RawRuleCode": "Third_Card_Number"
+  },
+  {
+    "Section": 6,
+    "Rule": 2,
+    "Point": "b",
+    "Title": "Collecting a third card travelling anti-clockwise",
+    "RuleDescription": "You also collect a Third card when you collect a percentage card — that is, when you land on Chance or Community Chest travelling anti-clockwise.",
+    "RawRuleCode": "Third_Card_AntiClockwise"
+  },
+  {
+    "Section": 6,
+    "Rule": 3,
+    "Point": "a",
+    "Title": "Collecting a Chance card",
+    "RuleDescription": "You collect a Chance card when you land on a Chance space (the standard, clockwise case; landing anti-clockwise or via a double gives a Percentage Chance card instead).",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 3,
+    "Point": "b",
+    "Title": "Collecting a Community Chest card",
+    "RuleDescription": "You collect a Community Chest card when you land on a Community Chest space (the standard, clockwise case; landing anti-clockwise or via a double gives a Percentage Community Chest card instead).",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 3,
+    "Point": "c",
+    "Title": "Collecting a Tax card",
+    "RuleDescription": "You collect a Tax card when you land on a Tax space.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 4,
+    "Point": null,
+    "Title": "Cards may have multiple actions",
+    "RuleDescription": "A card may have multiple actions, and each action may offer different options.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 5,
+    "Point": null,
+    "Title": "Keeping and playing cards",
+    "RuleDescription": "Cards may be kept in hand and played later. Each card defines when it may be played: at any time on your own turn, whenever the card's condition applies, at any time at all, or a combination of these.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 6,
+    "Point": "a",
+    "Title": "A NOPE cancels a card",
+    "RuleDescription": "A NOPE card cancels another card — for example, a Go To Jail card cancelled by a NOPE.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 6,
+    "Point": "b",
+    "Title": "NOPE chaining",
+    "RuleDescription": "Another player may NOPE a NOPE, and this can be chained without limit.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 6,
+    "Point": "c",
+    "Title": "NOPE hand limit",
+    "RuleDescription": "A player may hold a maximum of two NOPE cards.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 6,
+    "Point": "d",
+    "Title": "NOPE is not a card type of its own",
+    "RuleDescription": "NOPE cards are not a separate card type — they occur within several card sets (Third, GO, and so on).",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 6,
+    "Rule": 7,
+    "Point": "a",
+    "Title": "A card can lock you in jail",
+    "RuleDescription": "A card can keep you in jail so you cannot leave — by a double, by paying the fee, or by a release card — even though you still roll each turn, until the card's lock expires.",
+    "RawRuleCode": "Jail_CantLeaveDueToCard"
+  },
+  {
+    "Section": 6,
+    "Rule": 7,
+    "Point": "b",
+    "Title": "A card can let you collect rent in jail",
+    "RuleDescription": "A card can let you collect rent on your properties while you are in jail, overriding the usual rule that a jailed owner collects no rent.",
+    "RawRuleCode": "Jail_CollectRentInJail"
+  },
+  {
     "Section": 7,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Only one global event at a time",
+    "RuleDescription": "At most one global event is active at any moment. Because every event card is a Double card, and rolling a double clears the active event, a new event always starts on the very roll that cleared the previous one — two can never run at once.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 7,
+    "Rule": 2,
+    "Point": "a",
+    "Title": "Utility rent event",
+    "RuleDescription": "A card can start a table-wide event that changes the rent charged on utilities. It stays active until any player rolls a double.",
+    "RawRuleCode": "Event_Utility"
+  },
+  {
+    "Section": 7,
+    "Rule": 2,
+    "Point": "b",
+    "Title": "Station rent event",
+    "RuleDescription": "A card can start a table-wide event that changes the rent charged on stations. It stays active until any player rolls a double.",
+    "RawRuleCode": "Event_Station"
+  },
+  {
+    "Section": 7,
+    "Rule": 2,
+    "Point": "c",
+    "Title": "Tax event",
+    "RuleDescription": "A card can start a table-wide event that changes the tax paid on tax spaces. It stays active until any player rolls a double.",
+    "RawRuleCode": "Event_Tax"
+  },
+  {
+    "Section": 7,
+    "Rule": 2,
+    "Point": "d",
+    "Title": "Jail event",
+    "RuleDescription": "A card can start a table-wide event affecting jail, so players pay the jail fee instead of being sent to jail. It stays active until any player rolls a double.",
+    "RawRuleCode": "Event_Jail"
+  },
+  {
+    "Section": 7,
+    "Rule": 2,
+    "Point": "e",
+    "Title": "Free Parking event",
+    "RuleDescription": "A card can start a table-wide event affecting Free Parking. It stays active until any player rolls a double.",
+    "RawRuleCode": "Event_FreeParking"
+  },
+  {
+    "Section": 7,
+    "Rule": 3,
+    "Point": null,
+    "Title": "An event lasts until a double is rolled",
+    "RuleDescription": "The active global event is cleared as soon as any player rolls a double.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 7,
+    "Rule": 3,
+    "Point": "a",
+    "Title": "A downgraded double does not clear events",
+    "RuleDescription": "When a card downgrades your triple into a double, it does not count for clearing the active global event — the event stays active.",
+    "RawRuleCode": "Event_DowngradedToDouble"
+  },
+  {
+    "Section": 7,
+    "Rule": 3,
+    "Point": "b",
+    "Title": "A converted triple still clears events",
+    "RuleDescription": "When a card converts your double into a triple, it still counts as a double for clearing the active global event — the event is cleared.",
+    "RawRuleCode": "Event_ConvertedToTriple"
+  },
+  {
+    "Section": 8,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Landing on GO grants a GO card",
+    "RuleDescription": "A player who lands on GO collects a GO card.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 8,
     "Rule": 2,
     "Point": null,
     "Title": "Passing GO clockwise",
@@ -160,7 +480,7 @@
     "RawRuleCode": "Go_PassClockwise"
   },
   {
-    "Section": 7,
+    "Section": 8,
     "Rule": 3,
     "Point": null,
     "Title": "Passing GO anti-clockwise",
@@ -168,7 +488,7 @@
     "RawRuleCode": "Go_PassAntiClockwise"
   },
   {
-    "Section": 7,
+    "Section": 8,
     "Rule": 4,
     "Point": null,
     "Title": "Landing on GO",
@@ -176,7 +496,15 @@
     "RawRuleCode": "Go_LandOn"
   },
   {
-    "Section": 8,
+    "Section": 9,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Each space grants its card",
+    "RuleDescription": "Landing on Just Visiting grants a Just Visiting card; landing on Go To Jail grants a Go To Jail card.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 9,
     "Rule": 2,
     "Point": null,
     "Title": "Go To Jail sends you to jail",
@@ -184,7 +512,7 @@
     "RawRuleCode": "GoToJail_SendToJail"
   },
   {
-    "Section": 9,
+    "Section": 10,
     "Rule": 1,
     "Point": null,
     "Title": "Roll a double to leave jail",
@@ -192,7 +520,7 @@
     "RawRuleCode": "Jail_LeaveByDouble"
   },
   {
-    "Section": 9,
+    "Section": 10,
     "Rule": 2,
     "Point": null,
     "Title": "Three turns in jail, then you pay",
@@ -200,7 +528,7 @@
     "RawRuleCode": "Jail_ThreeTurnLimit"
   },
   {
-    "Section": 9,
+    "Section": 10,
     "Rule": 3,
     "Point": null,
     "Title": "The jail fee grows each turn",
@@ -208,151 +536,87 @@
     "RawRuleCode": "Jail_FeeEscalates"
   },
   {
-    "Section": 10,
+    "Section": 11,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Collect the Free Parking card",
+    "RuleDescription": "You collect a Free Parking card and resolve it. If the card states otherwise, it supersedes the rules below for this space.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 11,
     "Rule": 2,
     "Point": null,
+    "Title": "Resolution",
+    "RuleDescription": "When you land on Free Parking, exactly one of the cases below applies.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 11,
+    "Rule": 2,
+    "Point": "a",
     "Title": "Free Parking fee when there's nothing to take",
     "RuleDescription": "If the pot is empty, or you own no properties, you pay into Free Parking the difference between the two main dice times 100.",
     "RawRuleCode": "FreeParking_PayDiceDifference"
   },
   {
-    "Section": 10,
+    "Section": 11,
     "Rule": 2,
-    "Point": "a",
+    "Point": "b",
     "Title": "A double pays no Free Parking fee",
     "RuleDescription": "Rolling a double or triple makes the two main dice equal, so the difference is zero — you pay nothing into Free Parking.",
     "RawRuleCode": "FreeParking_NoPayOnDouble"
   },
   {
-    "Section": 10,
-    "Rule": 3,
-    "Point": null,
+    "Section": 11,
+    "Rule": 2,
+    "Point": "c",
     "Title": "Taking from Free Parking is capped",
     "RuleDescription": "When you take from Free Parking you collect up to £1000 from the pot — up to £2000 if you own a double hotel.",
     "RawRuleCode": "FreeParking_TakeCap"
   },
   {
-    "Section": 10,
-    "Rule": 4,
-    "Point": null,
+    "Section": 11,
+    "Rule": 2,
+    "Point": "d",
     "Title": "You also take the properties in Free Parking",
     "RuleDescription": "When you take from Free Parking you also collect any properties currently sitting in the pot.",
     "RawRuleCode": "FreeParking_TakeProperties"
   },
   {
-    "Section": 10,
-    "Rule": 5,
-    "Point": null,
+    "Section": 11,
+    "Rule": 2,
+    "Point": "e",
     "Title": "Hand a property in to take from Free Parking",
     "RuleDescription": "To take from Free Parking you hand in one of your properties — one that isn't part of a set you've built on, and from a set you haven't handed in from before.",
     "RawRuleCode": "FreeParking_HandInEligibility"
   },
   {
-    "Section": 10,
-    "Rule": 6,
+    "Section": 11,
+    "Rule": 2,
+    "Point": "f",
+    "Title": "Purge when you've nothing eligible to hand in",
+    "RuleDescription": "If there's money to take but you have no property eligible to hand in, you purge one of your properties instead, and still take the money and any properties in Free Parking.",
+    "RawRuleCode": "FreeParking_PurgeWhenNoneEligible"
+  },
+  {
+    "Section": 11,
+    "Rule": 3,
     "Point": null,
     "Title": "Hand-ins are tracked per set",
     "RuleDescription": "Once you hand a property into Free Parking, you can't hand in any other property from that same set for the rest of the game.",
     "RawRuleCode": "FreeParking_HandInTrackedPerSet"
   },
   {
-    "Section": 10,
-    "Rule": 7,
-    "Point": null,
-    "Title": "Purge when you've nothing eligible to hand in",
-    "RuleDescription": "If there's money to take but you have no property eligible to hand in, you purge one of your properties instead, and still take the money and any properties in Free Parking.",
-    "RawRuleCode": "FreeParking_PurgeWhenNoneEligible"
-  },
-  {
-    "Section": 12,
-    "Rule": 1,
-    "Point": null,
-    "Title": "Loans cover what you can't pay",
-    "RuleDescription": "If you can't afford what you owe, you can take a loan from the bank for exactly the shortfall, rounded up to the nearest step according to the rounding rule. You don't have to mortgage first.",
-    "RawRuleCode": "Loan_CoversShortfall"
-  },
-  {
-    "Section": 12,
-    "Rule": 3,
-    "Point": null,
-    "Title": "Keep up to £200 when taking a loan",
-    "RuleDescription": "When you take a loan you may keep £200 in cash — only money above £200 goes toward what you owe, and the loan covers the rest.",
-    "RawRuleCode": "Loan_KeepUpTo200"
-  },
-  {
-    "Section": 12,
+    "Section": 11,
     "Rule": 4,
     "Point": null,
-    "Title": "Maximum of three loans",
-    "RuleDescription": "You can have at most three loans outstanding at once.",
-    "RawRuleCode": "Loan_MaxThree"
+    "Title": "Cards may change the payout",
+    "RuleDescription": "Cards held by the landing player or by other players can change the money outcome — you might collect nothing, collect the whole pot, or have all your money stolen.",
+    "RawRuleCode": "<NONE>"
   },
   {
     "Section": 12,
-    "Rule": 5,
-    "Point": null,
-    "Title": "Loan repayment when you pass GO",
-    "RuleDescription": "Each time you pass GO you repay 10% of the total you originally borrowed across your outstanding loans (never less than the smallest grid amount).",
-    "RawRuleCode": "Loan_RepayInstalmentOnGo"
-  },
-  {
-    "Section": 12,
-    "Rule": 6,
-    "Point": null,
-    "Title": "Oldest loan first; overpayment is lost",
-    "RuleDescription": "Repayments clear your oldest loan first. The full instalment is paid even if it's more than that loan needs — any overpayment is lost, not carried over to the next loan.",
-    "RawRuleCode": "Loan_RepaidOldestOverpaymentLost"
-  },
-  {
-    "Section": 13,
-    "Rule": 1,
-    "Point": null,
-    "Title": "Mortgage fee when you pass GO",
-    "RuleDescription": "Each time you pass GO you pay 20% of the purchase cost of every property you still have mortgaged.",
-    "RawRuleCode": "Mortgage_FeeOnGo"
-  },
-  {
-    "Section": 13,
-    "Rule": 4,
-    "Point": null,
-    "Title": "A mortgaged property breaks its set's rent",
-    "RuleDescription": "A mortgaged property earns no rent and stops counting toward its set — so the rest of the set drops to single rent until you unmortgage it.",
-    "RawRuleCode": "Mortgage_NoSetRentWhileMortgaged"
-  },
-  {
-    "Section": 14,
-    "Rule": 1,
-    "Point": null,
-    "Title": "Nobody completes a set until everyone can",
-    "RuleDescription": "No player may hold a complete colour set until every player is able to complete one. Until then, completing a set means reserving the final property instead of owning it.",
-    "RawRuleCode": "Reserved_NoSetUntilAllCan"
-  },
-  {
-    "Section": 14,
-    "Rule": 2,
-    "Point": null,
-    "Title": "Reserve the property that completes your set",
-    "RuleDescription": "If you land on the last property you need for a set while the reserve rule is active, you can reserve it for half its price instead of buying it.",
-    "RawRuleCode": "Reserved_ReserveFinalProperty"
-  },
-  {
-    "Section": 14,
-    "Rule": 3,
-    "Point": null,
-    "Title": "A reserved property is inert",
-    "RuleDescription": "While a property is reserved it earns no rent, and no other player can buy it.",
-    "RawRuleCode": "Reserved_PropertyInert"
-  },
-  {
-    "Section": 14,
-    "Rule": 6,
-    "Point": null,
-    "Title": "Reserved properties end once someone has a set",
-    "RuleDescription": "As soon as a player breaks through to a complete set, the reservation rule is spent and no longer applies for the rest of the game.",
-    "RawRuleCode": "Reserved_MechanicEnds"
-  },
-  {
-    "Section": 15,
     "Rule": 1,
     "Point": null,
     "Title": "Declining or not affording sends it to auction",
@@ -360,7 +624,7 @@
     "RawRuleCode": "Auction_Trigger"
   },
   {
-    "Section": 15,
+    "Section": 12,
     "Rule": 2,
     "Point": null,
     "Title": "Auctions open at half price",
@@ -368,7 +632,31 @@
     "RawRuleCode": "Auction_MinimumBidHalfPrice"
   },
   {
-    "Section": 15,
+    "Section": 12,
+    "Rule": 3,
+    "Point": null,
+    "Title": "Who may bid",
+    "RuleDescription": "Every player may bid, including the player who declined the property and anyone in jail. Bids must be paid from money you genuinely have — no mortgaging, selling buildings, or dealing to raise a bid. A player who cannot afford the minimum bid takes no part in the auction.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 12,
+    "Rule": 4,
+    "Point": null,
+    "Title": "Bidding order and raising",
+    "RuleDescription": "Bidding proceeds clockwise, starting with the player who landed on the property — or the next eligible player clockwise if they cannot afford the minimum. On your go you either raise above the current bid or pass; the amounts you may raise by follow the game's rounding rule.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 12,
+    "Rule": 5,
+    "Point": null,
+    "Title": "Passing is final",
+    "RuleDescription": "A player who passes drops out of the auction for the rest of it and cannot re-enter.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 12,
     "Rule": 6,
     "Point": null,
     "Title": "Last bidder standing wins",
@@ -376,7 +664,7 @@
     "RawRuleCode": "Auction_ForcedLastSurvivor"
   },
   {
-    "Section": 15,
+    "Section": 12,
     "Rule": 7,
     "Point": null,
     "Title": "Nobody can afford it",
@@ -384,7 +672,79 @@
     "RawRuleCode": "Auction_NobodyCanAfford"
   },
   {
-    "Section": 16,
+    "Section": 13,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Nobody completes a set until everyone can",
+    "RuleDescription": "No player may hold a complete colour set until every player is able to complete one. Until then, completing a set means reserving the final property instead of owning it.",
+    "RawRuleCode": "Reserved_NoSetUntilAllCan"
+  },
+  {
+    "Section": 13,
+    "Rule": 2,
+    "Point": null,
+    "Title": "Reserve the property that completes your set",
+    "RuleDescription": "If you land on the last property you need for a set while the reserve rule is active, you can reserve it for half its price instead of buying it.",
+    "RawRuleCode": "Reserved_ReserveFinalProperty"
+  },
+  {
+    "Section": 13,
+    "Rule": 3,
+    "Point": null,
+    "Title": "A reserved property is inert",
+    "RuleDescription": "While a property is reserved it earns no rent, and no other player can buy it.",
+    "RawRuleCode": "Reserved_PropertyInert"
+  },
+  {
+    "Section": 13,
+    "Rule": 4,
+    "Point": null,
+    "Title": "Unreserving",
+    "RuleDescription": "You may unreserve a property — adding it to your owned properties to complete the set — only once every other player also has a set, or a reserved property they are able to unreserve. Unreserving costs the full purchase price of the property.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 13,
+    "Rule": 5,
+    "Point": null,
+    "Title": "A player short of funds does not block others",
+    "RuleDescription": "If you cannot afford to unreserve your property, that does not prevent other players from unreserving theirs or completing sets through deals.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 13,
+    "Rule": 6,
+    "Point": null,
+    "Title": "Reserved properties end once someone has a set",
+    "RuleDescription": "As soon as a player breaks through to a complete set, the reservation rule is spent and no longer applies for the rest of the game.",
+    "RawRuleCode": "Reserved_MechanicEnds"
+  },
+  {
+    "Section": 14,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Double hotels",
+    "RuleDescription": "Once you have built a hotel on every property in a set, you may build a double hotel on one of those properties. A double hotel costs the price of five houses.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 14,
+    "Rule": 2,
+    "Point": null,
+    "Title": "One double hotel per set",
+    "RuleDescription": "A double hotel may be built on any colour set, and on as many of your sets as you like — but only one property per set may hold a double hotel.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 14,
+    "Rule": 3,
+    "Point": null,
+    "Title": "Half-price building on a full street",
+    "RuleDescription": "A street is every set on one side of the board. If you own a complete street before any of its sets has been built on — neither now nor earlier in your ownership — you build on every set in that street at half the normal cost, keeping the discount while you own the whole street. Built-on history is per-ownership and resets when a property changes hands.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 15,
     "Rule": 1,
     "Point": null,
     "Title": "Stations cost more as you own more",
@@ -392,7 +752,7 @@
     "RawRuleCode": "Station_PriceScales"
   },
   {
-    "Section": 16,
+    "Section": 15,
     "Rule": 2,
     "Point": null,
     "Title": "Mortgaged stations still raise the price",
@@ -400,7 +760,15 @@
     "RawRuleCode": "Station_MortgagedCountsForPrice"
   },
   {
-    "Section": 17,
+    "Section": 15,
+    "Rule": 3,
+    "Point": null,
+    "Title": "No surcharge for non-purchase acquisitions",
+    "RuleDescription": "You pay no surcharge for a station gained through Free Parking, a card, or a deal — the scaling price applies only to buying a station outright.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 16,
     "Rule": 1,
     "Point": null,
     "Title": "Utility rent is a dice roll",
@@ -408,7 +776,7 @@
     "RawRuleCode": "Utility_RentIsDiceTimesMultiplier"
   },
   {
-    "Section": 17,
+    "Section": 16,
     "Rule": 2,
     "Point": null,
     "Title": "Which dice count for utility rent",
@@ -416,7 +784,7 @@
     "RawRuleCode": "Utility_DiceDependsOnArrival"
   },
   {
-    "Section": 17,
+    "Section": 16,
     "Rule": 3,
     "Point": null,
     "Title": "Owning both utilities pays more",
@@ -424,7 +792,119 @@
     "RawRuleCode": "Utility_PairMultiplier"
   },
   {
+    "Section": 17,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Mortgage fee when you pass GO",
+    "RuleDescription": "Each time you pass GO you pay 20% of the purchase cost of every property you still have mortgaged.",
+    "RawRuleCode": "Mortgage_FeeOnGo"
+  },
+  {
+    "Section": 17,
+    "Rule": 2,
+    "Point": null,
+    "Title": "Applies to forced mortgages",
+    "RuleDescription": "The pass-GO repayment applies to every mortgaged property, including any you were forced to mortgage.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 17,
+    "Rule": 3,
+    "Point": null,
+    "Title": "Only properties still mortgaged at GO count",
+    "RuleDescription": "The 20% is charged only on properties still mortgaged at the moment you pass GO — whether during your own movement or third-die movement. A property unmortgaged before GO is passed is not charged.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 17,
+    "Rule": 4,
+    "Point": null,
+    "Title": "A mortgaged property breaks its set's rent",
+    "RuleDescription": "A mortgaged property earns no rent and stops counting toward its set — so the rest of the set drops to single rent until you unmortgage it.",
+    "RawRuleCode": "Mortgage_NoSetRentWhileMortgaged"
+  },
+  {
+    "Section": 18,
+    "Rule": 1,
+    "Point": null,
+    "Title": "When a loan may be taken",
+    "RuleDescription": "You may take a loan whenever you cannot afford to pay what you owe from the money in your account. You are not required to mortgage your properties first — taking a loan and mortgaging are alternatives.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 18,
+    "Rule": 2,
+    "Point": null,
+    "Title": "Loans cover what you can't pay",
+    "RuleDescription": "If you can't afford what you owe, you can take a loan from the bank for exactly the shortfall, rounded up to the nearest step according to the rounding rule. You don't have to mortgage first.",
+    "RawRuleCode": "Loan_CoversShortfall"
+  },
+  {
+    "Section": 18,
+    "Rule": 3,
+    "Point": null,
+    "Title": "Keep up to £200 when taking a loan",
+    "RuleDescription": "When you take a loan you may keep £200 in cash — only money above £200 goes toward what you owe, and the loan covers the rest.",
+    "RawRuleCode": "Loan_KeepUpTo200"
+  },
+  {
+    "Section": 18,
+    "Rule": 4,
+    "Point": null,
+    "Title": "Maximum of three loans",
+    "RuleDescription": "You can have at most three loans outstanding at once.",
+    "RawRuleCode": "Loan_MaxThree"
+  },
+  {
+    "Section": 18,
+    "Rule": 5,
+    "Point": null,
+    "Title": "Loan repayment when you pass GO",
+    "RuleDescription": "Each time you pass GO you repay 10% of the total you originally borrowed across your outstanding loans (never less than the smallest grid amount).",
+    "RawRuleCode": "Loan_RepayInstalmentOnGo"
+  },
+  {
+    "Section": 18,
+    "Rule": 6,
+    "Point": null,
+    "Title": "Oldest loan first; overpayment is lost",
+    "RuleDescription": "Repayments clear your oldest loan first. The full instalment is paid even if it's more than that loan needs — any overpayment is lost, not carried over to the next loan.",
+    "RawRuleCode": "Loan_RepaidOldestOverpaymentLost"
+  },
+  {
+    "Section": 18,
+    "Rule": 7,
+    "Point": null,
+    "Title": "Paying more, or paying early",
+    "RuleDescription": "You may repay more than the minimum instalment when passing GO, and repay any amount toward a loan on your own turn. You may also take a loan to cover a loan repayment. As a loan carries no interest, the only cost of borrowing is the rounding/overpayment described above.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
     "Section": 19,
+    "Rule": 1,
+    "Point": null,
+    "Title": "Building is blocked until the set is level again",
+    "RuleDescription": "After a property is purged, no other property in that set may be built on until every purged property has been built back up to the same level as the rest of the set — preserving the even-building rule.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 19,
+    "Rule": 2,
+    "Point": null,
+    "Title": "When purging happens",
+    "RuleDescription": "You purge when you land on Free Parking but have no property eligible to hand in. A card may also force you to purge.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 19,
+    "Rule": 3,
+    "Point": null,
+    "Title": "Purging other players",
+    "RuleDescription": "A card may give its holder the option to purge one or two of another player's properties, if the card states so.",
+    "RawRuleCode": "<NONE>"
+  },
+  {
+    "Section": 20,
     "Rule": 1,
     "Point": null,
     "Title": "Going bankrupt",
@@ -432,7 +912,7 @@
     "RawRuleCode": "Bankruptcy_Declared"
   },
   {
-    "Section": 19,
+    "Section": 20,
     "Rule": 2,
     "Point": null,
     "Title": "Bankrupt assets go to the bank",
@@ -440,7 +920,7 @@
     "RawRuleCode": "Bankruptcy_AssetsToBank"
   },
   {
-    "Section": 19,
+    "Section": 20,
     "Rule": 3,
     "Point": null,
     "Title": "A creditor is still paid",
@@ -448,7 +928,7 @@
     "RawRuleCode": "Bankruptcy_CreditorPaidByBank"
   },
   {
-    "Section": 19,
+    "Section": 20,
     "Rule": 4,
     "Point": null,
     "Title": "Last player standing wins",

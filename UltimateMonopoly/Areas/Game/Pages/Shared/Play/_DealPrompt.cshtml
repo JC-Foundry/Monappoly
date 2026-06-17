@@ -59,7 +59,7 @@
                 <div class="d-flex flex-wrap gap-1 align-items-center">
                     @if (s.Money > 0)
                     {
-                        <span class="badge text-bg-secondary">@cur@s.Money</span>
+                        <span class="badge text-bg-secondary">@cur@s.Money.ToString("N0")</span>
                     }
                     @foreach (var i in s.Indexes)
                     {

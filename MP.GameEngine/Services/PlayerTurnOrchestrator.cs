@@ -77,7 +77,9 @@ public class PlayerTurnOrchestrator
         if (player.IsInJail)
             player.JailTurnCounter++;
 
-        ushort movement;
+        if (player.BoardIndex != IndexHelper.GoSpace)
+            player.InitialRoll = false;
+        
         var transitionToThirdDie = true;
         switch (dice.RollType)
         {
@@ -152,6 +154,16 @@ public class PlayerTurnOrchestrator
 
         if(player.InitialRoll && player.BoardIndex != IndexHelper.GoSpace)
             player.InitialRoll = false;
+        
+        //Check if rolling player gets a third card (they rolled their number):
+        if(player.GetThirdCard)
+        {
+            await engine.CardService.DrawCard(engine, player, CardType.Third, ct);
+            engine.CiteRule(RuleCode.Third_Card_Number);
+            
+            //Reset to false (for next turn/roll):
+            player.GetThirdCard = false;
+        }
         
         if(transitionToThirdDie)
         {
@@ -292,6 +304,15 @@ public class PlayerTurnOrchestrator
             //Move each player based on third die, if not in jail
             await _movementService.MovePlayer(engine, player, thirdDie, ct);
             await _boardService.ResolveBoardSpaceForPlayer(engine, player, ct);
+            
+            //Check if player gets a third card (someone else rolled their number):
+            if (!player.GetThirdCard) continue;
+            
+            await engine.CardService.DrawCard(engine, player, CardType.Third, ct);
+            engine.CiteRule(RuleCode.Third_Card_Number);
+
+            //Reset to false (for next turn/roll):
+            player.GetThirdCard = false;
         }
         
         engine.TurnStateProvider.TransitionToEndOfTurn();

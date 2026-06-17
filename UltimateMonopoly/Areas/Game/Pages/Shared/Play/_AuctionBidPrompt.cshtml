@@ -26,8 +26,8 @@
             <p class="mb-2">@Model.Body</p>
         }
         <div class="d-flex justify-content-between small text-body-secondary mb-3">
-            <span>Current bid: <span class="fw-semibold text-body">@cur@Model.CurrentHighBid</span></span>
-            <span>Your balance: <span class="fw-semibold text-body">@cur@Model.PlayerBalance</span></span>
+            <span>Current bid: <span class="fw-semibold text-body">@cur@Model.CurrentHighBid.ToString("N0")</span></span>
+            <span>Your balance: <span class="fw-semibold text-body">@cur@Model.PlayerBalance.ToString("N0")</span></span>
         </div>
         <div class="text-body-secondary small mb-1">Raise the bid by:</div>
         <div class="d-flex flex-wrap gap-2">
@@ -36,7 +36,7 @@
                 var newBid = Model.CurrentHighBid + inc;
                 <button type="button" class="btn btn-outline-primary flex-fill" data-prompt-submit data-bid-amount="@newBid"
                         disabled="@(newBid > Model.PlayerBalance)">
-                    +@cur@inc
+                    +@cur@inc.ToString("N0")
                 </button>
             }
         </div>

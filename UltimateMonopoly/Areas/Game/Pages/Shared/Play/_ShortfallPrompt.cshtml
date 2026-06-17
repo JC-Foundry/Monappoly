@@ -26,11 +26,11 @@
         }
         <dl class="row mb-3 small">
             <dt class="col-7 text-body-secondary fw-normal">You owe</dt>
-            <dd class="col-5 text-end mb-1">@cur@Model.Cost</dd>
+            <dd class="col-5 text-end mb-1">@cur@Model.Cost.ToString("N0")</dd>
             <dt class="col-7 text-body-secondary fw-normal">Your balance</dt>
-            <dd class="col-5 text-end mb-1">@cur@Model.PlayerBalance</dd>
+            <dd class="col-5 text-end mb-1">@cur@Model.PlayerBalance.ToString("N0")</dd>
             <dt class="col-7 fw-semibold text-danger">Short by</dt>
-            <dd class="col-5 text-end fw-semibold text-danger mb-0">@cur@Model.AmountOwed</dd>
+            <dd class="col-5 text-end fw-semibold text-danger mb-0">@cur@Model.AmountOwed.ToString("N0")</dd>
         </dl>
 
         <div class="text-body-secondary small mb-1">Raise the funds:</div>

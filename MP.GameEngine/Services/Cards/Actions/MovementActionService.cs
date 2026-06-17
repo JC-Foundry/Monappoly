@@ -105,7 +105,7 @@ public class MovementActionService : ICardActionService<MovementAction>
         else
         {
             var pick = action.Target == PlayerTarget.Self ? PlayerTarget.ChosenPlayer : action.Target;
-            target = (await CardActionHelper.ResolveTargets(engine, player, pick, ct)).FirstOrDefault();
+            target = (await CardActionHelper.ResolveTargets(engine, player, pick, ct, JailFilter.OnlyNotJailed)).FirstOrDefault();
         }
 
         if (target is null || target.PlayerId == player.PlayerId)

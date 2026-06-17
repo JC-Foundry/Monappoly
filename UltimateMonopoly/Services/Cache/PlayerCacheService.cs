@@ -11,7 +11,7 @@ public class PlayerCacheService
     private readonly ProfileService _profileService;
 
     private const string CacheKey = "Players";
-    private static readonly TimeSpan PlayerNameExpiration = TimeSpan.FromHours(6);
+    private static readonly TimeSpan PlayerExpiration = TimeSpan.FromHours(2);
 
     public PlayerCacheService(IMemoryCache memoryCache,
         ProfileService profileService)
@@ -32,7 +32,7 @@ public class PlayerCacheService
     public async Task<UserProfileViewModel> GetPlayerProfile(string userId)
         => await _memoryCache.GetOrCreateAsync(GetKey(userId), async entry =>
         {
-            entry.SlidingExpiration = PlayerNameExpiration;
+            entry.SlidingExpiration = PlayerExpiration;
             return await _profileService.GetUserProfileViewModelAsync(userId);
         }) ?? throw new InvalidOperationException($"Failed to get user/player profile for {userId}");
 }

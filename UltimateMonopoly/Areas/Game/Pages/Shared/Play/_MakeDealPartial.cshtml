@@ -90,7 +90,7 @@
                     <span class="input-group-text">@cur</span>
                     <input type="number" class="form-control" data-deal-money="@s.Side"
                            min="0" max="@s.Balance" step="1" placeholder="0" inputmode="numeric" />
-                    <span class="input-group-text text-body-secondary">/ @cur@s.Balance</span>
+                    <span class="input-group-text text-body-secondary">/ @cur@s.Balance.ToString("N0")</span>
                 </div>
 
                 @* Property grid — squares act as checkboxes (one row per set). *@

@@ -1,8 +1,11 @@
 using System.Text.Json;
 using JC.Core.Models;
 using JC.Web.Security.Services;
+using Microsoft.EntityFrameworkCore;
 using UltimateMonopoly.Data;
 using UltimateMonopoly.Models.ViewModels.Social;
+using UltimateMonopoly.Pages;
+using IndexModel = UltimateMonopoly.Pages.Leaderboard.IndexModel;
 
 namespace UltimateMonopoly.Services;
 
@@ -73,6 +76,21 @@ public class ProfileService
 
         var imgUrl = _urlLinkService.GetImgUrl(user.AvatarImageName);
         return new UserProfileViewModel(user, imgUrl);
+    }
+
+    public async Task<List<UserProfileViewModel>> GetUserProfilesForLeaderboard()
+    {
+        //Get a list of enabled users where they have played at least one game
+        var users = await _context.Users
+            .Where(u => u.IsEnabled 
+                        && (u.NumberOfWins + u.NumberOfDraws + u.NumberOfLosses >= IndexModel.MinimumGames))
+            .ToListAsync();
+
+        return (from u in users 
+            let imgUrl = _urlLinkService.GetImgUrl(u.AvatarImageName) 
+            select new UserProfileViewModel(u, imgUrl))
+            .OrderBy(u => string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName)
+            .ToList();
     }
 
     // Builds the view model from the profile cookie when it belongs to the

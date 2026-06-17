@@ -51,6 +51,25 @@ public class FriendService
                                || (f.FriendUserId == userId1 && f.CreatedById == userId2)));
     }
 
+    public async Task<List<(bool Firends, string userId)>> AreFriends(IEnumerable<string> userIds, string? userId = null)
+    {
+        userId ??= _userInfo.UserId;
+        
+        var list = userIds.ToList();
+        var friends = await _repos.GetRepository<Friend>()
+            .AsQueryable().FilterDeleted(DeletedQueryType.OnlyActive)
+            .Where(f => f.DateRemovedUtc == null
+                        && ((f.CreatedById == userId && list.Contains(f.FriendUserId))
+                            || (f.FriendUserId == userId && list.Contains(f.CreatedById!))))
+            .Select(f => new
+            {
+                UserId = f.CreatedById == userId ? f.FriendUserId : f.CreatedById
+            })
+            .ToListAsync();
+
+        return list.Select(u => (friends.Any(f => f.UserId == u), u)).ToList();
+    }
+
     public async Task<List<FriendViewModel>> GetFriendsList()
     {
         var currentUserId = _userInfo.UserId;

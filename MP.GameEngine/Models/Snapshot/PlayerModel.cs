@@ -25,6 +25,9 @@ public class PlayerModel
     public ushort BoardIndex { get; set; }
     public PlayerDirection Direction { get; set; }
     
+    //Get a third card for number being rolled
+    public bool GetThirdCard { get; set; }
+    
     public ushort DoublesInRow { get; set; }
     public ushort TriplesInRow { get; set; }
     
@@ -81,6 +84,8 @@ public class PlayerModel
         Money = model.Money;
         BoardIndex = model.BoardIndex;
         Direction = model.Direction;
+        
+        GetThirdCard = model.GetThirdCard;
         
         DoublesInRow = model.DoublesInRow;
         TriplesInRow = model.TriplesInRow;

@@ -1,0 +1,61 @@
+@page "{userId}"
+@model UltimateMonopoly.Pages.Leaderboard.Compare
+@{
+    ViewData["Title"] = $"Compare — {Model.PlayerName}";
+
+    // One partial instance per tab — give each a unique id prefix (collapse/chart ids) and hide the
+    // over-time charts (aggregate stats carry no per-turn series).
+    ViewDataDictionary Vd(string prefix) =>
+        new(ViewData) { ["CmpPrefix"] = prefix, ["CmpHideCharts"] = true };
+
+    var tabs = new[]
+    {
+        (Id: "avg",   Label: "Average", Icon: "bi-calculator",        Players: Model.AverageComparePlayers),
+        (Id: "total", Label: "Total",   Icon: "bi-collection-fill",   Players: Model.TotalComparePlayers),
+        (Id: "max",   Label: "Max",    Icon: "bi-arrow-up-circle-fill",   Players: Model.MaxComparePlayers),
+        (Id: "min",   Label: "Min",   Icon: "bi-arrow-down-circle-fill", Players: Model.MinComparePlayers)
+    };
+}
+
+<link rel="stylesheet" href="~/css/player-stats.css" asp-append-version="true" />
+
+<div class="container-lg py-4">
+
+    <div class="mb-3">
+        <a asp-page="/Leaderboard/Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to leaderboard
+        </a>
+    </div>
+
+    <div class="stats-hero mb-4">
+        <h1 class="h3 mb-1"><i class="bi bi-bar-chart-steps me-2"></i>Player Comparison</h1>
+        <p class="mb-0 opacity-75">Your stats versus <strong>@Model.PlayerName</strong></p>
+    </div>
+
+    @* ── Tabs — one per stats view (Average / Total / Best / Worst) ───────── *@
+    <ul class="nav nav-tabs" id="compareTabs" role="tablist">
+        @for (var i = 0; i < tabs.Length; i++)
+        {
+            var t = tabs[i];
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(i == 0 ? "active" : "")" id="tab-@t.Id-btn" type="button"
+                        role="tab" data-bs-toggle="tab" data-bs-target="#tab-@t.Id"
+                        aria-controls="tab-@t.Id" aria-selected="@(i == 0 ? "true" : "false")">
+                    <i class="bi @t.Icon me-1"></i>@t.Label
+                </button>
+            </li>
+        }
+    </ul>
+
+    <div class="tab-content pt-4">
+        @for (var i = 0; i < tabs.Length; i++)
+        {
+            var t = tabs[i];
+            var vd = Vd("cmp-" + t.Id);
+            <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="tab-@t.Id" role="tabpanel"
+                 aria-labelledby="tab-@t.Id-btn">
+                <partial name="_CompareGame" model="t.Players" view-data="vd" />
+            </div>
+        }
+    </div>
+</div>

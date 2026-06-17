@@ -41,7 +41,10 @@ public static class MoneyHelper
         switch (reason)
         {
             case FinancialReason.Rent:
+            case FinancialReason.TripleBonus:
+            case FinancialReason.GoBonus:
                 //Rent that resolves to 0, is 0. All others round UP to minimum value
+                //Triple or GO bonus that is 0, stays 0 (receive no bonus cards)
                 return value;
             case FinancialReason.LoanTake:
                 //Loan take is always rounded UP

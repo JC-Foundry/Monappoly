@@ -29,6 +29,7 @@ public sealed class CardOptionPrompt : Prompt<CardOptionResponse>
     /// prompt at all.
     /// </summary>
     public IReadOnlyList<CardOption> Options { get; init; } = [];
+    public bool PlayCardChoice { get; init; }
 
     public override PromptTarget Target => PromptTarget.SinglePlayer(PlayerId);
 }

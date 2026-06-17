@@ -87,6 +87,7 @@ public static class ServiceRegistration
         // schedule as a safety-net: it sweeps every finished game and is idempotent, so it
         // backfills any game whose stats never got written. 03:00 and 15:00 UK time (every 12h).
         services.TryAddScoped<GameStatsService>();
+        services.TryAddScoped<LeaderboardService>();
         services.AddHangfireScheduler(AdHocJobRegistration.For<StatisticsJob>());
         services.AddHangfireJob<StatisticsJob>(opts =>
         {

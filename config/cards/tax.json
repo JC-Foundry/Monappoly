@@ -96,7 +96,7 @@
         ]
     },
     {
-        "RawText": "Tax payment is paid by the player rolling the lowest number",
+        "RawText": "Tax payment is paid by the player rolling the lowest number (including you)",
         "CardType": "Tax",
         "ConditionType": "None",
         "SuppressDefault": {
@@ -112,7 +112,9 @@
                         "Counterparty": 1,
                         "AmountSource": 1,
                         "Target": 4,
-                        "DiceOff": {}
+                        "DiceOff": {
+                            "IncludeHolder": true
+                        }
                     }
                 ]
             }

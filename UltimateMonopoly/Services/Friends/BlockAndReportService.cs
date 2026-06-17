@@ -61,6 +61,21 @@ public class BlockAndReportService
             .AnyAsync(b => (b.CreatedById == userId && list.Contains(b.BlockedUserId)) 
                            || (list.Contains(b.CreatedById!) && b.BlockedUserId == userId));
     }
+
+    public async Task<List<(bool Blocked, string userId)>> CheckAndReportExistingBlocks(string userId, IEnumerable<string> conflictingUserIds)
+    {
+        var list = conflictingUserIds.ToList();
+        var blocked = await _repos.GetRepository<BlockedUser>()
+            .AsQueryable().FilterDeleted(DeletedQueryType.OnlyActive)
+            .Where(b => (b.CreatedById == userId && list.Contains(b.BlockedUserId)
+                         || list.Contains(b.CreatedById!) && b.BlockedUserId == userId))
+            .Select(b => new
+            {
+                UserId = b.CreatedById == userId ? b.BlockedUserId : b.CreatedById
+            })
+            .ToListAsync();
+        return list.Select(u => (blocked.Any(b => b.UserId == u), u)).ToList();
+    }
     
     
     private async Task<BlockedUser?> GetBlockedUser(string userId) 

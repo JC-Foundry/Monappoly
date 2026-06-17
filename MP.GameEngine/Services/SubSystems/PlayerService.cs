@@ -57,6 +57,9 @@ public class PlayerService
             $"and a third card at the end of this turn.",
             ct: ct);
         
+        //Set receive third card:
+        player.GetThirdCard = true;
+        
         //Bank transaction:
         await _transactionService.ReceiveDiceBonus(engine, player, ct);
         if(!theyRolled)

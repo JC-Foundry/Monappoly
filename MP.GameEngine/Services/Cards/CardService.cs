@@ -110,7 +110,7 @@ public class CardService
     /// <paramref name="context"/> is the optional trigger context (e.g. the amount that fired the card) —
     /// the trigger layer supplies it; the manual jail-exit / use-card plays pass <c>null</c>.
     /// </summary>
-    public async Task PlayCard(Framework.GameEngine engine, PlayerModel player, CardModel card, CancellationToken ct, CardActionContext? context = null)
+    public async Task<SuppressDefault> PlayCard(Framework.GameEngine engine, PlayerModel player, CardModel card, CancellationToken ct, CardActionContext? context = null)
     {
         var applied = await ResolveCard(engine, player, card, ct, context);
         var chosenGroup = card.Groups.FirstOrDefault(g => g.IsChosenGroup);
@@ -121,7 +121,7 @@ public class CardService
             //in the player's hand, untouched, so they can try again. Undo the chosen-group mark.
             if (chosenGroup is not null)
                 chosenGroup.IsChosenGroup = false;
-            return;
+            return new SuppressDefault(SuppressDefaultType.None);
         }
 
         if(chosenGroup is null)
@@ -129,7 +129,7 @@ public class CardService
 
         if(chosenGroup.TurnsRemaining is > 0)
             //Still can be played/activated again later
-            return;
+            return card.SuppressDefault;
         
         //Reset chosen group and turns remaining
         foreach (var g in card.Groups)
@@ -140,6 +140,7 @@ public class CardService
         
         player.Cards.Remove(card);
         ReturnToDeck(engine, card);
+        return card.SuppressDefault;
     }
 
 

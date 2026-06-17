@@ -54,6 +54,25 @@ public class SuppressDefault
         
         SuppressTripleBonus = suppressDefaultType.HasFlag(SuppressDefaultType.SuppressTripleBonus);
     }
+
+    public void Aggregate(SuppressDefault other)
+    {
+        SuppressGoBonus = SuppressGoBonus || other.SuppressGoBonus;
+        
+        SuppressTaxPayment = SuppressTaxPayment || other.SuppressTaxPayment;
+        
+        SuppressFreeParkingFine = SuppressFreeParkingFine || other.SuppressFreeParkingFine;
+        SuppressFreeParkingMoneyTake = SuppressFreeParkingMoneyTake || other.SuppressFreeParkingMoneyTake;
+        SuppressFreeParkingPropertyTake = SuppressFreeParkingPropertyTake || other.SuppressFreeParkingPropertyTake;
+        SuppressFreeParkingPropertyHandIn = SuppressFreeParkingPropertyHandIn || other.SuppressFreeParkingPropertyHandIn;
+        SuppressFreeParkingPurge = SuppressFreeParkingPurge || other.SuppressFreeParkingPurge;
+        
+        SuppressGoToJail = SuppressGoToJail || other.SuppressGoToJail;
+        
+        SuppressDirectionChange = SuppressDirectionChange || other.SuppressDirectionChange;
+        
+        SuppressTripleBonus = SuppressTripleBonus || other.SuppressTripleBonus;
+    }
 }
 
 [Flags]

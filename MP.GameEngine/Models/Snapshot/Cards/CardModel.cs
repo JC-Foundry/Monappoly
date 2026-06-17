@@ -63,9 +63,11 @@ public class CardModel
     public CardModel(CardModel model)
     {
         CardId = model.CardId;
+        UniqueText = model.UniqueText;
         CardText = model.CardText;
         CardType = model.CardType; 
         ConditionType = model.ConditionType;
+        SuppressDefault = model.SuppressDefault;
 
         // Groups / Conditions are immutable card-definition data (fixed for the game's
         // life), so the working-copy clone shares the references rather than deep-copying

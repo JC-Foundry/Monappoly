@@ -148,7 +148,8 @@ public static class PromptValidator
         if (submittingUserId != prompt.PlayerId && submittingUserId != cache.HostPlayerId)
             return false;
 
-        return prompt.Options.Any(o => o.Key == r.SelectedKey);
+        //Play card choice can return NO selected option
+        return prompt.PlayCardChoice || prompt.Options.Any(o => o.Key == r.SelectedKey);
     }
 
     /// <summary>

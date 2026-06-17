@@ -50,9 +50,9 @@
             {
                 tipTitle = space.Name;
                 var owner = string.IsNullOrEmpty(prop?.OwnerPlayerId) ? "Available" : await PlayerCache.GetPlayerName(prop.OwnerPlayerId);
-                tipContent = $"Cost: {RuleDictionary.Currency}{space.PurchaseCost}";
+                tipContent = $"Cost: {RuleDictionary.Currency}{space.PurchaseCost:N0}";
                 if (space.IsBuildable)
-                    tipContent += $"\nBuild: {RuleDictionary.Currency}{space.BuildCost}";
+                    tipContent += $"\nBuild: {RuleDictionary.Currency}{space.BuildCost:N0}";
                 tipContent += $"\nOwner: {owner}";
 
                 // Rent level + current rent — only once owned (mortgaged/reserved show level too,
@@ -63,14 +63,14 @@
                         ? $"{RuleDictionary.Currency}0"
                         : space.PropertySet == PropertySet.Utility
                             ? $"{space.GetRent(prop.RentLevel) ?? 0}× dice"
-                            : $"{RuleDictionary.Currency}{space.GetRent(prop.RentLevel) ?? 0}";
+                            : $"{RuleDictionary.Currency}{(space.GetRent(prop.RentLevel) ?? 0):N0}";
                     tipContent += $"\nRent level: {RentLevelName(prop.RentLevel)}\nRent: {rentText}";
                 }
             }
             else if (space.IsTaxable)
             {
                 tipTitle = space.Name;
-                tipContent = $"Tax: {RuleDictionary.Currency}{space.Tax}";
+                tipContent = $"Tax: {RuleDictionary.Currency}{space.Tax:N0}";
             }
             var hasTip = tipContent is not null;
 

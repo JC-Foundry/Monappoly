@@ -137,7 +137,7 @@ public class GameSetupService
             return new GameCreationResult(false);
         }
         
-        var link = _urlLinkService.GetUrlLink($"/Game/Setup/{game.Id}");
+        var link = _urlLinkService.GetUrlLink($"/Games/Join/{game.Id}");
         var qr = new QrCodeHelper(QrCodeFormat.Svg, 10)
             .GenerateQrCode(link);
         return new GameCreationResult(true, game.Id, qr);

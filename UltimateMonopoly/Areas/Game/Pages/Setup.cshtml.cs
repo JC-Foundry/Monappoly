@@ -155,7 +155,7 @@ public class SetupModel : PageModel
             if (card is not null) Players.Add(card);
         }
 
-        var joinLink = _urlLinks.GetUrlLink($"/Game/Setup/{game.Id}");
+        var joinLink = _urlLinks.GetUrlLink($"/Games/Join/{game.Id}");
         //Base64 PNG data URI (data:image/png;base64,…) rendered via an <img>, not inline SVG.
         JoinQrImage = new QrCodeHelper(QrCodeFormat.Base64, 10).GenerateQrCode(joinLink);
 

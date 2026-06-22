@@ -132,7 +132,7 @@ public class BoardSkinShareService
 
             foreach (var userId in userIds)
             {
-                _boardCacheService.Invalidate(userId);
+                _boardCacheService.Invalidate(userId, true);
             }
             return true;
         }
@@ -156,8 +156,10 @@ public class BoardSkinShareService
         
         await _repos.GetRepository<SharedBoardSkin>()
             .SoftDeleteAsync(shareLink);
-        
-        _boardCacheService.Invalidate(_userInfo.UserId);
+
+        //Own cache → no-arg (Invalidate defaults to the current user). Passing the explicit id would hit
+        //the "another user requires admin" guard and no-op for a normal user.
+        _boardCacheService.Invalidate();
         return true;
     }
 }

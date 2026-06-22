@@ -59,6 +59,12 @@ public class PlayerModel
     
     public bool IsBankrupt { get; set; }
 
+    /// <summary>Held free-hotel credits (the "receive a free hotel" tax card — R-06). Each credit waives the
+    /// build cost of one future hotel (a <see cref="RentLevel.FOUR_HOUSES"/> → <see cref="RentLevel.HOTEL"/>
+    /// step), consumed in <c>BuildingService.BuildOnProperties</c>. Granted when a hotel can't be placed
+    /// immediately — the player has no four-house street, or the table hotel pool is empty.</summary>
+    public ushort FreeHotels { get; set; }
+
     /// <summary>
     /// Cards owned by the player (keep until needed/played upon condition)
     /// </summary>
@@ -107,7 +113,8 @@ public class PlayerModel
         FreeNextJailExit = model.FreeNextJailExit;
         
         IsBankrupt = model.IsBankrupt;
-        
+        FreeHotels = model.FreeHotels;
+
         Cards = model.Cards.Select(c => new CardModel(c)).ToList();
         Loans = model.Loans.Select(l => new LoanModel(l)).ToList();
 
@@ -144,6 +151,9 @@ public class PlayerModel
 
     public bool IsDiceNumber(DiceRoll roll)
     {
+        if(roll.RollType == DiceRollType.Triple)
+            return false;
+        
         var d1 = roll.Die1;
         var d2 = roll.Die2 ?? throw new ArgumentNullException(nameof(roll.Die2), "Die2 cannot be null for dice roll validation.");
         

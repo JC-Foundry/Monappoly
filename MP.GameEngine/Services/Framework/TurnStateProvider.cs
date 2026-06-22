@@ -37,6 +37,10 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
         return player?.IsInJail ?? throw new InvalidOperationException("Player not found in game players list.");
     }
 
+    /// <summary>True when the player exists in the game and is still in play (not bankrupt).</summary>
+    private bool IsActivePlayer(string playerId) =>
+        cache.Game.GetPlayer(playerId) != null;
+
     /// <summary>True when the cache is at one of the two idle boundary phases (Start or End of turn).</summary>
     private bool IsAtTurnBoundary() =>
         cache.TurnState is TurnState.StartOfTurn or TurnState.EndOfTurn;
@@ -65,6 +69,7 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
     /// </summary>
     public bool CanStartTurn(string playerId, string submittingUserId) => 
         IsAuthorisedActor(playerId, submittingUserId) 
+        && IsActivePlayer(playerId)
         && cache.TurnState == TurnState.StartOfTurn
         && IsEngineIdle();
 
@@ -83,14 +88,15 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
         && IsEngineIdle();
 
     /// <summary>
-    /// Deals can be initiated or accepted at either turn boundary (Start or
-    /// End). Bilateral validation (the *other* party must also be reachable)
-    /// is the engine layer's job — the provider only confirms the calling
-    /// player is at a legal moment in their own turn cycle.
+    /// Deals can be initiated or accepted at either turn boundary (Start or End) by ANY active
+    /// (non-bankrupt) player — not just the current player: a deal fires at a turn boundary regardless
+    /// of whose turn it is. Bilateral validation (the *other* party must also be reachable) is the engine
+    /// layer's job — the provider only confirms the proposer is an active player and the game is sitting
+    /// at a turn boundary (engine idle).
     /// </summary>
     public bool CanDeal(string playerId, string submittingUserId) =>
         IsAuthorisedActor(playerId, submittingUserId)
-        && IsCurrentPlayer(playerId)
+        && IsActivePlayer(playerId)
         && IsAtTurnBoundary()
         && IsEngineIdle();
 
@@ -121,7 +127,9 @@ public class TurnStateProvider(GameCacheModel cache, ISnapshotService snapshotSe
     /// </summary>
     public bool CanDeclareBankruptcy(string playerId, string submittingUserId) =>
         IsAuthorisedActor(playerId, submittingUserId)
-        && IsAtTurnBoundary() && IsEngineIdle();
+        && IsActivePlayer(playerId)
+        && IsAtTurnBoundary() 
+        && IsEngineIdle();
 
 
     // ─── Transitions ────────────────────────────────────────────────────

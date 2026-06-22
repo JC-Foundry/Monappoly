@@ -49,7 +49,12 @@ public class BuildingService
             cost = (uint)doubleHotelCost;
         }
         
-        cost = MoneyHelper.NormaliseAmountToPositive(cost, engine.Cache.RoundingRule, FinancialReason.Build);        
+        cost = MoneyHelper.NormaliseAmountToPositive(cost, engine.Cache.RoundingRule, FinancialReason.Build);
+
+        //R-06: a held free-hotel credit waives the cost when this is a hotel build (FOUR_HOUSES -> HOTEL).
+        var freeHotelDiscount = FreeHotelDiscount(engine, player, [boardIndex]);
+        cost = freeHotelDiscount >= cost ? 0 : cost - freeHotelDiscount;
+
         if (player.Money < cost)
         {
             _ = await engine.PromptProvider.Acknowledge(player.PlayerId, "Cannot Build",
@@ -98,7 +103,11 @@ public class BuildingService
         var streetEffect = engine.Cache.Game.HasStreetEffect((PropertySet)space.PropertySet);
         var cost = PropertySetHelper.GetBuildCost(set, engine.Cache.Board, streetEffect);
         cost = MoneyHelper.NormaliseAmountToPositive(cost, engine.Cache.RoundingRule, FinancialReason.Build);
-        
+
+        //R-06: held free-hotel credits waive the cost of any hotel steps in this set build.
+        var freeHotelDiscount = FreeHotelDiscount(engine, player, PropertySetHelper.GetIndexes(set));
+        cost = freeHotelDiscount >= cost ? 0 : cost - freeHotelDiscount;
+
         if (player.Money < cost)
         {
             _ = await engine.PromptProvider.Acknowledge(player.PlayerId, "Cannot Build",
@@ -159,7 +168,11 @@ public class BuildingService
         }
         
         cost = MoneyHelper.NormaliseAmountToPositive(cost, engine.Cache.RoundingRule, FinancialReason.Build);
-        
+
+        //R-06: held free-hotel credits waive the cost of any hotel steps across every set being built.
+        var freeHotelDiscount = FreeHotelDiscount(engine, player, indexes);
+        cost = freeHotelDiscount >= cost ? 0 : cost - freeHotelDiscount;
+
         if (player.Money < cost)
         {
             _ = await engine.PromptProvider.Acknowledge(player.PlayerId, "Cannot Build",
@@ -228,10 +241,53 @@ public class BuildingService
             
             var streetEffect = engine.Cache.Game.HasStreetEffect((PropertySet)space.PropertySet);
             var cost = PropertySetHelper.GetBuildCost(property.BoardIndex, engine.Cache.Board, streetEffect);
-            await _transactionService.PayForBuild(engine, player, doubleHotelCost ?? cost, property.BoardIndex, ct);
+            var chargeCost = doubleHotelCost ?? cost;
+
+            //Free-hotel credit (R-06): a hotel build (FOUR_HOUSES -> HOTEL, so RentLevel is now HOTEL) is
+            //free while the holder has a credit; one credit covers one hotel. Double-hotel builds
+            //(RentLevel now DOUBLE_HOTEL) are not covered. This is the single point that consumes credits;
+            //the affordability check / prompt in the build entry points preview the same waiver.
+            if (property.RentLevel == RentLevel.HOTEL && player.FreeHotels > 0)
+            {
+                player.FreeHotels--;
+                chargeCost = 0;
+            }
+
+            await _transactionService.PayForBuild(engine, player, chargeCost, property.BoardIndex, ct);
         }
-        
+
         _propertyService.NormaliseProperties(engine);
+    }
+
+    /// <summary>
+    /// The free-hotel discount for building the given properties one level (R-06): each held
+    /// <see cref="PlayerModel.FreeHotels"/> credit waives the build cost of one property stepping
+    /// FOUR_HOUSES -> HOTEL, in board-index order and capped at the player's credits. Read-only — the
+    /// credits are actually consumed in <see cref="BuildOnProperties"/>; this mirrors that waiver so the
+    /// affordability check and confirmation prompt show the real (discounted) cost.
+    /// </summary>
+    private static uint FreeHotelDiscount(Framework.GameEngine engine, PlayerModel player, IEnumerable<ushort> boardIndexes)
+    {
+        var credits = player.FreeHotels;
+        if (credits == 0)
+            return 0;
+
+        uint discount = 0;
+        foreach (var index in boardIndexes)
+        {
+            if (credits == 0)
+                break;
+
+            var property = engine.Cache.Game.GetPropertySpace(index);
+            var space = engine.Cache.Board.GetBoardSpace(index);
+            if (property is null || space.PropertySet is null || property.RentLevel != RentLevel.FOUR_HOUSES)
+                continue;   //only a FOUR_HOUSES -> HOTEL step is covered
+
+            var streetEffect = engine.Cache.Game.HasStreetEffect((PropertySet)space.PropertySet);
+            discount += PropertySetHelper.GetBuildCost(index, engine.Cache.Board, streetEffect);
+            credits--;
+        }
+        return discount;
     }
 
     #endregion

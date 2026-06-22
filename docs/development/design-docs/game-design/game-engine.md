@@ -28,8 +28,11 @@ The application is a **helper**, not a digital simulator.
    three-dice mechanic moves every player on each roll, and the app computes
    those movements and their consequences from a single roll input.
 
-4. **The board layout is already known.** The existing board-skin feature
-   defines spaces, colours, and prices — the engine consumes that.
+4. **The board layout is already known.** The board's layout, sets, and prices
+   are canonical and fixed across every game; the board-skin feature only
+   overrides the **display names** of spaces (card spaces excepted — they keep
+   their deck names). The engine consumes the resolved board (canonical
+   structure + the skin's space names).
 
 5. **Dice are input, not generated.** Players roll real dice and enter the
    result. A virtual dice option may be added later (see §10) but is out of
@@ -100,8 +103,9 @@ Razor Pages). The engine is added as new class-library projects.
    on the way in and emits its own POCOs on the way out.
 
 3. **The board comes from the existing board-skin model.** The engine takes a
-   resolved board definition (spaces, colours, prices) as input — it does not
-   own board-skin persistence.
+   resolved board definition (the canonical spaces / sets / prices, with the
+   skin's space names overlaid) as input — it does not own board-skin
+   persistence.
 
 ---
 

@@ -488,6 +488,12 @@
                                 <dd class="col-5 text-end mb-2">@hotelsBuilt</dd>
                                 <dt class="col-7 text-body-secondary fw-normal">Hotels left</dt>
                                 <dd class="col-5 text-end mb-2">@hotelsLeft</dd>
+                                @* Free-hotel credits (R-06) — each waives the cost of one future hotel build. Shown only when held. *@
+                                @if (player.FreeHotels > 0)
+                                {
+                                    <dt class="col-7 text-body-secondary fw-normal">Free hotels</dt>
+                                    <dd class="col-5 text-end mb-2"><span class="badge text-bg-success">@player.FreeHotels</span></dd>
+                                }
                                 <dt class="col-7 text-body-secondary fw-normal">Cost to build all</dt>
                                 @* >0 guard: Cost() bumps a rounded-to-zero figure up to one grid unit, so show £0 directly when no set is held rather than a misleading minimum. *@
                                 <dd class="col-5 text-end mb-0">@(buildAllCostRaw > 0 ? Cost(buildAllCostRaw, FinancialReason.Build) : $"{cur}0")</dd>
@@ -592,15 +598,10 @@
                                                             {
                                                                 <span class="badge text-bg-info">Reserved</span>
                                                             }
-                                                            @* Purge state — currently purged (buildings stripped, rent reset to SET), or
-                                                               purged at some earlier point (HasBeenPurged) but since recovered. *@
+                                                            @* Purge state — currently purged (buildings stripped, rent reset to SET). *@
                                                             @if (prop.IsPurged)
                                                             {
                                                                 <span class="badge text-bg-danger">Purged</span>
-                                                            }
-                                                            else if (prop.HasBeenPurged)
-                                                            {
-                                                                <span class="badge text-bg-secondary">Purged Before</span>
                                                             }
                                                         </div>
                                                         <div class="pp-space-body">

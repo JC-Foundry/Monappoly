@@ -25,7 +25,7 @@ public record SaveSkinResult(bool Success, string? Id);
 
 
 //Game Setup Records:
-public record GameCreationResult(bool Result, string? GameId = null, string? JoinQrCode = null);
+public record GameCreationResult(bool Result, string? GameId = null);
 public record JoinGameResult(bool Result, string? Message = null, string? GameId = null);
 
 

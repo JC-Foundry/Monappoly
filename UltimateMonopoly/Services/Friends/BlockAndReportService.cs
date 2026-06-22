@@ -140,7 +140,6 @@ public class BlockAndReportService
             if(friend != null)
                 //Soft delete friend to double guard showing up.
                 //Relationship now has removed timestamp, and is soft deleted.
-                //TODO: Decide if Unblocking would create new friend record.
                 await _repos.GetRepository<Friend>()
                     .SoftDeleteAsync(friend, saveNow: false);
             
@@ -164,8 +163,6 @@ public class BlockAndReportService
         
         var blockedUser = await GetBlockedUser(userId);
         if (blockedUser == null) return true;
-
-        //TODO: Decide if friend relationship should be readded when unlock
         
         await _repos.BeginTransactionAsync();
         try

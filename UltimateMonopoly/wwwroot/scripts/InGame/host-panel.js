@@ -5,8 +5,7 @@
 // Each action confirms via its own Bootstrap modal; the modal's confirm button invokes the
 // matching GamePlayHub method (host-gated server-side). Draw Game enqueues the draw — the
 // engine concludes the game and the GameCompleted broadcast (game-play-hub.js) redirects
-// every client to the results page. Force Refresh / Cancel Game are scaffolded; their hub
-// methods are still TODO.
+// every client to the results page.
 (function () {
     'use strict';
 

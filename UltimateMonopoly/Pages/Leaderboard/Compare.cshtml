@@ -54,7 +54,7 @@
             var vd = Vd("cmp-" + t.Id);
             <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="tab-@t.Id" role="tabpanel"
                  aria-labelledby="tab-@t.Id-btn">
-                <partial name="_CompareGame" model="t.Players" view-data="vd" />
+                <partial name="_CompareGame" model="(t.Players, Model.Board)" view-data="vd" />
             </div>
         }
     </div>

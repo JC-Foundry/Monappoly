@@ -207,10 +207,11 @@ public class CardTriggerService
     {
         var matchingCards = new List<HeldCard>();
         foreach (var held in from player in engine.Cache.Game.GetPlayers(subject.PlayerId, excludePovPlayer: false)
-                 //Jailed players can't play cards through the trigger pipeline — the only in-jail play is the
-                 //OnInJail trigger (get-out-of-jail-free / befriend a guard, on their own jailed subject).
-                 //Exclude jailed holders from every other trigger (anytime cards, bystander reactions).
-                 where !player.IsInJail || trigger == CardTrigger.OnInJail
+                 //All cards are playable in jail — there is deliberately NO blanket jail exclusion here.
+                 //Get-out-of-jail-free cards never surface through this pipeline anyway (their Conditions
+                 //carry Trigger=None, which matches no real trigger flag); they play via their own
+                 //LeaveJailCard command path. Where a card is genuinely jail-specific (e.g. the dodgy-judge
+                 //"a double in jail becomes a triple"), the per-condition JailFilter below still gates it.
                  let mc = player.Cards
                      .Where(c =>
                      {

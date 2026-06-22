@@ -67,11 +67,17 @@ builder.Services.AddWebDefaults(builder.Configuration,
     configureClientIp: ip => ip.TrustProxyHeaders = true);
 
 // Rate limiting (opt-in) — scoped to the Identity auth endpoints via UseWhen in the pipeline below.
-// Per-IP brute-force defence on login / register / password / 2FA: 10 requests per minute per client IP.
+// Per-IP brute-force backstop on login / register / password / 2FA. Token bucket (not fixed-window) so a
+// legitimate fumbling session bursts through — wrong-password retries, register-then-login, confirm-email,
+// 2FA, plus a second user behind the same NAT/CGNAT IP — while the sustained refill still throttles an
+// automated hammer to a crawl. The real brute-force defence is per-account lockout; this is the coarse
+// per-IP cap on top. Burst up to 30 (TokenLimit); sustained 15/min (TokensPerPeriod over the 1-min Window).
+// PermitLimit is intentionally unset — it is a no-op under TokenBucket (TokenLimit drives capacity).
 builder.Services.AddRateLimiting(options =>
 {
     options.Strategy = RateLimitingStrategy.TokenBucket;
-    options.PermitLimit = 20;
+    options.TokenLimit = 30;
+    options.TokensPerPeriod = 15;
     options.Window = TimeSpan.FromMinutes(1);
     options.PartitionBy = RateLimitPartitionBy.ClientIp;
 });
@@ -178,6 +184,8 @@ async Task SetupDefaults()
 {
     await using var scope = app.Services.CreateAsyncScope();
     var boardCache = scope.ServiceProvider.GetRequiredService<BoardCacheService>();
+    var cardCache = scope.ServiceProvider.GetRequiredService<CardCacheService>();
     
     await boardCache.GetDefaultBoard();
+    await cardCache.GetCards();
 }

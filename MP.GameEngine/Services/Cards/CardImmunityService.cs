@@ -47,9 +47,11 @@ public class CardImmunityService
             PlayCardChoice = true
         }, ct: ct);
         
-        if(string.IsNullOrEmpty(response.SelectedKey))
+        //Only the offered immunity card's own id counts as "play" — an empty (decline) or any other key
+        //is a no-play (M-01: previously any non-empty key played the immunity card without matching the id).
+        if(response.SelectedKey != immunityCard.CardId)
             return false;
-        
+
         _ = await engine.CardService.PlayCard(engine, subject, immunityCard, ct);
         return true;
     }

@@ -132,7 +132,7 @@ public class BoardSkinService
         await _repos.GetRepository<BoardSkin>()
             .AddAsync(boardSkin);
         
-        _boardCacheService.Invalidate(_userInfo.UserId);
+        _boardCacheService.Invalidate();
         return true;
     }
 
@@ -144,7 +144,7 @@ public class BoardSkinService
         await _repos.GetRepository<BoardSkin>()
             .UpdateAsync(boardSkin);
         
-        _boardCacheService.Invalidate(_userInfo.UserId);
+        _boardCacheService.Invalidate();
         return true;
     }
 
@@ -211,7 +211,7 @@ public class BoardSkinService
             await _repos.SaveChangesAsync();
             await _repos.CommitTransactionAsync();
             
-            _boardCacheService.Invalidate(_userInfo.UserId);
+            _boardCacheService.Invalidate();
             return true;
         }
         catch (Exception ex)
@@ -251,7 +251,7 @@ public class BoardSkinService
         await _repos.GetRepository<BoardSkinSpace>()
             .AddAsync(boardSkinSpace);
         
-        _boardCacheService.Invalidate(_userInfo.UserId);
+        _boardCacheService.Invalidate();
         return true;
     }
 
@@ -263,7 +263,7 @@ public class BoardSkinService
         await _repos.GetRepository<BoardSkinSpace>()
             .UpdateAsync(boardSkinSpace);
         
-        _boardCacheService.Invalidate(_userInfo.UserId);
+        _boardCacheService.Invalidate();
         return true;
     }
 
@@ -279,7 +279,7 @@ public class BoardSkinService
         await _repos.GetRepository<BoardSkinSpace>()
             .SoftDeleteAsync(space);
         
-        _boardCacheService.Invalidate(_userInfo.UserId);
+        _boardCacheService.Invalidate();
         return true;
     }
 

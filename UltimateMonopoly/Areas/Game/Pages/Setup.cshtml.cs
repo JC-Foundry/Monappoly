@@ -151,7 +151,7 @@ public class SetupModel : PageModel
 
         foreach (var p in players)
         {
-            var card = await BuildCard(p, game.CreatedById);
+            var card = await BuildCard(p, game.CreatedById!);
             if (card is not null) Players.Add(card);
         }
 

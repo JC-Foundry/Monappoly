@@ -15,7 +15,6 @@ public class ProfileService
     public const string ProtectorPurpose = "UserProfileProtector";
     public const string ImgFileType = ".png";
 
-    //TODO: to be extended with pieces that are in the game
     //Note: your avatar image is a game piece
     private readonly string[] _avatarImageNames = ["car", "dog", "cat", "van", "horse", "wheel_barrow", "boot", "battleship", "plane"];
 

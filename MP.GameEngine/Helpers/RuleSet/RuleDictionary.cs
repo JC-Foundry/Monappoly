@@ -41,7 +41,7 @@ public static class RuleDictionary
     public const ushort FourthStationCost = SingleStationCost + 200; //4 stations grants rent of 200, so increase by 200
     
     //Houses and Hotels
-    public const ushort HouseCount = 37;
+    public const ushort HouseCount = 35;
     public const ushort HotelCount = 13;
     public const ushort MaxDoubleHotelsPerSet = 1;
     

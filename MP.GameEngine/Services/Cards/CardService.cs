@@ -6,6 +6,7 @@ using MP.GameEngine.Models.EventReceipts;
 using MP.GameEngine.Models.Prompts.PromptTypes;
 using MP.GameEngine.Models.Snapshot;
 using MP.GameEngine.Models.Snapshot.Cards;
+using MP.GameEngine.Services.SubSystems;
 
 namespace MP.GameEngine.Services.Cards;
 
@@ -31,10 +32,13 @@ public class CardService
     private readonly ICardActionService<DiceAction> _diceActionService;
     private readonly ICardActionService<NoOpAction> _noOpActionService;
     private readonly ICardActionService<CardTransferAction> _cardTransferActionService;
+    private readonly PropertyService _propertyService;
 
     /// <summary>
     /// Creates the card interpreter over the per-action handlers it dispatches to
     /// (one <see cref="ICardActionService{T}"/> per concrete <see cref="CardAction"/> type).
+    /// <paramref name="propertyService"/> is used to re-normalise rent levels once a card has
+    /// resolved (cards move title without each action re-normalising — see <see cref="ResolveCard"/>).
     /// </summary>
     public CardService(ICardActionService<MoneyAction> moneyActionService,
         ICardActionService<MovementAction> movementActionService,
@@ -48,7 +52,8 @@ public class CardService
         ICardActionService<DeckDrawAction> deckDrawActionService,
         ICardActionService<DiceAction> diceActionService,
         ICardActionService<NoOpAction> noOpActionService,
-        ICardActionService<CardTransferAction> cardTransferActionService)
+        ICardActionService<CardTransferAction> cardTransferActionService,
+        PropertyService propertyService)
     {
         _moneyActionService = moneyActionService;
         _movementActionService = movementActionService;
@@ -63,6 +68,7 @@ public class CardService
         _diceActionService = diceActionService;
         _noOpActionService = noOpActionService;
         _cardTransferActionService = cardTransferActionService;
+        _propertyService = propertyService;
     }
 
 
@@ -209,6 +215,14 @@ public class CardService
         var applied = true;
         foreach (var action in group.Actions)
             applied &= await ApplyAction(engine, player, action, ct, context);
+
+        //Re-normalise rent levels once the card's actions have all run. Property card actions move
+        //title (return / take / hand-in / receive-all / clear-FP) without each one re-normalising, so a
+        //set completed or broken by a card would otherwise leave properties at the wrong RentLevel
+        //(e.g. SINGLE instead of SET), which then trips "build on set" (R-04). One recompute at the
+        //resolution boundary covers every property-affecting action and multi-action card uniformly —
+        //including the multiple cards resolved in a trigger chain (each funnels through here).
+        _propertyService.NormaliseProperties(engine);
 
         //A play that didn't take effect isn't "played" — no receipt, and PlayCard keeps the card.
         if (applied)

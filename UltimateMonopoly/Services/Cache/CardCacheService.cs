@@ -29,7 +29,7 @@ public class CardCacheService
             return await _cardImportService.ImportCards();
         }) ?? throw new InvalidOperationException("Failed to get all cards");
     
-    public async Task<CardModel?> GetCard(string cardId)
+    public async Task<CardModel> GetCard(string cardId)
         => await _memoryCache.GetOrCreateAsync(GetKey(cardId), async entry =>
         {
             entry.SlidingExpiration = CardExpiration;

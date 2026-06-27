@@ -1,6 +1,7 @@
 using System.Text.Json;
 using JC.Core.Extensions;
 using JC.Github.Models;
+using UltimateMonopoly.Pages;
 
 namespace UltimateMonopoly.Areas.Admin.Models.ViewModels.Logs;
 
@@ -39,7 +40,7 @@ public class ReportedIssueViewModel
         Type = issue.Type;
         TypeDisplay = issue.Type.ToDisplayName();
 
-        Description = issue.Description;
+        Description = BugReportModel.StripReportLink(issue.Description);
         if (!string.IsNullOrEmpty(issue.ClientMetadata))
         {
             try

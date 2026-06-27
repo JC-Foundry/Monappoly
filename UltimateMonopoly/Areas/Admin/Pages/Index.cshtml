@@ -1,42 +1,66 @@
 @page
 @model UltimateMonopoly.Areas.Admin.Pages.IndexModel
+@using UltimateMonopoly.Areas.Admin.Models.ViewModels.Dashboard
 @{
     ViewData["Title"] = "Dashboard";
+    const string tile = "~/Areas/Admin/Pages/Shared/Dashboard/_SpokeTile.cshtml";
+    SpokeTileModel Coming(string title, string icon, string tone) => new() { Title = title, Icon = icon, Tone = tone };
 }
 
 <div class="d-flex align-items-center gap-3 mb-4">
     <span class="admin-page-ico bg-primary-subtle text-primary"><i class="bi bi-speedometer2"></i></span>
     <div>
         <h1 class="h3 mb-1">Admin Dashboard</h1>
-        <p class="text-body-secondary mb-0">Manage users, reports, and games, edit the rules, and review the audit trail.</p>
+        <p class="text-body-secondary mb-0">A glance at each area — open one for its full dashboard.</p>
     </div>
 </div>
 
-@* Section overview cards. Links land as each feature phase ships (design-docs/c1-admin-area.md §13). *@
-<div class="row g-3">
-    @{
-        (string Title, string Desc, string Icon, string Tone)[] sections =
+<div class="row g-4">
+    @* 50/50 — Users · Community *@
+    <div class="col-12 col-xl-6">
+        @if (Model.UsersTile != null)
         {
-            ("User Management",   "View users, manage roles, disable or remove accounts.",        "bi-people",         "primary"),
-            ("Report Management", "Review block-reports and act on the reported user.",            "bi-flag",           "danger"),
-            ("Game Management",   "Browse every game and draw, cancel, or delete it.",             "bi-controller",     "info"),
-            ("Rules & Turn Tax",  "Edit the player-facing rule text and the turn-tax config.",     "bi-journal-richtext","secondary"),
-            ("Audit Trail",       "Trace who changed what — by table and by user.",                "bi-clipboard-data", "warning"),
-            ("Application Logs",  "Admin actions plus email, notification, and messaging logs.",   "bi-journal-text",   "success")
-        };
-    }
-    @foreach (var s in sections)
+            <partial name="@tile" model="Model.UsersTile" />
+        }
+    </div>
+    <div class="col-12 col-xl-6">
+        @if (Model.CommunityTile != null)
+        {
+            <partial name="@tile" model="Model.CommunityTile" />
+        }
+        else
+        {
+            <partial name="@tile" model='Coming("Community", "bi-people-fill", "info")' />
+        }
+    </div>
+
+    @* Full width — Games (SystemAdmin only) *@
+    @if (Model.GamesTile != null)
     {
-        <div class="col-12 col-md-6 col-xl-4">
-            <div class="card h-100">
-                <div class="card-body d-flex align-items-start gap-3">
-                    <span class="admin-page-ico bg-@(s.Tone)-subtle text-@s.Tone"><i class="bi @s.Icon"></i></span>
-                    <div class="min-w-0">
-                        <h2 class="h6 mb-1">@s.Title</h2>
-                        <p class="small text-body-secondary mb-0">@s.Desc</p>
-                    </div>
-                </div>
-            </div>
+        <div class="col-12">
+            <partial name="@tile" model="Model.GamesTile" />
         </div>
     }
+
+    @* 50/50 — Audit · App Logs *@
+    <div class="col-12 col-xl-6">
+        @if (Model.AuditTile != null)
+        {
+            <partial name="@tile" model="Model.AuditTile" />
+        }
+        else
+        {
+            <partial name="@tile" model='Coming("Audit", "bi-clipboard-data", "warning")' />
+        }
+    </div>
+    <div class="col-12 col-xl-6">
+        @if (Model.AppLogsTile != null)
+        {
+            <partial name="@tile" model="Model.AppLogsTile" />
+        }
+        else
+        {
+            <partial name="@tile" model='Coming("App Logs", "bi-journal-text", "secondary")' />
+        }
+    </div>
 </div>

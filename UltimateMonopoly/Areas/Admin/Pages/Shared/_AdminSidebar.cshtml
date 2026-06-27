@@ -35,6 +35,17 @@ else
         </a>
     </div>
 
+    @* Hangfire dashboard — SystemAdmin only (matches HangfireDashboardAuthFilter); opens /hangfire in a new tab. *@
+    @if (User.IsInRole(AppRoles.SystemAdmin))
+    {
+        <div class="admin-nav-block">
+            <a href="/hangfire" target="_blank" rel="noopener" class="list-group-item list-group-item-action admin-nav-header">
+                <i class="bi bi-hourglass-split me-2 text-success"></i> Hangfire Dashboard
+                <i class="bi bi-box-arrow-up-right admin-nav-chevron"></i>
+            </a>
+        </div>
+    }
+
     @* User Management *@
     <div class="admin-nav-block">
         <button type="button" class="list-group-item list-group-item-action admin-nav-header"
@@ -44,6 +55,8 @@ else
         </button>
         <div class="collapse @(usersOpen ? "show" : "")" id="nav-users">
             <div class="list-group list-group-flush">
+                <a asp-area="Admin" asp-page="/Users/Dashboard" class="list-group-item list-group-item-action admin-nav-item">Dashboard</a>
+                <div class="admin-nav-divider"></div>
                 <a asp-area="Admin" asp-page="/Users/Index" class="list-group-item list-group-item-action admin-nav-item">All Users</a>
                 <a asp-area="Admin" asp-page="/Users/Index" asp-route-RestrictedFilter="Restricted" class="list-group-item list-group-item-action admin-nav-item">Restricted Users</a>
                 <a asp-area="Admin" asp-page="/Users/Index" asp-route-DisabledFilter="Disabled" class="list-group-item list-group-item-action admin-nav-item">Disabled Users</a>
@@ -78,6 +91,8 @@ else
             </button>
             <div class="collapse @(gamesOpen ? "show" : "")" id="nav-games">
                 <div class="list-group list-group-flush">
+                    <a asp-area="Admin" asp-page="/Games/Dashboard" class="list-group-item list-group-item-action admin-nav-item">Dashboard</a>
+                    <div class="admin-nav-divider"></div>
                     <a asp-area="Admin" asp-page="/Games/Index" class="list-group-item list-group-item-action admin-nav-item">All Games</a>
                     <a asp-area="Admin" asp-page="/Games/Index" asp-route-State="Setup" class="list-group-item list-group-item-action admin-nav-item">Setup Games</a>
                     <a asp-area="Admin" asp-page="/Games/Index" asp-route-State="InPlay" class="list-group-item list-group-item-action admin-nav-item">In Play Games</a>
@@ -101,6 +116,8 @@ else
         </button>
         <div class="collapse @(auditOpen ? "show" : "")" id="nav-audit">
             <div class="list-group list-group-flush">
+                <a asp-area="Admin" asp-page="/Audit/Dashboard" class="list-group-item list-group-item-action admin-nav-item">Dashboard</a>
+                <div class="admin-nav-divider"></div>
                 <a asp-area="Admin" asp-page="/Audit/Data/Index" class="list-group-item list-group-item-action admin-nav-item">Data Trail</a>
                 <a asp-area="Admin" asp-page="/Audit/Users/Index" class="list-group-item list-group-item-action admin-nav-item">User Trail</a>
             </div>
@@ -116,6 +133,8 @@ else
         </button>
         <div class="collapse @(logsOpen ? "show" : "")" id="nav-logs">
             <div class="list-group list-group-flush">
+                <a asp-area="Admin" asp-page="/Logs/Dashboard" class="list-group-item list-group-item-action admin-nav-item">Dashboard</a>
+                <div class="admin-nav-divider"></div>
                 <a asp-area="Admin" asp-page="/Logs/Admin/Index" class="list-group-item list-group-item-action admin-nav-item">Admin Logs</a>
                 <div class="admin-nav-divider"></div>
                 <a asp-area="Admin" asp-page="/Logs/Notifications/Index" class="list-group-item list-group-item-action admin-nav-item">Notification Logs</a>

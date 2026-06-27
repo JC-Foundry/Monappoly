@@ -23,6 +23,10 @@ namespace UltimateMonopoly.Areas.Admin.Services;
 /// and wraps it in a fresh <see cref="GameEngine"/>; it is never populated into the live
 /// <see cref="GameCacheService"/> nor saved. The admin page sets <c>ViewData["AdminId"]</c> so the reused
 /// <c>_PlayerProfileView</c> force-disables every command button.
+/// <para>The ctor is <b>not</b> role-guarded: <see cref="BuildEngine"/> is read-only (it never persists), so
+/// any caller may rehydrate an engine — including a background job with no user context (the abandoned-games
+/// retention job draws via this path). The <b>destructive</b> <see cref="TryRevertToTurn"/> keeps a
+/// SystemAdmin guard, applied at the method rather than the ctor.</para>
 /// </summary>
 public class AdminGameStateService
 {
@@ -34,6 +38,7 @@ public class AdminGameStateService
     private readonly IEngineNotifier _notifier;
     private readonly IShortfallService _shortfallService;
     private readonly CardService _cardService;
+    private readonly IUserInfo _userInfo;
 
     public AdminGameStateService(ILogger<AdminGameStateService> logger,
         IRepositoryManager repos,
@@ -53,11 +58,7 @@ public class AdminGameStateService
         _notifier = notifier;
         _shortfallService = shortfallService;
         _cardService = cardService;
-        
-        if(!userInfo.IsInRole(SystemRoles.SystemAdmin))
-            throw new UnauthorizedAccessException(
-                "You are not authorized to perform this action."
-            );       
+        _userInfo = userInfo;
     }
 
     /// <summary>Builds a read-only engine over the given turn's snapshot, or null if the game / turn / snapshot is missing.</summary>
@@ -94,6 +95,11 @@ public class AdminGameStateService
 
     public async Task<bool> TryRevertToTurn(string gameId, uint turnNumber)
     {
+        // The guard lives here (not the ctor) so BuildEngine stays open to any caller; revert hard-deletes
+        // turns/snapshots/events, so it is SystemAdmin-only.
+        if (!_userInfo.IsInRole(SystemRoles.SystemAdmin))
+            throw new UnauthorizedAccessException("You are not authorized to perform this action.");
+
         var game = await _repos.GetRepository<UltimateMonopoly.Models.DataModels.Games.Game>()
             .AsQueryable()
             .Include(g => g.Turns)

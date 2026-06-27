@@ -7,5 +7,6 @@ public enum AdminTargetType
     Game,
     Report,
     Role,
-    Config
+    Config,
+    Issue
 }

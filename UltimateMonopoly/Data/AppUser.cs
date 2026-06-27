@@ -19,6 +19,10 @@ public class AppUser : BaseUser
 
     public DateTime? LastActiveUtc { get; set; }
 
+    /// <summary>UTC timestamp the account was registered. Set once at registration; powers the dashboard's
+    /// registration-trend and cohort metrics. Nullable so pre-existing accounts (before this column) read null.</summary>
+    public DateTime? RegisteredUtc { get; set; }
+
     public string? SetAvatarColour(string? colour)
     {
         if (string.IsNullOrWhiteSpace(colour))

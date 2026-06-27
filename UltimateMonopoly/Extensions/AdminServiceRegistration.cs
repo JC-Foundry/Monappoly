@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using UltimateMonopoly.Areas.Admin.Middleware;
 using UltimateMonopoly.Areas.Admin.Services;
+using UltimateMonopoly.Areas.Admin.Services.Dashboard;
 
 namespace UltimateMonopoly.Extensions;
 
@@ -19,6 +20,14 @@ public static class AdminServiceRegistration
         services.TryAddScoped<AppLogService>();
         services.TryAddScoped<SettingsManagementService>();
         services.TryAddScoped<RecentActivityService>();
+        services.TryAddScoped<IssueContactService>();
+
+        // Dashboards (C1 — hub + per-spoke). Each builds reusable widget models for its spoke + the hub tile.
+        services.TryAddScoped<UserDashboardService>();
+        services.TryAddScoped<CommunityDashboardService>();
+        services.TryAddScoped<GamesDashboardService>();
+        services.TryAddScoped<AuditDashboardService>();
+        services.TryAddScoped<AppLogsDashboardService>();
 
         // Singleton registry of users flagged for a live-session sign-in refresh (role/account changes).
         services.TryAddSingleton<AuthRefreshService>();

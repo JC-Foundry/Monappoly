@@ -10,7 +10,7 @@
 @if (Model.Paged != null)
 {
     <div class="d-flex align-items-center justify-content-between mb-2">
-        <span class="small text-body-secondary">@Model.Paged.TotalCount.ToString("N0") event(s)</span>
+        <span class="small text-body-secondary">Showing @Model.Paged.Count.ToString("N0") of @Model.Paged.TotalCount.ToString("N0") event(s)</span>
     </div>
 }
 

@@ -115,6 +115,19 @@ public class UserManagementService
         return new UserViewModel(user, roles.Contains(AppRoles.Restricted), roles);
     }
 
+    /// <summary>The reporter-contact essentials for <paramref name="userId"/> — email, a resolved display name,
+    /// and whether the email is confirmed — and nothing else, so a GithubManager can email a reporter without
+    /// full user-detail access. Returns null if the account no longer exists.</summary>
+    public async Task<UserContactInfo?> GetContactInfo(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return null;
+
+        // DisplayName can be null OR a set-but-empty string — guard with IsNullOrEmpty, not ??.
+        var displayName = string.IsNullOrEmpty(user.DisplayName) ? (user.UserName ?? "there") : user.DisplayName;
+        return new UserContactInfo(user.Email, displayName, user.EmailConfirmed);
+    }
+
     // ---- Actions (each mutates then writes an AdminActionLog; returns false on a missing user / failed op) ----
 
     private void RefreshUserSignIn(string userId)

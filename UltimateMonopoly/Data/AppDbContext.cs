@@ -46,6 +46,9 @@ public class AppDbContext : IdentityDataDbContext<AppUser, AppRole>,
     
     //Card IDs persistence
     public DbSet<PersistedCardIds> PersistedCardIds { get; set; }
+
+    //Dashboard — daily user-activity snapshots (trend history)
+    public DbSet<DailyActivityStat> DailyActivityStats { get; set; }
     
     // Social
     public DbSet<Friend> Friends { get; set; }

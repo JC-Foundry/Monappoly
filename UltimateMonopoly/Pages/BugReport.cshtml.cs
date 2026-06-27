@@ -15,6 +15,19 @@ namespace UltimateMonopoly.Pages;
 /// GitHub via <see cref="BugReportService"/>.</summary>
 public class BugReportModel : PageModel
 {
+    public const string ReportLinkDivider = "<br><span id=\"__report-link-divider__\"></span><br>";
+
+    /// <summary>The user's own report text, with the appended "View Issue in App" link removed. The link is
+    /// appended after <see cref="ReportLinkDivider"/> when an issue syncs to GitHub, so everything from the
+    /// divider onward is dropped — the admin description view and the reporter-contact email show only what the
+    /// user wrote. Bodies without the divider (GitHub-origin / never-synced) are returned trimmed, unchanged.</summary>
+    public static string StripReportLink(string? body)
+    {
+        if (string.IsNullOrEmpty(body)) return "";
+        var idx = body.IndexOf(ReportLinkDivider, StringComparison.Ordinal);
+        return (idx >= 0 ? body[..idx] : body).Trim();
+    }
+
     private readonly BugReportService _bugReports;
     private readonly IUserInfo _userInfo;
     private readonly NotificationSender _notifications;
@@ -62,7 +75,9 @@ public class BugReportModel : PageModel
         if (issue.ReportSent && issue.ExternalId.HasValue)
         {
             var appUrl = $"{Request.Scheme}://{Request.Host}/Admin/Logs/Issues/Index#{issue.ExternalId}";
-            var linkedBody = $"{description}\n\n<p><a href=\"{appUrl}\">View Issue in App</a></p>";
+            // The link goes after ReportLinkDivider so the admin description view and the reporter-contact email
+            // can strip it back off (StripReportLink) and show only the user's own text.
+            var linkedBody = $"{description}{ReportLinkDivider}<a href=\"{appUrl}\">View Issue in App</a>";
             await _bugReports.UpdateIssueBody(issue, linkedBody);
         }
 

@@ -81,7 +81,41 @@ public static class ServiceRegistration
         services.TryAddScoped<GameService>();
         services.TryAddScoped<PlayerProfileService>();
         services.TryAddScoped<GameCacheService>();
-        
+
+        // Game retention (terminal hard-purge) — permanently deletes ANY soft-deleted game-history record
+        // (snapshots/events/turns) past GameSettings.CleanupRetentionMonths: both the cascade from a deleted
+        // game AND the snapshots the snapshot auto-delete job soft-deletes on active games. Game/GamePlayer
+        // shells are kept (PlayerGameStat FK → stats stay intact). Daily at 03:00 UK, after the 01:00 stats sweep.
+        services.AddHangfireJob<GameCleanupJob>(opts =>
+        {
+            opts.Cron = "0 3 * * *";
+            opts.TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
+        });
+
+        // Abandoned games — in-play games with no new turn for GameSettings.AbandonedRetentionWeeks get
+        // Cancelled or Drawn (per GameSettings.AbandonedGameAction). Daily at 04:00 UK.
+        services.AddHangfireJob<GameAbandonmentJob>(opts =>
+        {
+            opts.Cron = "0 4 * * *";
+            opts.TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
+        });
+
+        // Auto-delete cancelled games — soft-deletes Cancelled games last touched past
+        // GameSettings.AutoDeleteCancelledRetentionMonths (the GameCleanupJob later hard-purges them). 03:30 UK.
+        services.AddHangfireJob<CancelledGameCleanupJob>(opts =>
+        {
+            opts.Cron = "30 3 * * *";
+            opts.TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
+        });
+
+        // Auto-delete snapshots — soft-deletes the snapshots/events of finished/cancelled games past
+        // GameSettings.AutoDeleteSnapshotsRetentionMonths (off by default). 04:30 UK.
+        services.AddHangfireJob<SnapshotCleanupJob>(opts =>
+        {
+            opts.Cron = "30 4 * * *";
+            opts.TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
+        });
+
         // Cards
         services.TryAddScoped<ICardCacheService, CardCacheService>();
         services.TryAddScoped<CardImportService>();
@@ -108,6 +142,14 @@ public static class ServiceRegistration
         services.AddHangfireJob<StatisticsJob>(opts =>
         {
             opts.Cron = "0 1,13 * * *";
+            opts.TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
+        });
+
+        // Daily user-activity snapshot — powers the dashboard's logins / DAU / WAU / MAU trend history
+        // (the live tables store only the latest activity, not history). 00:10 UK — records the prior day.
+        services.AddHangfireJob<DailyStatsJob>(opts =>
+        {
+            opts.Cron = "10 0 * * *";
             opts.TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
         });
 

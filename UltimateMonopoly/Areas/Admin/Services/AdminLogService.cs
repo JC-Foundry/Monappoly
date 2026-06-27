@@ -281,6 +281,27 @@ public class AdminLogService
     #endregion
 
 
+    #region Issues
+
+    /// <summary>Records that the reporter of an issue was emailed. <b>Retention note:</b> the Contact page reads
+    /// these entries to warn against double-contacting a reporter, so the (future) admin-log retention job must
+    /// <b>not</b> prune <see cref="AdminActionType.IssueReporterContacted"/> entries — otherwise the warning
+    /// silently regresses.</summary>
+    public async Task LogIssueReporterContacted(string issueId, string reporterUserId, string subject)
+    {
+        var detail = $"{AdminLogIdentifier} emailed the reporter of issue '{issueId}' (user '{reporterUserId}') — subject: \"{subject}\".";
+        await SaveLog(new AdminActionLog
+        {
+            Action = AdminActionType.IssueReporterContacted,
+            TargetType = AdminTargetType.Issue,
+            TargetId = issueId,
+            Detail = detail
+        });
+    }
+
+    #endregion
+
+
     private async Task SaveLog(AdminActionLog log)
     {
         await _logs.AddAsync(log);

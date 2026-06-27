@@ -140,6 +140,9 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
+                // Stamp registration time (powers the dashboard registration-trend / cohort metrics). LastLoginUtc
+                // is deliberately NOT set here — the sign-in / email-confirm flow owns that (TODO: reg-flow revisit).
+                user.RegisteredUtc = DateTime.UtcNow;
 
                 await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);

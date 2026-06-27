@@ -27,5 +27,8 @@ public enum AdminActionType
     RulesUpdated,
     TurnTaxUpdated,
     SettingsUpdated,
-    StatisticsRecomputed
+    StatisticsRecomputed,
+
+    // Issues
+    IssueReporterContacted
 }

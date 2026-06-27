@@ -17,7 +17,7 @@ namespace UltimateMonopoly.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.11")
+                .HasAnnotation("ProductVersion", "9.0.17")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -1255,6 +1255,9 @@ namespace UltimateMonopoly.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<DateTime?>("RegisteredUtc")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<bool>("RequirePasswordChange")
                         .HasColumnType("tinyint(1)");
 
@@ -1480,6 +1483,34 @@ namespace UltimateMonopoly.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("SharedBoardSkins");
+                });
+
+            modelBuilder.Entity("UltimateMonopoly.Models.DataModels.DailyActivityStat", b =>
+                {
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Dau")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Logins")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Mau")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NewUsers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalUsers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Wau")
+                        .HasColumnType("int");
+
+                    b.HasKey("Date");
+
+                    b.ToTable("DailyActivityStats");
                 });
 
             modelBuilder.Entity("UltimateMonopoly.Models.DataModels.Games.Game", b =>

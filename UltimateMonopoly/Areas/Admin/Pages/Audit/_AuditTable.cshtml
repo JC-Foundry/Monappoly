@@ -26,7 +26,7 @@
 }
 
 <div class="d-flex align-items-center justify-content-between mb-2">
-    <span class="small text-body-secondary">@Model.Entries.TotalCount.ToString("N0") entr@(Model.Entries.TotalCount == 1 ? "y" : "ies")</span>
+    <span class="small text-body-secondary">Showing @Model.Entries.Count.ToString("N0") of @Model.Entries.TotalCount.ToString("N0") entr@(Model.Entries.TotalCount == 1 ? "y" : "ies")</span>
 </div>
 
 <div class="table-responsive">

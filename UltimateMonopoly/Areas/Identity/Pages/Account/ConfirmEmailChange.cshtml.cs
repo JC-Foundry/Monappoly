@@ -26,12 +26,8 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
             _signInManager = signInManager;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [TempData]
-        public string StatusMessage { get; set; }
+        /// <summary>Whether the email change was confirmed — drives the success / error state on the page.</summary>
+        public bool Succeeded { get; private set; }
 
         public async Task<IActionResult> OnGetAsync(string userId, string email, string code)
         {
@@ -50,8 +46,7 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
             var result = await _userManager.ChangeEmailAsync(user, email, code);
             if (!result.Succeeded)
             {
-                StatusMessage = "Error changing email.";
-                return Page();
+                return Page();   // Succeeded stays false → error state
             }
 
             // Username is a separate, user-chosen field here (profanity-checked at register) — it is NOT
@@ -59,7 +54,7 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
             // scaffold set the username to the new email; that assumption doesn't hold in this app.)
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Thank you for confirming your email change.";
+            Succeeded = true;
             return Page();
         }
     }

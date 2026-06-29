@@ -5,7 +5,20 @@ namespace UltimateMonopoly.Helpers;
 public class RuleSection(string section, int sectionNumber)
 {
     public string Section { get; } = section;
+
+    /// <summary>
+    /// The canonical section id — matches <c>GameRule.Section</c>. Stable and never renumbered, so it
+    /// reliably looks up a section's rules and serves as the anchor id. Admin callers (<c>GetSection</c>)
+    /// key off this.
+    /// </summary>
     public int SectionNumber { get; set; } = sectionNumber;
+
+    /// <summary>
+    /// The display ordinal shown to players — made contiguous (0, 1, 2 …) after fully-hidden sections are
+    /// dropped, so the list never shows a gap. Equals <see cref="SectionNumber"/> until renumbered by
+    /// <see cref="PageRulesHelper.GetSections"/>.
+    /// </summary>
+    public int DisplayNumber { get; set; } = sectionNumber;
 }
 
 public static class PageRulesHelper
@@ -61,19 +74,22 @@ public static class PageRulesHelper
         if(rules == null)
             return sections;
 
+        // Keep only sections that still have a visible rule, and renumber their DISPLAY ordinal contiguously
+        // (0, 1, 2 …) so a fully-hidden section leaves no gap in the list. SectionNumber (the canonical id that
+        // maps a section to its rules) is left untouched.
         var i = 0;
         var validSections = new List<RuleSection>();
-        foreach (var s in from s in sections 
-                 let validRules = rules
-                     .Count(r => r.Section == s.SectionNumber && !r.IsHidden) 
-                 where validRules != 0 
-                 select s)
+        foreach (var s in sections)
         {
-            s.SectionNumber = i;
+            var visibleRules = rules.Count(r => r.Section == s.SectionNumber && !r.IsHidden);
+            if (visibleRules == 0)
+                continue;
+
+            s.DisplayNumber = i;
             validSections.Add(s);
             i++;
         }
-        
+
         return validSections;
     }
     

@@ -22,7 +22,7 @@
 </head>
 <body>
     <nav class="navbar navbar-glass mb-4" data-game-nav>
-        <div class="container-xl d-flex align-items-center justify-content-between">
+        <div class="app-page d-flex align-items-center justify-content-between">
             <partial name="_Branding" />
 
             @if (SignInManager.IsSignedIn(User))
@@ -35,7 +35,7 @@
         </div>
     </nav>
 
-    <main class="container-xl pb-5">
+    <main class="app-page pb-5">
         @RenderBody()
     </main>
 

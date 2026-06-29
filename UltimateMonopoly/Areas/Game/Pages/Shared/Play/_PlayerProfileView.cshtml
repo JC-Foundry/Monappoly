@@ -705,7 +705,7 @@
                                 <i class="bi @CardIcon(item.CardType) fs-3 text-body-secondary"></i>
                                 <div class="flex-grow-1">
                                     <p class="mb-2">@item.GetDisplayText(engine.Cache, playerId)</p>
-                                    <span class="badge text-bg-@CardDisplayHelper.CardColourDisplay(item.CardType)">@item.CardType.ToDisplayName()</span>
+                                    <span class="badge text-bg-@CardDisplayHelper.CardColourDisplay(item.CardType, false)">@item.CardType.ToDisplayName()</span>
                                 </div>
                                 <div class="text-end small text-body-secondary flex-shrink-0">
                                     <div class="fw-semibold">@item.ConditionDisplay()</div>

@@ -5,6 +5,7 @@ using JC.Core.Services.DataRepositories;
 using Microsoft.EntityFrameworkCore;
 using MP.GameEngine.Abstractions;
 using MP.GameEngine.Enums.Games;
+using MP.GameEngine.Services.SubSystems;
 using UltimateMonopoly.Models.DataModels.Games;
 using UltimateMonopoly.Models.ViewModels.Games;
 using UltimateMonopoly.Services.Cache;
@@ -175,9 +176,23 @@ public class GameService
         {
             if(engine.Cache.HostPlayerId != submittingUserId)
                 return;
-            
+
             var completionService = sp.GetRequiredService<IGameCompletionService>();
             await completionService.DrawGame(engine);
+        });
+    }
+
+    public void EnqueueDeclareWinner(string gameId, string submittingUserId)
+    {
+        _executor.Enqueue(gameId, async (engine, sp, ct) =>
+        {
+            if(engine.Cache.HostPlayerId != submittingUserId)
+                return;
+
+            // Bankrupts every player but the highest net worth; its final bankruptcy concludes
+            // the game (→ DeclareWinner → GameCompleted), redirecting all clients to the results.
+            var bankruptcyService = sp.GetRequiredService<BankruptcyService>();
+            await bankruptcyService.DeclareWinnerViaNetWorth(engine, ct);
         });
     }
 

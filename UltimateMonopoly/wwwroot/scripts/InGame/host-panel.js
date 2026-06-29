@@ -84,6 +84,8 @@
 
     wire('drawGameConfirmModal', 'draw', 'DrawGame');
     wire('forceRefreshConfirmModal', 'force-refresh', 'ForceRefresh');
+    // Declare Winner — highest net worth wins, the rest are bankrupted (DeclareWinnerViaNetWorth).
+    wire('declareWinnerConfirmModal', 'declare-winner', 'DeclareWinner');
     // Cancel Game isn't wired here — its confirm button is a plain POST form to the Play page
     // (Cancel handler), which cancels server-side and broadcasts the redirect home.
 })();

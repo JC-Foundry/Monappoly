@@ -101,7 +101,7 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
@@ -133,8 +133,10 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
             if(profanityResult.IsProfane)
             {
                 _logger.LogWarning("User tried to register with username '{Username}'", Input.Username);
-                ModelState.AddModelError(nameof(Input.Username),
-                    $"This username is not allowed. Please choose another.");
+                // Model-level (string.Empty) so it renders in the page's error alert, not the field span —
+                // jQuery-unobtrusive clears server-only field errors the moment the user interacts.
+                ModelState.AddModelError(string.Empty,
+                    "That username isn't allowed — please choose another.");
             }
             
             if (ModelState.IsValid)

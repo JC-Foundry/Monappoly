@@ -2,6 +2,7 @@ using Hangfire;
 using JC.Communication.Email.Models;
 using JC.Communication.Email.Models.Options;
 using JC.Communication.Extensions;
+using JC.Communication.Notifications.Models.Options;
 using JC.Core.Extensions;
 using JC.Github.Extensions;
 using JC.Identity.Authentication;
@@ -39,6 +40,10 @@ builder.Services.AddRazorPages(options =>
     // other admin page (Dashboard included). Dual-role admins are unaffected.
     options.Conventions.AddAreaFolderApplicationModelConvention("Admin", "/",
         model => model.Filters.Add(new GithubManagerPageFilter()));
+    // Signed-in users have no business on the login/register flow — bounce them to account management.
+    // The filter skips Manage/*, Logout, ConfirmEmail/Change, AccessDenied and Disabled (still authed-usable).
+    options.Conventions.AddAreaFolderApplicationModelConvention("Identity", "/Account",
+        model => model.Filters.Add(new RedirectAuthenticatedFilter()));
 });
 builder.Services.AddControllers();
 
@@ -62,6 +67,20 @@ builder.Services.AddMySqlDatabase<AppDbContext>(builder.Configuration, migration
 // Core
 builder.Services.AddCore<AppDbContext>();
 
+// JC.Core background-job retention (the jobs are registered with Hangfire in ServiceRegistration).
+// Audit-entry cleanup keeps 6 months (with the package's 30-record-per-table floor). The generic
+// soft-delete cleanup is deliberately left OFF: it auto-discovers EVERY soft-deletable entity and
+// hard-deletes app-wide, which would bypass the bespoke game-retention pipeline (GameCleanupJob keeps
+// Game/GamePlayer shells alive for the PlayerGameStat FK). Only enable it with the game-history tables
+// blacklisted.
+builder.Services.ConfigureCoreBackgroundJobs(options =>
+{
+    options.EnableAuditCleanupJob = true;
+    options.AuditRetentionMonths = 6;
+
+    options.EnableSoftDeleteCleanupJob = false;
+});
+
 // Identity. Disabled (but still signed-in) users are redirected to a dedicated page — distinct from the
 // generic 403 AccessDenied — that explains the disable and offers log out / self-delete. AccessDeniedRoute
 // is auto-added to the middleware's ExcludedPaths, so a disabled user can actually load it.
@@ -70,6 +89,27 @@ builder.Services.AddIdentity<AppUser, AppRole, AppDbContext>(
     {
         options.AccessDeniedRoute = "/Identity/Account/Disabled";
     });
+
+// Identity password policy + email confirmation. Configured after AddIdentity so these override the
+// ASP.NET defaults. RequireConfirmedAccount gates sign-in on a confirmed email — the register / external-
+// login flows already branch on it (no auto-login until the user confirms via the emailed link).
+builder.Services.Configure<Microsoft.AspNetCore.Identity.IdentityOptions>(options =>
+{
+    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;   // at least one special character
+    
+    options.User.RequireUniqueEmail = true;
+    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@";
+
+    options.SignIn.RequireConfirmedAccount = true;     // must confirm email before signing in
+    
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+});
 
 // Global authorisation — every page requires an authenticated user by default.
 // Pages that must be public (Login, Register, password reset, etc.) opt out with [AllowAnonymous].
@@ -120,16 +160,38 @@ builder.Services.AddEmail<AppDbContext>(builder.Configuration, options =>
     options.Provider = builder.Environment.IsDevelopment() 
         ? EmailProvider.Console 
         : EmailProvider.Microsoft;
-    options.LoggingMode = builder.Environment.IsDevelopment() 
+    options.LoggingMode = builder.Environment.IsDevelopment()
         ? EmailLoggingMode.FullLog
         : EmailLoggingMode.ExcludeContent;
+});
+// Email-log retention — keep 6 months (registered with Hangfire in ServiceRegistration).
+builder.Services.ConfigureEmailBackgroundJobs(options =>
+{
+    options.EnableEmailLogCleanupJob = true;
+    options.EmailLogRetentionMonths = 6;
 });
 
 // Communication — Messaging (E1 — friends-only DMs; no group chats)
 builder.Services.AddMessaging<AppDbContext>(o => o.DisableGroups = true);
+// Messaging-log retention — activity + read logs, keep 6 months.
+builder.Services.ConfigureMessagingBackgroundJobs(options =>
+{
+    options.EnableActivityLogCleanupJob = true;
+    options.ActivityLogRetentionMonths = 6;
+
+    options.EnableReadLogCleanupJob = true;
+    options.ReadLogRetentionMonths = 6;
+});
 
 // Communication — Notifications
 builder.Services.AddNotifications<AppDbContext>();
+// Notification-log retention — keep 6 months. (No dedicated Configure extension ships for this one, so
+// the options are set through the standard Options pipeline the job reads via IOptions<>.)
+builder.Services.Configure<NotificationBackgroundJobOptions>(options =>
+{
+    options.EnableNotificationLogCleanupJob = true;
+    options.NotificationLogRetentionMonths = 6;
+});
 
 //Background Jobs — Hangfire
 builder.Services.AddHangfireSqlServer(builder.Configuration);
@@ -189,6 +251,8 @@ app.MapGet("/account", () => Results.Redirect("/Identity/Account/Manage"));
 app.MapGet("/profile", () => Results.Redirect("/Identity/Profile"));
 app.MapGet("/social", () => Results.Redirect("/Social/Friends"));
 app.MapGet("/friends", () => Results.Redirect("/Social/Friends"));
+app.MapGet("/chat", () => Results.Redirect("/Social/Messages/Index"));
+app.MapGet("/message", () => Results.Redirect("/Social/Messages/Index"));
 app.MapGet("/join", () => Results.Redirect("/Games/Join"));
 
 app.MapRazorPages();

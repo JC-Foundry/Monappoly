@@ -143,13 +143,15 @@ public class GamesDashboardService
         var finishedLengths = games.Where(g => g.State == GameState.Finished && turnsByGame.ContainsKey(g.Id))
             .Select(g => (int)turnsByGame[g.Id].MaxTurn).ToList();
         var avgTurns = finishedLengths.Count > 0 ? finishedLengths.Average() : 0;
+        // Bins tuned to typical play (games normally run 100+ turns): very short ≤30, short ≤80,
+        // quick ≤120, standard ≤160, long 160+.
         var lengthBuckets = new List<HistogramBucket>
         {
-            new("1–10", finishedLengths.Count(l => l <= 10)),
-            new("11–25", finishedLengths.Count(l => l > 10 && l <= 25)),
-            new("26–50", finishedLengths.Count(l => l > 25 && l <= 50)),
-            new("51–100", finishedLengths.Count(l => l > 50 && l <= 100)),
-            new("100+", finishedLengths.Count(l => l > 100))
+            new("0–30", finishedLengths.Count(l => l <= 30)),
+            new("31–80", finishedLengths.Count(l => l > 30 && l <= 80)),
+            new("81–120", finishedLengths.Count(l => l > 80 && l <= 120)),
+            new("121–160", finishedLengths.Count(l => l > 120 && l <= 160)),
+            new("160+", finishedLengths.Count(l => l > 160))
         };
         var longest = games.Where(g => turnsByGame.ContainsKey(g.Id))
             .Select(g => new { g.Name, g.Id, Turns = (int)turnsByGame[g.Id].MaxTurn })

@@ -165,7 +165,7 @@ builder.Services.AddGithub<AppDbContext>(builder.Configuration, options =>
 builder.Services.AddEmail<AppDbContext>(builder.Configuration, options =>
 {
     options.Provider = builder.Environment.IsDevelopment() 
-        ? EmailProvider.Console 
+        ? EmailProvider.Microsoft 
         : EmailProvider.Microsoft;
     options.LoggingMode = builder.Environment.IsDevelopment()
         ? EmailLoggingMode.FullLog
@@ -250,6 +250,24 @@ await app.Services.MigrateDatabaseAsync<AppDbContext>();
 
 // Seed admin and roles
 await app.ConfigureAdminAndRolesAsync<AppUser, AppRole, AppDbContext, AppRoles>();
+
+// XML sitemap — only the publicly crawlable content pages (everything else is behind global auth).
+// Built from the live request host so the <loc>s are correct across dev / staging / prod without a
+// hardcoded domain. AllowAnonymous so the global "require authenticated user" fallback doesn't gate it.
+app.MapGet("/sitemap.xml", (HttpContext ctx) =>
+{
+    var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
+    string[] paths = ["/", "/Rules", "/Guides"];
+
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+    sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+    foreach (var path in paths)
+        sb.AppendLine($"  <url><loc>{baseUrl}{path}</loc></url>");
+    sb.AppendLine("</urlset>");
+
+    return Results.Content(sb.ToString(), "application/xml");
+}).AllowAnonymous();
 
 // Short routes for Identity pages
 app.MapGet("/login", () => Results.Redirect("/Identity/Account/Login"));

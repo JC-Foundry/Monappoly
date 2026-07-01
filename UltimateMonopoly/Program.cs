@@ -165,7 +165,7 @@ builder.Services.AddGithub<AppDbContext>(builder.Configuration, options =>
 builder.Services.AddEmail<AppDbContext>(builder.Configuration, options =>
 {
     options.Provider = builder.Environment.IsDevelopment() 
-        ? EmailProvider.Console 
+        ? EmailProvider.Microsoft 
         : EmailProvider.Microsoft;
     options.LoggingMode = builder.Environment.IsDevelopment()
         ? EmailLoggingMode.FullLog

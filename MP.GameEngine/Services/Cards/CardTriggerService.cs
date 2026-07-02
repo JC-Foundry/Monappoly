@@ -76,11 +76,21 @@ public class CardTriggerService
     public Task<SuppressDefault> OnRollDouble(Framework.GameEngine engine, PlayerModel roller, CancellationToken ct)
         => ProcessGameTrigger(engine, roller, CardTrigger.OnRollDouble, null, ct);
 
-    /// <summary>Subject rolled a triple — downgrade triple→double. Orchestrator triple branch.</summary>
+    /// <summary>Subject rolled a triple — downgrade triple→double. Fired at roll time (the roll is the subject).</summary>
     public Task<SuppressDefault> OnRollTriple(Framework.GameEngine engine, PlayerModel roller, CancellationToken ct)
         => ProcessGameTrigger(engine, roller, CardTrigger.OnRollTriple, null, ct);
 
-    /// <summary>Another player rolled a triple — a bystander may cancel their triple bonus. Subject is the roller.</summary>
+    /// <summary>
+    /// The subject's triple <b>bonus</b> is being resolved — a bystander may cancel it ("cancel a player's
+    /// triple bonus"). Distinct from the roll: fired at the single bonus-resolution point (the orchestrator,
+    /// just before <c>PlayerService.ResolveTripleBonus</c>), NOT at roll time, so it composes with a drawn
+    /// payout modifier into one application. Subject is the roller.
+    /// </summary>
+    public Task<SuppressDefault> OnTripleBonus(Framework.GameEngine engine, PlayerModel roller, CancellationToken ct)
+        => ProcessGameTrigger(engine, roller, CardTrigger.OnTripleBonus, null, ct);
+
+    /// <summary>Reserved (no cards today) — another player rolls a triple, a future bystander roll-side card
+    /// (e.g. downgrade another player's triple). Fired at roll time via <c>DiceService.ResolveTripleTriggers</c>.</summary>
     public Task<SuppressDefault> OnOtherRollsTriple(Framework.GameEngine engine, PlayerModel roller, CancellationToken ct)
         => ProcessGameTrigger(engine, roller, CardTrigger.OnOtherRollsTriple, null, ct);
 

@@ -73,7 +73,7 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
                     values: new { area = "Identity", code },
                     protocol: Request.Scheme);
 
-                var (plain, html) = AccountEmail.ResetPassword(_branding.Get(), callbackUrl ?? string.Empty);
+                var (html, plain) = AccountEmail.ResetPassword(_branding.Get(), callbackUrl ?? string.Empty);
                 await _emailService.SendAsync(
                     new[] { new EmailRecipient(Input.Email) },
                     "Reset Password", plain, html);

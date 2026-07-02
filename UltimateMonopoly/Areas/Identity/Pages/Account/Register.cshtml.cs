@@ -160,7 +160,7 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    var (plain, html) = AccountEmail.ConfirmAccount(_branding.Get(), callbackUrl ?? string.Empty);
+                    var (html, plain) = AccountEmail.ConfirmAccount(_branding.Get(), callbackUrl ?? string.Empty);
                     await _emailService.SendAsync(
                         [new EmailRecipient(Input.Email ?? string.Empty)],
                         "Confirm your email", plain, html);

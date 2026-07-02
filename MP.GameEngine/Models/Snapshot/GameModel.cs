@@ -28,6 +28,14 @@ public class GameModel
     /// The modified dice roll type from convert/downgrade cards
     /// </summary>
     public DiceRollType? ModifiedDiceRollType { get; set; }
+
+    /// <summary>
+    /// Scratch record for the triple currently being resolved: convert/modify/cancel cards write their
+    /// payout effect here so the bonus is applied exactly once (accumulator +£500 once, payout once) in
+    /// <c>PlayerService.ResolveTripleBonus</c> after the <c>OnTripleBonus</c> window, rather than each card
+    /// self-applying. Transient — set as a triple resolves and cleared as it is applied.
+    /// </summary>
+    public TripleBonusModifier? TripleBonusModifier { get; set; }
     
     
     /// <summary>
@@ -59,6 +67,7 @@ public class GameModel
         FreeParkingAmount = model.FreeParkingAmount;
         GlobalEventInfo = new EventInfo(model.GlobalEventInfo);
         ModifiedDiceRollType = model.ModifiedDiceRollType;
+        TripleBonusModifier = model.TripleBonusModifier is null ? null : new TripleBonusModifier(model.TripleBonusModifier);
         
         Players = model.Players.Select(p => new PlayerModel(p)).ToList();
         Properties = model.Properties.Select(p => new PropertyModel(p)).ToList();

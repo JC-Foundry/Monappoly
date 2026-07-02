@@ -80,7 +80,7 @@ public class IndexModel : PageModel
         var subject = $"[Contact] {Contact.Subject.Trim()}";
 
         // Same branded shell as the admin reply, via EmailBuilder — encodes the user-supplied fields for us.
-        var (plain, html) = EmailBodyBuilder.Create(_branding.Get(), "New contact message")
+        var (html, plain) = EmailBodyBuilder.Create(_branding.Get(), "New contact message")
             .Paragraph($"A visitor sent a contact message from {RuleDictionary.GameName}.")
             .Paragraph($"From: {sender?.UserName} <{Contact.Email.Trim()}>\nSubject: {Contact.Subject.Trim()}")
             .Quote(Contact.Message.Trim())

@@ -13,8 +13,9 @@ namespace MP.GameEngine.Services.Cards.Actions;
 /// Resolves a card <see cref="DiceAction"/> (cards-design.md §3 Dice). Today it handles the
 /// triple-bonus <i>payout</i> family (<see cref="DiceKind.ModifyTripleBonus"/>): it works out the
 /// payout factor / recipient — rolling a die for "×die", or a one-die dice-off for the
-/// "lowest roller receives it" redirect — and applies it through the split
-/// <see cref="PlayerService.ApplyTripleBonus"/>. The accumulator still increments there.
+/// "lowest roller receives it" redirect — and <b>records</b> it onto <c>GameModel.TripleBonusModifier</c>.
+/// The bonus is credited exactly once by <see cref="PlayerService.ResolveTripleBonus"/> after the
+/// <c>OnTripleBonus</c> window, so several cards touching the same bonus compose into one application.
 ///
 /// The roll-type conversions (<see cref="DiceKind.ConvertDoubleToTriple"/> /
 /// <see cref="DiceKind.DowngradeTripleToDouble"/>) are applied in <c>PlayerTurnOrchestrator</c>
@@ -22,16 +23,13 @@ namespace MP.GameEngine.Services.Cards.Actions;
 /// </summary>
 public class DiceActionService : ICardActionService<DiceAction>
 {
-    private readonly PlayerService _playerService;
     private readonly DiceService _diceService;
     private readonly CardImmunityService _immunityService;
 
     /// <summary>Creates the dice-action handler over the triple-bonus resolution and dice seams.</summary>
-    public DiceActionService(PlayerService playerService, 
-        DiceService diceService,
+    public DiceActionService(DiceService diceService,
         CardImmunityService immunityService)
     {
-        _playerService = playerService;
         _diceService = diceService;
         _immunityService = immunityService;
     }
@@ -99,14 +97,25 @@ public class DiceActionService : ICardActionService<DiceAction>
             var result = await _immunityService.CheckCancelledTripleBonusImmunity(engine, target, ct);
             if (result)
             {
-                engine.Notifier.Notify(engine.Cache.GameId, holder.PlayerId, 
+                engine.Notifier.Notify(engine.Cache.GameId, holder.PlayerId,
                     "Player played an immunity card. Triple bonus is not cancelled");
-                engine.Notifier.Notify(engine.Cache.GameId, target.PlayerId, 
+                engine.Notifier.Notify(engine.Cache.GameId, target.PlayerId,
                     "You played an immunity card. Triple bonus is not cancelled");
                 return;
             }
         }
-        
-        await _playerService.ApplyTripleBonus(engine, target, factor, recipient, ct);
+
+        // Record onto the pending triple-bonus modifier rather than applying here. The bonus is credited
+        // exactly once in PlayerService.ResolveTripleBonus after the OnTripleBonus window, so several cards
+        // touching the same bonus (a drawn modifier + a bystander cancel) compose into one application
+        // instead of double-paying / double-incrementing the accumulator. A cancel (factor 0) dominates.
+        var modifier = engine.Cache.Game.TripleBonusModifier ??= new TripleBonusModifier();
+        if (factor == 0)
+            modifier.Cancelled = true;
+        else
+        {
+            modifier.Factor = factor;
+            modifier.RecipientId = recipient?.PlayerId;
+        }
     }
 }

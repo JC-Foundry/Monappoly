@@ -123,21 +123,27 @@ public class PlayerTurnOrchestrator
                         case DiceRollType.Normal:
                             throw new InvalidOperationException("Double rolls cannot be downgraded to a normal roll");
                         case DiceRollType.Triple:
-                            //Credit the triple bonus since double was upgraded to triple
-                            await _playerService.ResolveTripleBonus(engine, player, ct);
-                            
-                            await HandleTripleRoll(engine, player, dice, ct);
-                            transitionToThirdDie = false;
+                            //A drawn Double card upgraded the roll to a triple. Fire the roller's OnRollTriple
+                            //(a held "downgrade next triple" card may turn it straight back into a double),
+                            //then hand off to TripleRoll — the SINGLE place a triple draws its card, resolves
+                            //its bonus once (OnTripleBonus + ResolveTripleBonus), and moves. That is why the
+                            //bonus is not credited inline here.
+                            suppressDefault.Aggregate(await _diceService.ResolveTripleTriggers(engine, player, ct));
+
+                            //OnRollTriple may have downgraded it straight back to a double:
+                            dice = engine.Cache.GetTurnDiceRoll()
+                                   ?? throw new InvalidOperationException("Dice roll cannot be null");
+                            if (dice.RollType == DiceRollType.Double)
+                            {
+                                await HandleDoubleRoll(engine, player, otherPlayers, dice, suppressDefault, ct);
+                                break;
+                            }
+
+                            transitionToThirdDie = await TripleRoll(engine, player, otherPlayers, suppressDefault, ct);
                             break;
                         default:
                             await HandleDoubleRoll(engine, player, otherPlayers, dice, suppressDefault, ct);
                             break;
-                    }
-                    
-                    if (!suppressDefault.SuppressDirectionChange && engine.Cache.Game.ModifiedDiceRollType == null)
-                    {
-                        //Suppress default is "do not turn around" or "double upgraded to triple"
-                        player.FlipDirection(engine);
                     }
                 }
                 else
@@ -273,6 +279,11 @@ public class PlayerTurnOrchestrator
             if(effect.OtherPlayerMissesTurn)
                 p.TurnsToMiss++;
         }
+        
+        //Moved in HandleDoubleRoll so that downgraded triples FLIP direction
+        //and upgraded doubles do not change direction.
+        if (!suppressDefault.SuppressDirectionChange)
+            player.FlipDirection(engine);
     }
 
 
@@ -280,13 +291,19 @@ public class PlayerTurnOrchestrator
     {
         var suppressDefault = await engine.CardService.DrawCard(engine, player, CardType.Triple, ct);
         sd.Aggregate(suppressDefault);
-        if (!sd.SuppressTripleBonus)
-        {
-            //Credit the triple bonus, and increase it (default triple bonus - card will credit custom if needed):
-            await _playerService.ResolveTripleBonus(engine, player, ct);
-        }
-        
-        //Re-get dice roll (triple card may have downgraded to double):
+
+        //Open the OnTripleBonus window (the "cancel triple bonus" card) AFTER the drawn card, then credit the
+        //bonus EXACTLY ONCE. On a triple the accumulator ALWAYS +£500 — whether the payout is £0 / full /
+        //doubled / redirected is decided by the pending modifier the drawn card + the cancel recorded, which
+        //ResolveTripleBonus composes and applies in a single call.
+        //
+        //Do NOT gate this on SuppressTripleBonus: under record-then-apply that card flag is vestigial (the
+        //pending factor 0 is what suppresses the *payout*), and skipping ResolveTripleBonus would skip the
+        //guaranteed accumulator increment too.
+        await _triggerService.OnTripleBonus(engine, player, ct);
+        await _playerService.ResolveTripleBonus(engine, player, ct);
+
+        //Re-get dice roll (triple card may have2 downgraded to double):
         var dice = engine.Cache.GetTurnDiceRoll() 
                ?? throw new InvalidOperationException("Dice roll cannot be null");
                     

@@ -78,7 +78,7 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
                 pageHandler: null,
                 values: new { userId = userId, code = code },
                 protocol: Request.Scheme);
-            var (plain, html) = AccountEmail.ConfirmAccount(_branding.Get(), callbackUrl ?? string.Empty);
+            var (html, plain) = AccountEmail.ConfirmAccount(_branding.Get(), callbackUrl ?? string.Empty);
             await _emailService.SendAsync(
                 [new EmailRecipient(Input.Email ?? string.Empty)],
                 "Confirm your email", plain, html);

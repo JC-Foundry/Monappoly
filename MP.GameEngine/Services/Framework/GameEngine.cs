@@ -13,9 +13,11 @@ public sealed class GameEngine(GameCacheModel cache,
     CardService cardService)
 {
     public GameCacheModel Cache { get; } = cache;
-    public IPromptProvider PromptProvider { get; } = new PromptProvider(cache, notifier);
-    public ITurnStateProvider TurnStateProvider { get; } = new TurnStateProvider(cache, snapshotService);
-    public IEventEmitter EventEmitter { get; } = new EventEmitter(cache);
+    
+    //Internal Set to allow MP.GameEngine.Tests to swap out implementations
+    public IPromptProvider PromptProvider { get; internal set; } = new PromptProvider(cache, notifier);
+    public ITurnStateProvider TurnStateProvider { get; internal set; } = new TurnStateProvider(cache, snapshotService);
+    public IEventEmitter EventEmitter { get; internal set; } = new EventEmitter(cache);
     public IEngineNotifier Notifier { get; } = notifier;
     
     public IShortfallService ShortfallService { get; } = shortfallService;

@@ -106,7 +106,7 @@ public class IssueContactService
         if (string.IsNullOrWhiteSpace(contact.Email)) return IssueContactResult.NoEmail;
 
         subject = string.IsNullOrWhiteSpace(subject) ? $"Re: your report on {RuleDictionary.GameName}" : subject.Trim();
-        var (plain, html) = BuildBody(issue, contact.DisplayName, message.Trim(), _branding.Get());
+        var (html, plain) = BuildBody(issue, contact.DisplayName, message.Trim(), _branding.Get());
 
         // Send from the support mailbox (same address contact messages go to), not the noreply DefaultFromAddress —
         // the body invites the reporter to "just reply to this email", so replies must land in support.
@@ -122,10 +122,8 @@ public class IssueContactService
         return IssueContactResult.Sent;
     }
 
-    /// <summary>Builds the plain-text + HTML bodies via <see cref="EmailBuilder"/>: greeting → the admin's message
-    /// → the reporter's original report → sign-off + a short reference. Deliberately carries no GitHub link or
-    /// client metadata.</summary>
-    private static (string Plain, string Html) BuildBody(ReportedIssue issue, string displayName, string message, EmailBranding branding)
+    
+    private static (string Html, string Plain) BuildBody(ReportedIssue issue, string displayName, string message, EmailBranding branding)
     {
         var typeLabel = issue.Type == IssueType.Suggestion ? "suggestion" : "bug report";
         var date = issue.Created.ToLocalTime().ToString("D");

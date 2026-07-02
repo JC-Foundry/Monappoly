@@ -85,8 +85,19 @@ public class PlayerService
     /// accumulator increments. The orchestrator's triple branch calls this when no Dice card has taken
     /// over the bonus.
     /// </summary>
-    public Task ResolveTripleBonus(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
-        => ApplyTripleBonus(engine, player, factor: 1, recipient: null, ct);
+    public async Task ResolveTripleBonus(Framework.GameEngine engine, PlayerModel holder, CancellationToken ct)
+    {
+        // Apply the triple bonus exactly once, composing whatever convert/modify/cancel cards recorded onto
+        // the pending modifier during the draw + OnTripleBonus window. A recorded cancel (factor 0) wins over
+        // any scaling factor; with nothing recorded it is the full ×1 bonus to the holder.
+        var modifier = engine.Cache.Game.TripleBonusModifier;
+        engine.Cache.Game.TripleBonusModifier = null;
+
+        var factor = modifier is { Cancelled: true } ? (ushort)0 : modifier?.Factor ?? 1;
+        var recipient = modifier?.RecipientId is { } id ? engine.Cache.Game.GetPlayer(id) : null;
+
+        await ApplyTripleBonus(engine, holder, factor, recipient, ct);
+    }
 
     /// <summary>
     /// Resolves a triple bonus with a modifiable payout (a Dice <c>ModifyTripleBonus</c> card supplies

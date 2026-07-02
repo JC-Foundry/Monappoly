@@ -168,7 +168,7 @@ public class IndexModel : PageModel
                 values: new { area = "Identity", userId, email = EmailInput.NewEmail, code },
                 protocol: Request.Scheme);
 
-            var (plain, html) = AccountEmail.ConfirmEmailChange(_branding.Get(), callbackUrl ?? string.Empty);
+            var (html, plain) = AccountEmail.ConfirmEmailChange(_branding.Get(), callbackUrl ?? string.Empty);
             var result = await _emailService.SendAsync(
                 new[] { new EmailRecipient(EmailInput.NewEmail) },
                 "Confirm your email", plain, html);
@@ -199,7 +199,7 @@ public class IndexModel : PageModel
             values: new { area = "Identity", userId, code },
             protocol: Request.Scheme);
 
-        var (plain, html) = AccountEmail.ConfirmAccount(_branding.Get(), callbackUrl ?? string.Empty);
+        var (html, plain) = AccountEmail.ConfirmAccount(_branding.Get(), callbackUrl ?? string.Empty);
         var result = await _emailService.SendAsync(
             [new EmailRecipient(email ?? string.Empty)],
             "Confirm your email", plain, html);

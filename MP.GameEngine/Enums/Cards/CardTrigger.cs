@@ -24,8 +24,8 @@ public enum CardTrigger
     OnOtherTakesFreeParking = 1 << 4,   // another player takes the Free Parking money — a bystander receives it instead
     OnRollDouble            = 1 << 5,   // roll a double (convert double→triple; dodgy-judge double→triple while in jail)
     OnRollTriple            = 1 << 6,   // roll a triple (downgrade triple→double)
-    OnOtherRollsTriple      = 1 << 7,   // another player rolls a triple — a bystander cancels their triple bonus
-    // 1 << 8 retired (was OnEnterJail)
+    OnTripleBonus           = 1 << 7,   // cancel/modify triple bonus 
+    OnOtherRollsTriple      = 1 << 8,   // another player rolls a triple — a bystander downgrades their triple
     OnInJail                = 1 << 9,   // while in jail (get-out-of-jail-free; befriend a guard → free next exit)
     // 1 << 10 retired (was OnPayPlayer — folded into OnRentDue)
     OnRentDue               = 1 << 11,  // paying rent to another player — "your next payment to another player is doubled"

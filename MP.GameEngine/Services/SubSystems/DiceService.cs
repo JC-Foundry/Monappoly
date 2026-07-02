@@ -40,25 +40,41 @@ public class DiceService
         switch (roll.RollType)
         {
             case DiceRollType.Double when roll.Die1 == 1:
-                var suppressSnakeEyes = await _triggerService.OnSnakeEyes(engine, player, ct);
-                var suppressDouble = await _triggerService.OnRollDouble(engine, player, ct);
-                sd.Aggregate(suppressSnakeEyes);
-                sd.Aggregate(suppressDouble);
+                sd.Aggregate(await _triggerService.OnSnakeEyes(engine, player, ct));
+                sd.Aggregate(await _triggerService.OnRollDouble(engine, player, ct));
                 break;
             case DiceRollType.Double:
-                var suppressDefaultDouble = await _triggerService.OnRollDouble(engine, player, ct);
-                sd.Aggregate(suppressDefaultDouble);
-                break;
-            case DiceRollType.Triple:
-                var suppressTriple = await _triggerService.OnRollTriple(engine, player, ct);
-                var suppressOtherTriple = await _triggerService.OnOtherRollsTriple(engine, player, ct);
-                sd.Aggregate(suppressTriple);
-                sd.Aggregate(suppressOtherTriple);
+                sd.Aggregate(await _triggerService.OnRollDouble(engine, player, ct));
                 break;
         }
 
+        // A triple — whether rolled outright, or a double a held card just upgraded to one in the double
+        // branch above — must evaluate BOTH triple triggers (see ResolveTripleTriggers). Keyed off the
+        // effective roll type so the upgrade case is covered here rather than being missed.
+        if (engine.Cache.GetTurnDiceRoll()?.RollType == DiceRollType.Triple)
+            sd.Aggregate(await ResolveTripleTriggers(engine, player, ct));
+
         engine.EventEmitter.Emit(new DiceRollReceipt(player.PlayerId, roll));
         return (engine.Cache.GetTurnDiceRoll() ?? throw new InvalidOperationException("Turn dice roll not set"), sd);
+    }
+
+    /// <summary>
+    /// Evaluates the two triple triggers for the <b>current effective roll</b>, in order: the roller's
+    /// <see cref="CardTriggerService.OnRollTriple"/> (a held "downgrade next triple" card may convert it
+    /// back to a double), then — only while the roll is still a triple — the bystander
+    /// <see cref="CardTriggerService.OnOtherRollsTriple"/> cancel window. Call this at <b>every</b> point a
+    /// triple is established (a rolled triple, a held-card double→triple upgrade, or a drawn-card upgrade),
+    /// so both triggers always fire for a triple and a cancel can never be opened on a downgraded roll (#22).
+    /// </summary>
+    public async Task<SuppressDefault> ResolveTripleTriggers(Framework.GameEngine engine, PlayerModel player, CancellationToken ct)
+    {
+        var sd = new SuppressDefault();
+        sd.Aggregate(await _triggerService.OnRollTriple(engine, player, ct));
+
+        if (engine.Cache.GetTurnDiceRoll()?.RollType == DiceRollType.Triple)
+            sd.Aggregate(await _triggerService.OnOtherRollsTriple(engine, player, ct));
+
+        return sd;
     }
 
     /// <summary>

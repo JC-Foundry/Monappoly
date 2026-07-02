@@ -12,6 +12,7 @@ public static class ScenarioRegistry
         ModifierCancelScenarios.All()
             .Concat(ConversionCancelScenarios.All())
             .Concat(MiscComboScenarios.All())
+            .Concat(JailScenarios.All())
             .OrderBy(s => s.Id)
             .ToList();
 

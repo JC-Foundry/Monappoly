@@ -33,6 +33,10 @@ public static class CardText
     /// <summary>Free Parking deck, held — the roller plays it reactively to BLOCK a bystander's cancel.</summary>
     public const string ImmunityTripleBonusCancel = "Immunity from triple bonus being cancelled. Keep until needed";
 
+    // ── Jail ──
+    /// <summary>Just Visiting deck, resolve-on-draw — swap places with a jailed player; jail leave-fees also swap.</summary>
+    public const string JailSwap = "Swap places with any other player in jail. Your jail fees to leave are also swapped.";
+
     // ── A harmless Triple-deck card to occupy the roller's own triple draw when isolating a cancel. ──
     public const string ResetJailCost = "Your cost to leave jail is reset to £50";
 

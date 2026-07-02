@@ -212,6 +212,12 @@ public class CardService
 
         group.IsChosenGroup = true;
 
+        //Actions in a group share one context so an earlier action can stash state for a later one — a
+        //swap partner or dice-off winner via ContextPlayerId (the "swap places with a jailed player, fees
+        //also swapped" card, the GO "both players receive £200" swap). A resolve-on-draw card carries no
+        //external context, so mint one here; otherwise the stash is dropped and the follow-on action no-ops.
+        context ??= new CardActionContext();
+
         //Actions within the chosen group are ANDed — every one runs (non-short-circuit &), and the
         //result is whether the play took effect. False (only a blocked jail release today) tells
         //PlayCard to retain the card in hand rather than consume it.

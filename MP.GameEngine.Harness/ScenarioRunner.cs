@@ -49,7 +49,7 @@ public static class ScenarioRunner
         foreach (var p in game.Players.OrderBy(p => p.OrderId))
             output.WriteLine(
                 $"  {p.PlayerId,-6} £{p.Money,-6} idx {p.BoardIndex,-3} {p.Direction,-8} " +
-                $"D{p.DoublesInRow}/T{p.TriplesInRow} bonus £{p.TripleBonus} cards {p.CardInstances.Count}" +
+                $"D{p.DoublesInRow}/T{p.TriplesInRow} bonus £{p.TripleBonus} jailfee £{p.JailCost} cards {p.CardInstances.Count}" +
                 (p.IsInJail ? $" [JAIL {p.JailTurnCounter}]" : ""));
     }
 }

@@ -1,0 +1,117 @@
+@page
+@using MP.GameEngine.Helpers.RuleSet
+@inject IConfiguration Config
+@model UltimateMonopoly.Pages.PrivacyModel
+@{
+    ViewData["Title"] = "Privacy Policy";
+    ViewData["Description"] = $"How {RuleDictionary.GameName} handles your data — what we collect, how it is used, and your rights.";
+
+    var webUrl = Config["Routes:WebUrl"] ?? "https://www.monappoly.com/";
+    ViewData["Canonical"] = $"{webUrl}Privacy";
+
+    var email = Config["Communication:Email:ContactRecipient"] ?? "support@monappoly.com";
+    var publisherUrl = Config["Routes:PublisherUrl"] ?? "https://www.jcfoundry.co.uk";
+}
+
+<article class="py-4 mx-auto" style="max-width: 820px;">
+    <h1 class="h3 mb-1">Privacy Policy</h1>
+    <p class="text-body-secondary small mb-4">Last updated: July 2026</p>
+
+    <div class="alert alert-secondary small" role="note">
+        @RuleDictionary.GameName is an independent, unofficial fan project. It is <strong>not</strong> affiliated
+        with, endorsed by, or sponsored by Hasbro, Inc. MONOPOLY&reg; is a trademark of Hasbro. The app is free to use.
+    </div>
+
+    <p>
+        This policy explains what personal data @RuleDictionary.GameName ("we", "us") collects when you use the app,
+        why we collect it, and the choices you have. The app is operated by
+        <a href="@publisherUrl" target="_blank" rel="noopener">JC Foundry</a>.
+    </p>
+
+    <h2 class="h5 mt-4">1. Information we collect</h2>
+    <ul>
+        <li><strong>Account information</strong> — the email address, username, and display name you provide when
+            you register, plus your (hashed) password. Email is used to confirm your account or recovery.</li>
+        <li><strong>Gameplay data</strong> — the games you create or join, your moves, statistics, board skins, and
+            related history, so the app can run games and show your stats.</li>
+        <li><strong>Social data</strong> — friend connections, friend requests, blocks, and direct messages you send
+            to friends through the app.</li>
+        <li><strong>Support &amp; feedback</strong> — the contents of any contact message, feedback, or bug report
+            you submit. Email content is <strong>not</strong> stored on our system(s).</li>
+        <li><strong>Technical data</strong> — a session/authentication cookie to keep you signed in, and basic
+            server logs (e.g. errors and admin actions) needed to operate and secure the service.</li>
+    </ul>
+    <p class="small text-body-secondary">
+        We do <strong>not</strong> take any payment information — the app is free — and we do not run third-party
+        advertising or sell your data.
+    </p>
+
+    <h2 class="h5 mt-4">2. How we use your data</h2>
+    <ul>
+        <li>To create and run your account and your games.</li>
+        <li>To provide the social features (friends, messaging) and your statistics.</li>
+        <li>To keep the service secure — spam/abuse prevention, moderation, and audit logging of actions.</li>
+        <li>To reply to your support messages and fix reported issues.</li>
+    </ul>
+
+    <h2 class="h5 mt-4">3. Cookies</h2>
+    <p>
+        We use only essential cookies required to sign you in and keep your session secure. We do not use tracking
+        or advertising cookies.
+    </p>
+
+    <h2 class="h5 mt-4">4. Email</h2>
+    <p>
+        We send email only for account purposes — confirming your address, account recovery, and replying to
+        contact or issue messages. We do not send marketing email.
+    </p>
+
+    <h2 class="h5 mt-4">5. Sharing &amp; third parties</h2>
+    <p>
+        We do not sell or rent your personal data. Data is shared only with the service providers we rely on to run
+        the app (such as our hosting provider and the email delivery service used to send account emails), and where
+        required by law. Some information is visible to other players by design — for example your display name and/or username, and
+        public statistics on the leaderboard, unless you hide your profile.
+    </p>
+
+    <h2 class="h5 mt-4">6. Data retention</h2>
+    <p>
+        We keep your account data while your account is active. Completed and abandoned games may be cleaned up
+        automatically after a period of time. If you delete your account, your personal account data is removed;
+        some anonymised or aggregate records may remain where needed for the integrity of past games.
+    </p>
+
+    <h2 class="h5 mt-4">7. Your rights &amp; choices</h2>
+    <p>
+        You can view and update your details, download a copy of your personal data, and permanently delete your
+        account from your
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-area="Identity" asp-page="/Account/Manage/Index">account settings</a>
+        }
+        else
+        {
+            <text>account settings</text>
+        }
+        (Account &rsaquo; Personal Data). You can also hide your profile from the public leaderboard at any time.
+        For any other request, contact us using the details below.
+    </p>
+
+    <h2 class="h5 mt-4">8. Children</h2>
+    <p>
+        The app is not directed at children under 13, and we do not knowingly collect personal data from them. If
+        you believe a child has provided us with personal data, please contact us and we will remove it.
+    </p>
+
+    <h2 class="h5 mt-4">9. Changes to this policy</h2>
+    <p>
+        We may update this policy from time to time. Material changes will be reflected by the "last updated" date
+        above.
+    </p>
+
+    <h2 class="h5 mt-4">10. Contact</h2>
+    <p>
+        Questions about this policy or your data? Email us at
+        <a href="mailto:@email">@email</a>.
+    </p>
+</article>

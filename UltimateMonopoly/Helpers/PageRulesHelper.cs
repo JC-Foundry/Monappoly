@@ -23,7 +23,7 @@ public class RuleSection(string section, int sectionNumber)
 
 public static class PageRulesHelper
 {
-    private const string DefaultSection = "Standard Monopoly Rules/Convensions";
+    private const string DefaultSection = "Standard Monopoly Rules/Conventions";
     private const string TurnTaxSection = "Player Turn Tax";
     private const string DiceSection = "Dice Rolls";
     private const string MovementSection = "Movement";

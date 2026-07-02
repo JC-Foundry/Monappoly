@@ -1,0 +1,143 @@
+@page
+@using MP.GameEngine.Helpers.RuleSet
+@inject IConfiguration Config
+@model UltimateMonopoly.Pages.TermsModel
+@{
+    ViewData["Title"] = "Terms of Service";
+    ViewData["Description"] = $"The terms for using {RuleDictionary.GameName} — a free, independent, unofficial companion app.";
+
+    var webUrl = Config["Routes:WebUrl"] ?? "https://www.monappoly.com/";
+    ViewData["Canonical"] = $"{webUrl}Terms";
+
+    var email = Config["Communication:Email:ContactRecipient"] ?? "support@monappoly.com";
+    var publisherUrl = Config["Routes:PublisherUrl"] ?? "https://www.jcfoundry.co.uk";
+}
+
+<article class="py-4 mx-auto" style="max-width: 820px;">
+    <h1 class="h3 mb-1">Terms of Service</h1>
+    <p class="text-body-secondary small mb-4">Last updated: July 2026</p>
+
+    <div class="alert alert-secondary small" role="note">
+        @RuleDictionary.GameName is an independent, unofficial fan project. It is <strong>not</strong> affiliated
+        with, endorsed by, or sponsored by Hasbro, Inc. MONOPOLY&reg; is a trademark of Hasbro. The app is free to use.
+    </div>
+
+    <p>
+        These Terms of Service ("Terms") are an agreement between you and @RuleDictionary.GameName ("we", "us"),
+        operated by <a href="@publisherUrl" target="_blank" rel="noopener">JC Foundry</a>. By creating an account or
+        using the app, you agree to these Terms and to our
+        <a asp-area="" asp-page="/Privacy">Privacy Policy</a>. If you do not agree, please do not use the app.
+    </p>
+
+    <h2 class="h5 mt-4">1. Who can use the app</h2>
+    <p>
+        You must be at least 13 years old to use @RuleDictionary.GameName. By using it you confirm that you are 13 or
+        older and that the information you give us is accurate. If you are using the app somewhere that sets a higher
+        minimum age for online services, you must meet that age.
+    </p>
+
+    <h2 class="h5 mt-4">2. The service</h2>
+    <p>
+        @RuleDictionary.GameName is a free companion app for a physical, house-ruled tabletop game — it keeps track of
+        money, cards, properties, and turns while you play on a real board. It does not involve real money, real prizes,
+        or gambling of any kind; all in-game currency and assets are fictional and have no monetary value. The app is
+        provided free of charge, "as is", and may be changed, limited, suspended, or withdrawn at any time.
+    </p>
+
+    <h2 class="h5 mt-4">3. Your account</h2>
+    <ul>
+        <li>Keep your login details secure and do not share your account. You are responsible for activity that
+            happens under your account.</li>
+        <li>Provide accurate registration information and a valid email address (used to confirm your account and for
+            recovery).</li>
+        <li>Tell us promptly if you believe your account has been accessed without your permission.</li>
+        <li>One person may not maintain multiple accounts to evade a restriction, ban, or block.</li>
+    </ul>
+
+    <h2 class="h5 mt-4">4. Acceptable use</h2>
+    <p>When using @RuleDictionary.GameName, you agree that you will <strong>not</strong>:</p>
+    <ul>
+        <li>Harass, bully, threaten, defame, or abuse other players, or invade their privacy.</li>
+        <li>Post or send content that is unlawful, hateful, discriminatory, obscene, sexually explicit, or otherwise
+            offensive — including in display names, board names, board designs, messages, and reports.</li>
+        <li>Impersonate any person or organisation, or misrepresent your affiliation with anyone.</li>
+        <li>Upload malware, attempt to gain unauthorised access, disrupt or overload the service, or probe or scan it
+            for vulnerabilities without our written permission.</li>
+        <li>Scrape, copy, or harvest data or content from the app, or reverse-engineer, decompile, or resell any part
+            of it, except to the extent the law does not allow such a restriction.</li>
+        <li>Use the app for any illegal purpose or in breach of any applicable law.</li>
+        <li>Cheat, exploit bugs for unfair advantage, or interfere with other players' games.</li>
+    </ul>
+
+    <h2 class="h5 mt-4">5. Content you create</h2>
+    <p>
+        You keep ownership of the content you create — your display name, custom board designs, messages, and any
+        text you submit ("Your Content"). You are solely responsible for Your Content and confirm you have the right
+        to post it and that it does not infringe anyone else's rights or break these Terms.
+    </p>
+    <p>
+        You grant us a non-exclusive, worldwide, royalty-free licence to store, display, and share Your Content only
+        as needed to run the app and its features (for example, showing your display name to other players, or sharing
+        a board design with the friends you choose). We do not sell Your Content. We may remove, hide, or edit content
+        that breaks these Terms, and we may filter or block names and text that appear to contain prohibited content.
+    </p>
+
+    <h2 class="h5 mt-4">6. Community &amp; moderation</h2>
+    <p>
+        You can block and report other users. We may review reports and take action — including removing content,
+        restricting features, disabling, or deleting accounts — where we consider these Terms have been broken. We
+        keep a record of moderation actions. We aim to be fair but do not guarantee any particular outcome or response
+        time.
+    </p>
+
+    <h2 class="h5 mt-4">7. Intellectual property</h2>
+    <p>
+        The app, its software, design, and branding (other than Your Content and any third-party materials) belong to
+        JC Foundry and are protected by law. These Terms do not grant you any right in them beyond using the app as
+        intended. @RuleDictionary.GameName is an independent, unofficial project and is not affiliated with, endorsed by,
+        or sponsored by Hasbro, Inc.; MONOPOLY&reg; and related marks are the property of their respective owners. If you
+        believe content on the app infringes your rights, contact us using the details below and we will look into it.
+    </p>
+
+    <h2 class="h5 mt-4">8. Suspension &amp; termination</h2>
+    <p>
+        You may stop using the app at any time and delete your account from your account settings. We may suspend,
+        restrict, or terminate your access — with or without notice — if you break these Terms, to protect other users
+        or the service, or if we stop offering the app. On termination, your right to use the app ends; sections that
+        by their nature should survive (such as intellectual property, disclaimers, and liability) continue to apply.
+    </p>
+
+    <h2 class="h5 mt-4">9. Disclaimers</h2>
+    <p>
+        The app is provided "as is" and "as available", without warranties of any kind, whether express or implied, to
+        the fullest extent permitted by law. We do not warrant that the app will be uninterrupted, error-free, secure,
+        or that any data or game state will always be preserved. You use the app at your own discretion and risk.
+        Nothing in these Terms excludes or limits any rights you have that cannot be excluded or limited by law.
+    </p>
+
+    <h2 class="h5 mt-4">10. Limitation of liability</h2>
+    <p>
+        To the fullest extent permitted by law, we will not be liable for any indirect, incidental, or consequential
+        loss, or for loss of data, profits, or goodwill, arising from your use of (or inability to use) the app. Because
+        the app is provided free of charge, our total liability to you for any claim relating to it is limited to the
+        greatest extent the law allows. Nothing in these Terms limits liability for death or personal injury caused by
+        negligence, for fraud, or for anything else that cannot be limited by law.
+    </p>
+
+    <h2 class="h5 mt-4">11. Changes to these Terms</h2>
+    <p>
+        We may update these Terms from time to time. If we make material changes, we will update the "last updated"
+        date above. Continuing to use the app after changes take effect means you accept the updated Terms.
+    </p>
+
+    <h2 class="h5 mt-4">12. Governing law</h2>
+    <p>
+        These Terms are governed by the laws of England and Wales, and the courts of England and Wales have
+        jurisdiction — without affecting any mandatory consumer-protection rights you have where you live.
+    </p>
+
+    <h2 class="h5 mt-4">13. Contact</h2>
+    <p>
+        Questions about these Terms? Email us at <a href="mailto:@email">@email</a>.
+    </p>
+</article>

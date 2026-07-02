@@ -44,6 +44,18 @@
                     <label asp-for="Input.ConfirmPassword">Confirm Password</label>
                     <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
                 </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input asp-for="Input.AcceptTerms" class="form-check-input" type="checkbox" required />
+                        <label asp-for="Input.AcceptTerms" class="form-check-label">
+                            I am <strong>13 or older</strong> and I have read and accept the
+                            <a asp-area="" asp-page="/Terms" target="_blank" rel="noopener">Terms of Service</a>
+                            and
+                            <a asp-area="" asp-page="/Privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+                        </label>
+                    </div>
+                    <div class="form-text">You must be 13 or older and agree to the Terms of Service and Privacy Policy to create an account.</div>
+                </div>
                 <button type="submit" class="w-100 btn btn-lg btn-primary mb-3">Register</button>
                 <div class="text-center">
                     <a asp-page="./Login">Already have an account? Log in</a>

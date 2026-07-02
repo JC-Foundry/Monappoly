@@ -14,7 +14,7 @@ namespace UltimateMonopoly.Pages.Leaderboard;
 /// </summary>
 public class IndexModel : PageModel
 {
-    public const int MinimumGames = 1;
+    public const int MinimumGames = 3;
     
     private readonly LeaderboardService _leaderboardService;
     private readonly ProfileService _profile;

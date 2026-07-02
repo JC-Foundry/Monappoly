@@ -42,6 +42,12 @@
                     ? 'All players must set their dice numbers before the game can start.'
                     : 'Ready to Start';
         }
+
+        // Keep the Start button in step with readiness — the server renders it disabled at page load, so
+        // a later dice-set / join / leave arriving over SignalR must re-evaluate it (otherwise the banner
+        // reads "Ready to Start" while the button stays disabled).
+        const startBtn = document.querySelector('[data-start-game]');
+        if (startBtn) startBtn.disabled = !ready;
     }
 
     const notify = (message, type) =>
@@ -90,7 +96,7 @@
         const card = cardFor(userId);
         if (!card) return;
         card.remove();
-        refreshCount();
+        updatePlayersHeader();
         notify('A player left the game.', 'success');
     });
 

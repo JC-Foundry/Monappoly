@@ -111,6 +111,15 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            /// <summary>
+            /// The user must tick this to confirm they are 13 or older AND accept the Terms of Service and
+            /// Privacy Policy. A bool is always "present", so [Required] can't force it true — the OnPost
+            /// handler adds a model-level error when it's false (mirrors the profanity-error pattern), and the
+            /// checkbox is <c>required</c> on the client for a native pre-submit block.
+            /// </summary>
+            [Display(Name = "I am 13 or older and accept the Terms of Service and Privacy Policy")]
+            public bool AcceptTerms { get; set; }
         }
 
 
@@ -135,7 +144,15 @@ namespace UltimateMonopoly.Areas.Identity.Pages.Account
                 ModelState.AddModelError(string.Empty,
                     "That username isn't allowed — please choose another.");
             }
-            
+
+            // Must confirm age (13+) and accept the Terms of Service and Privacy Policy. Model-level
+            // (string.Empty) so it renders in the page's error alert alongside the other registration errors.
+            if (!Input.AcceptTerms)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "You must confirm you are 13 or older and accept the Terms of Service and Privacy Policy to create an account.");
+            }
+
             if (ModelState.IsValid)
             {
                 var user = CreateUser();

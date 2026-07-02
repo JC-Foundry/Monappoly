@@ -38,7 +38,18 @@
                     metadata: body.getAttribute('data-metadata')
                 })
             });
-            if (!res.ok) throw new Error('failed');
+            if (!res.ok) {
+                // Surface the server's message (e.g. "please remove offensive language", "please describe
+                // the issue") from the { error } JSON when present; fall back to generic for 500s / non-JSON.
+                let msg = 'Something went wrong. Please try again.';
+                try {
+                    const data = await res.json();
+                    if (data && data.error) msg = data.error;
+                } catch { /* non-JSON error body — keep the generic message */ }
+                showAlert(msg, 'danger');
+                submitBtn.disabled = false;
+                return;
+            }
 
             showAlert('Thank you for your feedback! An administrator will be in touch.', 'success');
             desc.value = '';

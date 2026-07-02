@@ -24,13 +24,20 @@ public class ProfanityService
         _blockedWords = blockedWords;
     }
 
-    public async Task<ProfanityResult> Check(string? input)
+    /// <summary>
+    /// Checks <paramref name="input"/> for profanity. <paramref name="includeLocalList"/> (default true)
+    /// also matches the DB-backed local list; pass <c>false</c> where that list isn't appropriate — it holds
+    /// reserved terms like "admin" (to stop impersonating usernames), which are legitimate in free-text such
+    /// as a bug report ("the admin page 500s"). The library check (built-in profanity + evasion normalisation)
+    /// always runs.
+    /// </summary>
+    public async Task<ProfanityResult> Check(string? input, bool includeLocalList = true)
     {
         if (string.IsNullOrWhiteSpace(input))
             return ProfanityResult.Clean;
 
         input = input.Trim().ToLowerInvariant();
-        
+
         // 1. Library on the raw text — natural-word matching with its own allow-list (handles
         //    Scunthorpe et al.). Catches standard spellings and phrases.
         if (_library.ContainsProfanity(input))
@@ -45,7 +52,11 @@ public class ProfanityService
         if (_library.ContainsProfanity(normalised.ToLowerInvariant()))
             return new ProfanityResult(true, FirstLibraryHit(normalised) ?? normalised, ProfanitySource.Library);
 
-        // 3. Local list — our extra terms, substring-matched against the normalised input.
+        if (!includeLocalList)
+            return ProfanityResult.Clean;
+
+        // 3. Local list — our extra terms (incl. reserved words like "admin"), substring-matched against
+        //    the normalised input.
         var blocked = await _blockedWords.GetBlockedWords();
         foreach (var term in blocked)
         {

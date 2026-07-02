@@ -32,16 +32,19 @@ public class BugReportModel : PageModel
     private readonly IUserInfo _userInfo;
     private readonly NotificationSender _notifications;
     private readonly UserService _userService;
+    private readonly ProfanityService _profanity;
 
     public BugReportModel(BugReportService bugReports,
         IUserInfo userInfo,
         NotificationSender notifications,
-        UserService userService)
+        UserService userService,
+        ProfanityService profanity)
     {
         _bugReports = bugReports;
         _userInfo = userInfo;
         _notifications = notifications;
         _userService = userService;
+        _profanity = profanity;
     }
 
     // No direct page — the widgets post here via fetch.
@@ -52,6 +55,13 @@ public class BugReportModel : PageModel
         var description = input?.Description?.Trim() ?? "";
         if (description.Length == 0)
             return BadRequest(new { error = "Please describe the issue." });
+
+        // Profanity gate — this text is admin-facing and (when synced) leaves for GitHub, so filter it. The
+        // library check only: the local list holds reserved words like "admin" that are legitimate in a bug
+        // report ("the admin page 500s"), so it is excluded here.
+        var profanity = await _profanity.Check(description, includeLocalList: false);
+        if (profanity.IsProfane)
+            return BadRequest(new { error = "Please remove any offensive language before submitting your report." });
 
         // The widget sends "bug" / "suggestion"; anything that isn't a suggestion is treated as a bug.
         var type = string.Equals(input!.Type, "suggestion", StringComparison.OrdinalIgnoreCase)

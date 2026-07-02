@@ -266,7 +266,7 @@ await app.ConfigureAdminAndRolesAsync<AppUser, AppRole, AppDbContext, AppRoles>(
 app.MapGet("/sitemap.xml", (IConfiguration config) =>
 {
     var baseUrl = (config["Routes:WebUrl"] ?? "https://www.monappoly.com/").TrimEnd('/');
-    string[] paths = ["/", "/Rules", "/Guides"];
+    string[] paths = ["/", "/Rules", "/Guides", "/Privacy", "/Terms"];
 
     var sb = new System.Text.StringBuilder();
     sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");

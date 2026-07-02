@@ -201,13 +201,15 @@
     right: 0;
     bottom: 3.75rem;
 }
-/* Drawer: pinned to the drawer bottom. Absolute → the fixed .player-drawer is the containing
-   block (same trick as .pp-prompt), so it escapes the scrolling body and spans the drawer. */
+/* Drawer: pinned directly ABOVE the tab bar (3.75rem = the tab bar's reserved height), same as the
+   phone — so hiding a prompt still leaves the nav tabs tappable underneath. Absolute → the fixed
+   .player-drawer is the containing block (same trick as .pp-prompt / the tab bar), so it escapes the
+   scrolling body and spans the drawer. (Was bottom:0, which sat ON the tab bar and blocked it.) */
 .player-drawer .pp-prompt-reopen {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 3.75rem;
 }
 
 /* ── "Current space" tile (Profile tab, Block 2) — a full-width board-style banner for

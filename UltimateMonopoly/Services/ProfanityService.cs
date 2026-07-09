@@ -40,8 +40,9 @@ public class ProfanityService
 
         // 1. Library on the raw text — natural-word matching with its own allow-list (handles
         //    Scunthorpe et al.). Catches standard spellings and phrases.
-        if (_library.ContainsProfanity(input))
-            return new ProfanityResult(true, FirstLibraryHit(input) ?? input.Trim(), ProfanitySource.Library);
+        var hit = FirstLibraryHit(input);
+        if (!string.IsNullOrEmpty(hit))
+            return new ProfanityResult(true, hit, ProfanitySource.Library);
 
         var normalised = ProfanityNormaliser.Normalise(input);
         if (normalised.Length == 0)
@@ -49,8 +50,9 @@ public class ProfanityService
 
         // 2. Library on the normalised (de-leeted / de-separated) form — catches evasions of common
         //    words ("sh1t", "f.u.c.k").
-        if (_library.ContainsProfanity(normalised.ToLowerInvariant()))
-            return new ProfanityResult(true, FirstLibraryHit(normalised) ?? normalised, ProfanitySource.Library);
+        hit = FirstLibraryHit(normalised.ToLowerInvariant());
+        if (!string.IsNullOrEmpty(hit))
+            return new ProfanityResult(true, hit, ProfanitySource.Library);
 
         if (!includeLocalList)
             return ProfanityResult.Clean;
